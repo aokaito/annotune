@@ -1,4 +1,4 @@
-// DynamoDB を操作し歌詞・アノテーションの CRUD を提供するリポジトリ。
+// このリポジトリは DynamoDB を操作し、歌詞・アノテーションの CRUD を提供する。
 import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
 import { GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
@@ -7,7 +7,7 @@ import { HttpError } from '../utils/http';
 import type { AnnotationRecord, DocVersionRecord, LyricDocument } from '../types';
 import type { TableConfig } from '../config/env';
 
-// ISO 文字列の現在時刻を返すヘルパー
+// 現在時刻を ISO 形式の文字列で返すヘルパー
 const now = () => new Date().toISOString();
 
 // 二つの範囲が重なるかを判定するユーティリティ
@@ -17,6 +17,7 @@ const overlaps = (aStart: number, aEnd: number, bStart: number, bEnd: number) =>
 export class LyricsRepository {
   constructor(private readonly client: DynamoDBDocumentClient, private readonly config: TableConfig) {}
 
+  // 歌詞ドキュメントを新規作成し、初回のバージョンスナップショットも保存する
   async createLyric(ownerId: string, payload: { title: string; text: string }): Promise<LyricDocument> {
     const docId = nanoid();
     const timestamp = now();
@@ -56,8 +57,10 @@ export class LyricsRepository {
     return item;
   }
 
+  // 所有者ごとの歌詞一覧を取得する
   async listLyrics(ownerId: string): Promise<LyricDocument[]> {
     if (this.config.lyricsOwnerIndex) {
+      // グローバルセカンダリインデックス（ownerId-index）がある場合は Query で高速に取得
       const result = await this.client.send(
         new QueryCommand({
           TableName: this.config.lyricsTable,
@@ -71,6 +74,7 @@ export class LyricsRepository {
       return (result.Items ?? []) as LyricDocument[];
     }
 
+    // グローバルセカンダリインデックスが無い場合は全件走査してフィルタする（少量データ前提）
     const scanResult = await this.client.send(
       new ScanCommand({
         TableName: this.config.lyricsTable,
@@ -84,6 +88,7 @@ export class LyricsRepository {
     return (scanResult.Items ?? []) as LyricDocument[];
   }
 
+  // ドキュメントと関連アノテーションを取得する（所有者チェックは任意）
   async getLyric(docId: string, ownerId?: string): Promise<LyricDocument & { annotations: AnnotationRecord[] }> {
     const record = await this.client.send(
       new GetCommand({
@@ -107,6 +112,7 @@ export class LyricsRepository {
     return { ...lyric, annotations };
   }
 
+  // 公開設定が有効なドキュメントを取得する
   async getLyricForPublic(docId: string): Promise<LyricDocument & { annotations: AnnotationRecord[] }> {
     const record = await this.client.send(
       new GetCommand({
@@ -120,12 +126,14 @@ export class LyricsRepository {
     }
     const lyric = record.Item as LyricDocument;
     if (!lyric.isPublicView) {
+      // 公開フラグが false の場合は閲覧を禁止
       throw new HttpError(403, 'Document is not public');
     }
     const annotations = await this.loadAnnotations(docId);
     return { ...lyric, annotations };
   }
 
+  // 歌詞本文とタイトルを更新し、バージョンを進める
   async updateLyric(
     docId: string,
     ownerId: string,
@@ -179,6 +187,7 @@ export class LyricsRepository {
     return updated;
   }
 
+  // 歌詞ドキュメントを削除する（所有者のみ）
   async deleteLyric(docId: string, ownerId: string): Promise<void> {
     try {
       await this.client.send(
@@ -196,6 +205,7 @@ export class LyricsRepository {
     }
   }
 
+  // 公開／非公開フラグを切り替える
   async shareLyric(docId: string, ownerId: string, isPublicView: boolean): Promise<LyricDocument> {
     let result;
     try {
@@ -224,6 +234,7 @@ export class LyricsRepository {
     return result.Attributes as LyricDocument;
   }
 
+  // 新しいアノテーションを登録する
   async createAnnotation(
     docId: string,
     ownerId: string,
@@ -231,6 +242,7 @@ export class LyricsRepository {
     payload: { start: number; end: number; tag: string; comment?: string; props?: Record<string, unknown> }
   ): Promise<AnnotationRecord> {
     const lyric = await this.getLyric(docId, ownerId);
+    // 歌詞長と重複を確認し、MVP では重なりを禁止
     this.validateRange(payload.start, payload.end, lyric.text.length);
 
     if (lyric.annotations.some((ann) => overlaps(payload.start, payload.end, ann.start, ann.end))) {
@@ -268,6 +280,7 @@ export class LyricsRepository {
     return annotation;
   }
 
+  // 既存アノテーションを編集する
   async updateAnnotation(
     docId: string,
     ownerId: string,
@@ -275,6 +288,7 @@ export class LyricsRepository {
     payload: { start: number; end: number; tag: string; comment?: string; props?: Record<string, unknown> }
   ): Promise<AnnotationRecord> {
     const lyric = await this.getLyric(docId, ownerId);
+    // 更新時も範囲チェックと重複チェックを再実施
     this.validateRange(payload.start, payload.end, lyric.text.length);
 
     if (
@@ -334,6 +348,7 @@ export class LyricsRepository {
     );
   }
 
+  // バージョン履歴を取得（新しい順）
   async listVersions(docId: string, ownerId: string): Promise<DocVersionRecord[]> {
     await this.ensureOwner(docId, ownerId);
     const result = await this.client.send(
@@ -343,13 +358,14 @@ export class LyricsRepository {
         ExpressionAttributeValues: {
           ':docId': docId
         },
-        ScanIndexForward: false
+        ScanIndexForward: false // 降順（新しい順）で取得
       })
     );
 
     return (result.Items ?? []) as DocVersionRecord[];
   }
 
+  // 指定バージョンのスナップショットを取得する
   async getVersion(docId: string, version: number, ownerId: string): Promise<DocVersionRecord> {
     await this.ensureOwner(docId, ownerId);
     const result = await this.client.send(

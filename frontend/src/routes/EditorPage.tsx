@@ -62,8 +62,10 @@ export const EditorPage = () => {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       if (start !== end) {
+        // 範囲が選択されている場合は開始位置と終了位置を保持
         setSelection({ start, end });
       } else {
+        // 選択が解除されたらパレット表示もリセット
         setSelection(null);
       }
     };
@@ -107,6 +109,7 @@ export const EditorPage = () => {
     comment?: string;
     props?: { intensity?: string; length?: string };
   }) => {
+    // ミューテーションを呼び出したあと選択を解除し、次の入力に備える
     await annotations.create.mutateAsync(payload);
     setSelection(null);
   };
@@ -124,7 +127,7 @@ export const EditorPage = () => {
   };
 
   if (isLoading || !lyric) {
-    return <p className="text-muted-foreground">Loading editor…</p>;
+    return <p className="text-muted-foreground">エディタを読み込み中です…</p>;
   }
 
   return (
@@ -133,7 +136,7 @@ export const EditorPage = () => {
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-semibold text-foreground">{lyric.title}</h1>
-          <p className="text-sm text-muted-foreground">Doc ID: {lyric.docId}</p>
+          <p className="text-sm text-muted-foreground">ドキュメント ID: {lyric.docId}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -144,9 +147,11 @@ export const EditorPage = () => {
             }`}
             onClick={handleToggleShare}
           >
+            {/* 公開状態に応じてボタン表示を切り替える */}
             {lyric.isPublicView ? '公開リンクをオフにする' : '公開リンクをオンにする'}
           </button>
           <button className="rounded border border-red-200 bg-card px-3 py-2 text-sm text-red-600 hover:bg-red-50" onClick={handleDelete}>
+            {/* ドキュメントを削除。確認ダイアログあり */}
             削除
           </button>
         </div>
@@ -177,11 +182,13 @@ export const EditorPage = () => {
               className="rounded bg-primary px-5 py-2 font-semibold text-primary-foreground disabled:opacity-50"
               disabled={updateLyric.isPending}
             >
+              {/* 保存中はボタンを無効化して状態を表示 */}
               {updateLyric.isPending ? '保存中…' : '保存'}
             </button>
           </div>
           <div>
             <h2 className="text-lg font-semibold">レンダリング例</h2>
+            {/* 歌詞本文に注釈を当てたプレビュー */}
             <LyricDisplay text={lyric.text} annotations={lyric.annotations} />
           </div>
         </div>
@@ -207,6 +214,7 @@ export const EditorPage = () => {
           annotation={editing}
           onClose={() => setEditing(null)}
           onSave={handleUpdateAnnotation}
+          {/* 編集操作中のみ更新ボタンを無効化 */}
           isSaving={annotations.update.isPending}
         />
       )}

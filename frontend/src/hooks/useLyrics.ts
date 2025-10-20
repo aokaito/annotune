@@ -5,8 +5,11 @@ import type { LyricDocument, LyricVersionSnapshot, Annotation } from '../types';
 import { useAnnotuneApi } from './useAnnotuneApi';
 
 const keys = {
+  // ユーザーごとの歌詞一覧をキャッシュするキー
   list: (userId: string) => ['lyrics', userId] as const,
+  // 個別ドキュメント詳細のキャッシュキー
   lyric: (docId: string) => ['lyrics', 'detail', docId] as const,
+  // バージョン履歴のキャッシュキー
   versions: (docId: string) => ['lyrics', 'versions', docId] as const
 };
 
@@ -25,6 +28,7 @@ export const useLyric = (docId: string) => {
   return useQuery({
     queryKey: keys.lyric(docId),
     queryFn: () => api.getLyric(docId),
+    // まだ docId が決まっていない場合（URL 読み込み中など）は実行しない
     enabled: Boolean(docId)
   });
 };
@@ -34,6 +38,7 @@ export const useLyricVersions = (docId: string) => {
   return useQuery<LyricVersionSnapshot[]>({
     queryKey: keys.versions(docId),
     queryFn: () => api.listVersions(docId),
+    // ドキュメント ID が空のときは API を呼ばず、無駄なリクエストを避ける
     enabled: Boolean(docId)
   });
 };
@@ -44,8 +49,9 @@ export const useCreateLyric = () => {
   return useMutation({
     mutationFn: (payload: { title: string; text: string }) => api.createLyric(userId, payload),
     onSuccess: () => {
+      // 作成後に一覧を再取得し、成功トーストを表示
       queryClient.invalidateQueries({ queryKey: keys.list(userId) });
-      toast.success('Lyric created');
+      toast.success('ドキュメントを作成しました');
     }
   });
 };
@@ -57,9 +63,10 @@ export const useUpdateLyric = (docId: string) => {
     mutationFn: (payload: { title: string; text: string; version: number }) =>
       api.updateLyric(docId, payload),
     onSuccess: (lyric) => {
+      // 詳細・一覧双方のキャッシュを更新
       queryClient.invalidateQueries({ queryKey: keys.lyric(docId) });
       queryClient.invalidateQueries({ queryKey: keys.list(lyric.ownerId) });
-      toast.success('Lyric updated');
+      toast.success('ドキュメントを更新しました');
     }
   });
 };
@@ -70,8 +77,9 @@ export const useDeleteLyric = (docId: string) => {
   return useMutation({
     mutationFn: () => api.deleteLyric(docId),
     onSuccess: () => {
+      // 削除後は一覧を更新してカードを消す
       queryClient.invalidateQueries({ queryKey: keys.list(userId) });
-      toast.success('Lyric deleted');
+      toast.success('ドキュメントを削除しました');
     }
   });
 };
@@ -82,8 +90,9 @@ export const useShareLyric = (docId: string) => {
   return useMutation({
     mutationFn: (isPublic: boolean) => api.shareLyric(docId, isPublic),
     onSuccess: (lyric) => {
+      // 詳細キャッシュを更新し、公開状態に応じたメッセージを表示
       queryClient.invalidateQueries({ queryKey: keys.lyric(docId) });
-      toast.success(lyric.isPublicView ? 'Public sharing enabled' : 'Public sharing disabled');
+      toast.success(lyric.isPublicView ? '公開リンクを有効にしました' : '公開リンクを無効にしました');
     }
   });
 };
@@ -97,15 +106,17 @@ export const useAnnotationMutations = (docId: string) => {
     queryClient.invalidateQueries({ queryKey: keys.lyric(docId) });
   };
 
+  // 新規アノテーションを作成するミューテーション
   const create = useMutation({
     mutationFn: (payload: Omit<Annotation, 'annotationId' | 'createdAt' | 'updatedAt' | 'authorId'>) =>
       api.createAnnotation(docId, userId, payload),
     onSuccess: () => {
       invalidate();
-      toast.success('Annotation added');
+      toast.success('アノテーションを追加しました');
     }
   });
 
+  // 既存アノテーションを更新するミューテーション
   const update = useMutation({
     mutationFn: ({
       annotationId,
@@ -120,15 +131,16 @@ export const useAnnotationMutations = (docId: string) => {
     }) => api.updateAnnotation(docId, annotationId, payload),
     onSuccess: () => {
       invalidate();
-      toast.success('Annotation updated');
+      toast.success('アノテーションを更新しました');
     }
   });
 
+  // アノテーションを削除するミューテーション
   const remove = useMutation({
     mutationFn: (annotationId: string) => api.deleteAnnotation(docId, annotationId),
     onSuccess: () => {
       invalidate();
-      toast.success('Annotation removed');
+      toast.success('アノテーションを削除しました');
     }
   });
 

@@ -1,4 +1,4 @@
-// API Gateway の JWT クレームからユーザー情報を取り出す。
+// このユーティリティは API Gateway の JWT クレームからユーザー情報を取り出す。
 import type { APIGatewayProxyEventV2 } from 'aws-lambda';
 import { HttpError } from './http';
 import type { AnnotuneUser } from '../types';

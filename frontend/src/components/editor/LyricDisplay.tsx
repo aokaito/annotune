@@ -42,6 +42,7 @@ export const LyricDisplay = ({ text, annotations }: LyricDisplayProps) => {
     <div className="whitespace-pre-wrap rounded-lg border border-border bg-card p-6 font-medium text-foreground shadow-sm">
       {segments.map((segment, index) => {
         if (!segment.annotation) {
+          // アノテーションが付いていない部分はそのまま表示
           return <span key={`plain-${index}`}>{segment.text}</span>;
         }
         const style = getTagStyle(segment.annotation.tag);
@@ -51,6 +52,7 @@ export const LyricDisplay = ({ text, annotations }: LyricDisplayProps) => {
             className={`rounded px-1 underline decoration-2 ${style}`}
             title={segment.annotation.comment ?? segment.annotation.tag}
           >
+            {/* タグ付きの範囲は色付き背景と下線で強調 */}
             {segment.text}
           </span>
         );

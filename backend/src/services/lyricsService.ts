@@ -1,4 +1,4 @@
-// LyricsRepository を遅延生成しシングルトンで提供するサービス層。
+// このサービスは LyricsRepository を遅延生成し、シングルトンとして提供する。
 import { getDocumentClient } from '../utils/dynamo';
 import { getTableConfig } from '../config/env';
 import { LyricsRepository } from '../repositories/LyricsRepository';

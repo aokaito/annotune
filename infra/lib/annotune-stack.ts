@@ -1,4 +1,4 @@
-// Annotune 全体の AWS リソースをまとめて定義する CDK スタック。
+// このスタックでは Annotune 全体の AWS リソースをまとめて定義する。
 import * as path from 'path';
 import { Duration, RemovalPolicy, Stack, StackProps, aws_iam as iam } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
@@ -43,7 +43,7 @@ export class AnnotuneStack extends Stack {
       partitionKey: { name: 'docId', type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
-      pointInTimeRecovery: true
+      pointInTimeRecovery: true // 誤削除に備えてポイントインタイム復旧を有効化
     });
 
     lyricsTable.addGlobalSecondaryIndex({
@@ -57,7 +57,7 @@ export class AnnotuneStack extends Stack {
       partitionKey: { name: 'docId', type: AttributeType.STRING },
       sortKey: { name: 'annotationId', type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
-      removalPolicy: RemovalPolicy.DESTROY
+      removalPolicy: RemovalPolicy.DESTROY // 開発用途のため削除時にテーブルも削除
     });
 
     const versionsTable = new Table(this, 'VersionsTable', {
@@ -95,7 +95,7 @@ export class AnnotuneStack extends Stack {
       projectRoot: path.join(__dirname, '../../backend'),
       tsconfig: path.join(__dirname, '../../backend/tsconfig.json'),
       bundling: {
-        externalModules: ['aws-sdk']
+        externalModules: ['aws-sdk'] // ランタイムに同梱されている aws-sdk をバンドル対象から除外
       },
       environment: {
         LYRICS_TABLE_NAME: lyricsTable.tableName,
@@ -206,7 +206,7 @@ export class AnnotuneStack extends Stack {
         origin: new S3Origin(frontendBucket),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-        cachePolicy: CachePolicy.CACHING_OPTIMIZED
+        cachePolicy: CachePolicy.CACHING_OPTIMIZED // 静的アセットを CloudFront のキャッシュに乗せる
       },
       defaultRootObject: 'index.html'
     });

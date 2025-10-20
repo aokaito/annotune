@@ -18,16 +18,17 @@ export const Header = () => (
       <nav className="flex items-center gap-2">
         {/* 主要画面への遷移リンク */}
         <NavLink to="/" className={navClasses} end>
-          Dashboard
+          ダッシュボード
         </NavLink>
         <NavLink to="/versions/demo" className={navClasses}>
-          Versions
+          履歴
         </NavLink>
         <a
           className="rounded-md px-3 py-2 text-sm font-medium text-secondary-foreground hover:bg-secondary hover:text-secondary-foreground"
           href={import.meta.env.VITE_COGNITO_LOGIN_URL || '#'}
         >
-          Sign In
+          {/* Cognito Hosted UI のサインイン画面へ遷移 */}
+          サインイン
         </a>
       </nav>
     </div>

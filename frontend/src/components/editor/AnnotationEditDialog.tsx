@@ -39,6 +39,7 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, isSaving }: 
   });
 
   const handleSubmit = form.handleSubmit(async (values) => {
+    // 入力内容を数値に変換して API へ送り、完了後はモーダルを閉じる
     await onSave({
       annotationId: annotation.annotationId,
       start: Number(values.start),
@@ -58,6 +59,7 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, isSaving }: 
       <div className="w-full max-w-lg rounded-lg bg-card p-6 shadow-xl">
         <div className="flex items-center justify-between pb-4">
           <h2 className="text-lg font-semibold text-foreground">アノテーションの編集</h2>
+          {/* × ボタンでモーダルを閉じる */}
           <button onClick={onClose} className="text-muted-foreground">
             ✕
           </button>
@@ -65,7 +67,7 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, isSaving }: 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <label className="flex flex-col gap-2">
-              <span className="font-medium text-foreground">Start</span>
+              <span className="font-medium text-foreground">開始位置</span>
               <input
                 type="number"
                 className="rounded border border-border bg-card px-3 py-2"
@@ -73,7 +75,7 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, isSaving }: 
               />
             </label>
             <label className="flex flex-col gap-2">
-              <span className="font-medium text-foreground">End</span>
+              <span className="font-medium text-foreground">終了位置</span>
               <input
                 type="number"
                 className="rounded border border-border bg-card px-3 py-2"
@@ -104,7 +106,7 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, isSaving }: 
           </label>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <label className="flex flex-col gap-2">
-              <span className="font-medium text-foreground">Intensity</span>
+              <span className="font-medium text-foreground">強さ</span>
               <select className="rounded border border-border bg-card px-3 py-2" {...form.register('intensity')}>
                 <option value="low">弱</option>
                 <option value="medium">中</option>
@@ -112,7 +114,7 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, isSaving }: 
               </select>
             </label>
             <label className="flex flex-col gap-2">
-              <span className="font-medium text-foreground">Length</span>
+              <span className="font-medium text-foreground">長さ</span>
               <select className="rounded border border-border bg-card px-3 py-2" {...form.register('length')}>
                 <option value="short">短</option>
                 <option value="medium">中</option>
@@ -122,14 +124,14 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, isSaving }: 
           </div>
           <div className="flex justify-end gap-2">
             <button type="button" className="rounded border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground" onClick={onClose}>
-              Cancel
+              キャンセル
             </button>
             <button
               type="submit"
               className="rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
               disabled={isSaving}
             >
-              {isSaving ? 'Saving…' : '更新する'}
+              {isSaving ? '保存中…' : '更新する'}
             </button>
           </div>
         </form>

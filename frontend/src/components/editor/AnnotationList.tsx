@@ -22,6 +22,7 @@ export const AnnotationList = ({ annotations, onEdit, onDelete }: AnnotationList
       {annotations.map((annotation) => (
         <li key={annotation.annotationId} className="rounded-lg border border-border bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between">
+            {/* タグ名と位置情報をまとめて表示 */}
             <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${getTagStyle(annotation.tag)}`}>
               {annotation.tag}
               <span className="font-mono text-[10px] text-muted-foreground">
@@ -33,12 +34,14 @@ export const AnnotationList = ({ annotations, onEdit, onDelete }: AnnotationList
                 className="rounded border border-border px-2 py-1 text-muted-foreground hover:text-foreground"
                 onClick={() => onEdit(annotation)}
               >
+                {/* ダイアログを開いて編集 */}
                 編集
               </button>
               <button
                 className="rounded border border-red-200 bg-card px-2 py-1 text-red-600 hover:bg-red-50"
                 onClick={() => onDelete(annotation.annotationId)}
               >
+                {/* 即削除。バックエンドでも所有者チェックあり */}
                 削除
               </button>
             </div>
@@ -52,13 +55,15 @@ export const AnnotationList = ({ annotations, onEdit, onDelete }: AnnotationList
             <dl className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
               {annotation.props.intensity && (
                 <div>
-                  <dt className="font-semibold">Intensity</dt>
+                  {/* 強弱情報 */}
+                  <dt className="font-semibold">強さ</dt>
                   <dd>{annotation.props.intensity}</dd>
                 </div>
               )}
               {annotation.props.length && (
                 <div>
-                  <dt className="font-semibold">Length</dt>
+                  {/* 長さ情報 */}
+                  <dt className="font-semibold">長さ</dt>
                   <dd>{annotation.props.length}</dd>
                 </div>
               )}

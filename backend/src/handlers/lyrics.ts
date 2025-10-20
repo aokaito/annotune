@@ -19,7 +19,7 @@ const parseBody = <T>(event: APIGatewayProxyEventV2): T => {
   try {
     return JSON.parse(event.body) as T;
   } catch (error) {
-    // JSON 解析に失敗した場合は 400 を返す
+    // リクエストボディの JSON 解析に失敗した場合は 400 を返す
     throw new HttpError(400, 'Invalid JSON payload');
   }
 };

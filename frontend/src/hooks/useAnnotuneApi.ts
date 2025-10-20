@@ -8,6 +8,7 @@ export const useAnnotuneApi = () => {
   return {
     // 本番ではここを実 API クライアントに差し替える想定
     api: mockApi,
+    // ログイン中ユーザーの ID（モックでは固定値）
     userId
   };
 };

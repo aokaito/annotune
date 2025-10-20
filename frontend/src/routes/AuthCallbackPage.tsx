@@ -1,4 +1,4 @@
-// Cognito Hosted UI からのリダイレクトを処理し、ユーザー情報を Zustand に保存する。
+// このコンポーネントは Cognito Hosted UI からのリダイレクトを処理し、ユーザー情報を Zustand に保存する。
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
@@ -17,8 +17,10 @@ export const AuthCallbackPage = () => {
       // 本番ではトークン検証後のユーザー情報を保存する想定
       setAuthenticated('stub-user', displayName);
     }
+    // コールバック完了後はトップページへ戻す
     navigate('/', { replace: true });
   }, [location.hash, navigate, setAuthenticated]);
 
-  return <p className="text-muted-foreground">Signing you in…</p>;
+  // ホストされた UI から戻った直後に一瞬だけ表示されるメッセージ
+  return <p className="text-muted-foreground">サインイン処理中です…</p>;
 };

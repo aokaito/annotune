@@ -1,11 +1,11 @@
-// API Gateway で使うレスポンス整形とエラーハンドリングを提供。
+// このモジュールは API Gateway で使うレスポンス整形とエラーハンドリングを提供する。
 import type { APIGatewayProxyResultV2 } from 'aws-lambda';
 
 export const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyResultV2 => ({
   statusCode,
   headers: {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN ?? '*',
+    'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN ?? '*', // クロスオリジン制御のための設定。必要に応じてフロントのドメインに限定する
     'Access-Control-Allow-Credentials': 'true'
   },
   body: JSON.stringify(body)

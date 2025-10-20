@@ -1,4 +1,4 @@
-// API Gateway のルートキーに応じて個別ハンドラへディスパッチするエントリーポイント。
+// このファイルは API Gateway のルートキーに応じて個別ハンドラへディスパッチするエントリーポイント。
 import type { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import {
   createAnnotationHandler,

@@ -102,14 +102,16 @@ const createSeedData = (ownerId: string): MockDatabase => {
 };
 
 export const createMockApi = (ownerId: string): AnnotuneApi => {
-  // Map を使って疑似的な永続化を再現
+  // マップ構造を使って疑似的な永続化を再現
   const db = createSeedData(ownerId);
 
   return {
+    // ドキュメント一覧を取得する（ダッシュボードで使用）
     async listLyrics(requestOwnerId) {
       // オーナー一致のドキュメントのみ返却
       return [...db.lyrics.values()].filter((lyric) => lyric.ownerId === requestOwnerId);
     },
+    // 新しい歌詞ドキュメントを作成する
     async createLyric(requestOwnerId, payload) {
       const docId = nanoid();
       const now = new Date().toISOString();
@@ -137,9 +139,11 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       ]);
       return lyric;
     },
+    // 個別の歌詞ドキュメントを取得する
     async getLyric(docId) {
       return db.lyrics.get(docId);
     },
+    // 歌詞ドキュメントを更新し、バージョンを 1 進める
     async updateLyric(docId, payload) {
       const existing = db.lyrics.get(docId);
       if (!existing) {
@@ -170,10 +174,12 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       db.versions.set(docId, snapshots);
       return updated;
     },
+    // 歌詞ドキュメントを完全に削除する
     async deleteLyric(docId) {
       db.lyrics.delete(docId);
       db.versions.delete(docId);
     },
+    // 公開／非公開の状態を切り替える
     async shareLyric(docId, isPublicView) {
       const existing = db.lyrics.get(docId);
       if (!existing) {
@@ -183,6 +189,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       db.lyrics.set(docId, updated);
       return updated;
     },
+    // 新しいアノテーションを追加する
     async createAnnotation(docId, authorId, payload) {
       const existing = db.lyrics.get(docId);
       if (!existing) {
@@ -216,6 +223,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       db.lyrics.set(docId, updated);
       return updated;
     },
+    // 既存のアノテーションを編集する
     async updateAnnotation(docId, annotationId, payload) {
       const existing = db.lyrics.get(docId);
       if (!existing) {
@@ -252,6 +260,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       db.lyrics.set(docId, updated);
       return updated;
     },
+    // 指定したアノテーションを削除する
     async deleteAnnotation(docId, annotationId) {
       const existing = db.lyrics.get(docId);
       if (!existing) {
@@ -266,14 +275,16 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       db.lyrics.set(docId, updated);
       return updated;
     },
+    // バージョン一覧を新しい順に取得する
     async listVersions(docId) {
       return [...(db.versions.get(docId) ?? [])].sort((a, b) => b.version - a.version);
     },
+    // 指定バージョン番号のスナップショットを取得する
     async getVersion(docId, version) {
       return (db.versions.get(docId) ?? []).find((snap) => snap.version === version);
     }
   };
 };
 
-// For MVP scaffolding we expose a default mock implementation.
+// この MVP フェーズの動作確認用にデフォルトユーザーのモック API をエクスポート
 export const mockApi = createMockApi('demo-user');

@@ -33,6 +33,7 @@ export const AnnotationPalette = ({ selection, onSubmit, isSubmitting }: Annotat
 
   const handleSubmit = form.handleSubmit(async (values) => {
     if (!selection) return;
+    // 現在の範囲選択とフォーム入力を合わせて送信
     await onSubmit({
       start: selection.start,
       end: selection.end,
@@ -49,7 +50,7 @@ export const AnnotationPalette = ({ selection, onSubmit, isSubmitting }: Annotat
   return (
     <aside className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
       <div>
-        <h3 className="text-lg font-semibold text-foreground">Annotation パレット</h3>
+        <h3 className="text-lg font-semibold text-foreground">アノテーションパレット</h3>
         <p className="text-sm text-muted-foreground">
           テキストエリアで範囲を選択し、タグを追加します。
         </p>
@@ -61,12 +62,14 @@ export const AnnotationPalette = ({ selection, onSubmit, isSubmitting }: Annotat
             <span className="font-mono">{selection.end}</span>
           </p>
         ) : (
+          // まだ歌詞が選択されていない場合のガイド
           <p className="text-center text-muted-foreground">歌詞を選択するとここに表示されます。</p>
         )}
       </div>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <label className="flex flex-col gap-2 text-sm">
           <span className="font-medium text-foreground">タグ</span>
+          {/* プリセットタグから選択する。将来的にカスタムタグも追加予定 */}
           <select
             className="rounded border border-border bg-card px-3 py-2"
             {...form.register('tag', { required: true })}
@@ -88,7 +91,7 @@ export const AnnotationPalette = ({ selection, onSubmit, isSubmitting }: Annotat
         </label>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <label className="flex flex-col gap-2">
-            <span className="font-medium text-foreground">Intensity</span>
+            <span className="font-medium text-foreground">強さ</span>
             <select className="rounded border border-border bg-card px-3 py-2" {...form.register('intensity')}>
               <option value="low">弱</option>
               <option value="medium">中</option>
@@ -96,7 +99,7 @@ export const AnnotationPalette = ({ selection, onSubmit, isSubmitting }: Annotat
             </select>
           </label>
           <label className="flex flex-col gap-2">
-            <span className="font-medium text-foreground">Length</span>
+            <span className="font-medium text-foreground">長さ</span>
             <select className="rounded border border-border bg-card px-3 py-2" {...form.register('length')}>
               <option value="short">短</option>
               <option value="medium">中</option>
@@ -109,6 +112,7 @@ export const AnnotationPalette = ({ selection, onSubmit, isSubmitting }: Annotat
           type="submit"
           disabled={!selection || isSubmitting}
         >
+          {/* 選択範囲が無い場合や送信中は押せない */}
           {isSubmitting ? '保存中…' : 'アノテーション追加'}
         </button>
       </form>

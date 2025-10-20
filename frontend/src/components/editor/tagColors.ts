@@ -14,10 +14,10 @@ export const getTagStyle = (tag: AnnotationTag) =>
   tagPalette[tag] ?? 'bg-amber-100 text-amber-900 border-amber-300';
 
 export const presetTags: { id: AnnotationTag; label: string }[] = [
-  { id: 'vibrato', label: 'Vibrato' },
-  { id: 'scoop', label: 'Scoop' },
-  { id: 'fall', label: 'Fall' },
-  { id: 'slide', label: 'Slide' },
-  { id: 'hold', label: 'Hold' },
-  { id: 'breath', label: 'Breath' }
+  { id: 'vibrato', label: 'ビブラート' },
+  { id: 'scoop', label: 'しゃくり' },
+  { id: 'fall', label: 'フォール' },
+  { id: 'slide', label: 'スライド' },
+  { id: 'hold', label: 'ホールド' },
+  { id: 'breath', label: 'ブレス' }
 ];

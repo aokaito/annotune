@@ -5,7 +5,7 @@ export const nanoid = (size = 12): string => {
   let id = '';
   const cryptoObj = globalThis.crypto || undefined;
   if (cryptoObj && 'getRandomValues' in cryptoObj) {
-    // ブラウザの暗号化 API を利用した高品質な乱数
+    // ブラウザの暗号化 API を利用して高品質な乱数を取得する
     const randomValues = new Uint32Array(size);
     cryptoObj.getRandomValues(randomValues);
     for (let i = 0; i < size; i += 1) {
@@ -13,7 +13,7 @@ export const nanoid = (size = 12): string => {
     }
     return id;
   }
-  // Crypto API 非対応環境では Math.random にフォールバック
+  // 暗号化 API に非対応の環境では Math.random にフォールバックする
   for (let i = 0; i < size; i += 1) {
     const idx = Math.floor(Math.random() * alphabet.length);
     id += alphabet[idx];

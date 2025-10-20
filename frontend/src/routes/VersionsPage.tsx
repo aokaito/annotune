@@ -8,7 +8,7 @@ export const VersionsPage = () => {
   const { data: versions, isLoading } = useLyricVersions(docId);
 
   if (isLoading) {
-    return <p className="text-muted-foreground">Loading versions…</p>;
+    return <p className="text-muted-foreground">バージョン履歴を読み込み中です…</p>;
   }
 
   if (!versions || versions.length === 0) {
@@ -26,13 +26,15 @@ export const VersionsPage = () => {
         {versions.map((version) => (
           <li key={version.version} className="rounded-lg border border-border bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground">Version {version.version}</h2>
+              {/* バージョン番号と作成日時を表示 */}
+              <h2 className="text-lg font-semibold text-foreground">バージョン {version.version}</h2>
               <span className="text-sm text-muted-foreground">
                 {new Date(version.createdAt).toLocaleString()}
               </span>
             </div>
             <pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap rounded bg-muted/60 p-4 text-sm text-foreground">
-{version.text}
+              {/* その時点の歌詞全文を表示。長文の場合はスクロール可能 */}
+              {version.text}
             </pre>
           </li>
         ))}
