@@ -1,3 +1,4 @@
+// バックエンドで再利用するドメイン型定義。
 export type AnnotationTag =
   | 'vibrato'
   | 'scoop'

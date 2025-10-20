@@ -1,3 +1,4 @@
+// フロントエンドで利用する共通型定義。
 export type AnnotationTag =
   | 'vibrato'
   | 'scoop'

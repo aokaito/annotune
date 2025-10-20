@@ -1,3 +1,4 @@
+// API Gateway のルートキーに応じて個別ハンドラへディスパッチするエントリーポイント。
 import type { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import {
   createAnnotationHandler,
@@ -37,6 +38,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (
   const target = routeHandlers[routeKey];
 
   if (!target) {
+    // 実装されていないルートの場合は 404 を返却
     return jsonResponse(404, { message: `Route ${routeKey} not implemented` });
   }
 

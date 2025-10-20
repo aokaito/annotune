@@ -1,3 +1,4 @@
+// 既存アノテーションを編集するモーダルダイアログ。
 import { useForm } from 'react-hook-form';
 import { Annotation } from '../../types';
 import { presetTags } from './tagColors';

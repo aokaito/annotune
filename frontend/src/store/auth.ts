@@ -1,3 +1,4 @@
+// Cognito 認証情報を保持するシンプルな Zustand ストア。
 import { create } from 'zustand';
 
 interface AuthState {

@@ -1,3 +1,4 @@
+// アノテーションタグごとの配色を定義し、表示用クラスを返す。
 import type { AnnotationTag } from '../../types';
 
 export const tagPalette: Record<AnnotationTag, string> = {

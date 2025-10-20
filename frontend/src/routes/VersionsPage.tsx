@@ -1,3 +1,4 @@
+// バージョン履歴を一覧表示するページ。スナップショットを時系列で確認できる。
 import { useParams } from 'react-router-dom';
 import { useLyric, useLyricVersions } from '../hooks/useLyrics';
 
@@ -17,6 +18,7 @@ export const VersionsPage = () => {
   return (
     <section className="space-y-4">
       <header>
+        {/* 対象ドキュメント名と説明 */}
         <h1 className="text-2xl font-semibold text-foreground">{lyric?.title ?? 'Lyric'} のバージョン履歴</h1>
         <p className="text-sm text-muted-foreground">最新が上に表示されます。</p>
       </header>

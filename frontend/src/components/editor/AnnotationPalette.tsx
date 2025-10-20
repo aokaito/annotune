@@ -1,3 +1,4 @@
+// 注釈追加用フォーム。選択範囲とタグ／コメントを入力させる。
 import { useForm } from 'react-hook-form';
 import { presetTags } from './tagColors';
 

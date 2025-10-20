@@ -1,6 +1,8 @@
+// フロントエンド開発時に利用するインメモリのモック API 実装。
 import { nanoid } from '../utils/nanoid';
 import type { Annotation, LyricDocument, LyricVersionSnapshot } from '../types';
 
+// 各 API エンドポイントに対応するリクエストペイロード型
 export interface CreateLyricPayload {
   title: string;
   text: string;
@@ -25,6 +27,7 @@ interface MockDatabase {
   versions: Map<string, LyricVersionSnapshot[]>;
 }
 
+// フロントエンドが利用する API インターフェース
 export interface AnnotuneApi {
   listLyrics(ownerId: string): Promise<LyricDocument[]>;
   createLyric(ownerId: string, payload: CreateLyricPayload): Promise<LyricDocument>;
@@ -43,12 +46,14 @@ export interface AnnotuneApi {
   getVersion(docId: string, version: number): Promise<LyricVersionSnapshot | undefined>;
 }
 
+// 範囲が歌詞の長さを超えたり逆転していないか検証
 const clampRange = (text: string, start: number, end: number) => {
   if (start < 0 || end > text.length || start >= end) {
     throw new Error('Invalid annotation range');
   }
 };
 
+// デモ用の初期データを生成
 const createSeedData = (ownerId: string): MockDatabase => {
   const lyric: LyricDocument = {
     docId: 'demo-doc',
@@ -97,10 +102,12 @@ const createSeedData = (ownerId: string): MockDatabase => {
 };
 
 export const createMockApi = (ownerId: string): AnnotuneApi => {
+  // Map を使って疑似的な永続化を再現
   const db = createSeedData(ownerId);
 
   return {
     async listLyrics(requestOwnerId) {
+      // オーナー一致のドキュメントのみ返却
       return [...db.lyrics.values()].filter((lyric) => lyric.ownerId === requestOwnerId);
     },
     async createLyric(requestOwnerId, payload) {
@@ -139,6 +146,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
         throw new Error('Lyric not found');
       }
       if (existing.version !== payload.version) {
+        // バージョンがずれている場合は楽観ロックエラーとする
         throw new Error('Version conflict');
       }
       const nextVersion = existing.version + 1;
@@ -197,6 +205,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
           (ann) => !(payload.end <= ann.start || payload.start >= ann.end)
         )
       ) {
+        // 範囲が既存アノテーションと重複する場合は弾く
         throw new Error('Annotation overlaps with existing range');
       }
       const updated: LyricDocument = {

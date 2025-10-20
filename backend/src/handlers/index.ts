@@ -1,3 +1,4 @@
+// Lambda エントリーポイントで利用しやすいようハンドラを再エクスポート。
 export {
   createLyricHandler,
   listLyricsHandler,

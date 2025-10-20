@@ -1,3 +1,4 @@
+// 歌詞本文とアノテーションを分割表示し、タグに応じた装飾を行う。
 import { Annotation } from '../../types';
 import { getTagStyle } from './tagColors';
 

@@ -1,3 +1,4 @@
+// エディタ画面：歌詞本文の編集、注釈 CRUD、共有トグルをまとめた中核ページ。
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -27,6 +28,7 @@ export const EditorPage = () => {
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
   const [editing, setEditing] = useState<Annotation | null>(null);
 
+  // 歌詞データと各種ミューテーションを取得
   const { data: lyric, isLoading } = useLyric(docId);
   const updateLyric = useUpdateLyric(docId);
   const deleteLyric = useDeleteLyric(docId);
@@ -41,6 +43,7 @@ export const EditorPage = () => {
     }
   });
 
+  // 取得した歌詞データでフォーム値を初期化
   useEffect(() => {
     if (lyric) {
       form.reset({
@@ -51,6 +54,7 @@ export const EditorPage = () => {
     }
   }, [lyric, form]);
 
+  // テキストエリアの選択範囲を監視し、注釈パレットへ渡す
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -73,6 +77,7 @@ export const EditorPage = () => {
     };
   }, []);
 
+  // 保存ボタン押下で歌詞ドキュメントを更新
   const handleSave = form.handleSubmit(async (values) => {
     await updateLyric.mutateAsync({
       title: values.title,
@@ -81,17 +86,20 @@ export const EditorPage = () => {
     });
   });
 
+  // ドキュメント削除を実行しダッシュボードに戻る
   const handleDelete = async () => {
     if (!window.confirm('本当に削除しますか？')) return;
     await deleteLyric.mutateAsync();
     navigate('/');
   };
 
+  // 公開設定のトグル
   const handleToggleShare = async () => {
     if (!lyric) return;
     await shareLyric.mutateAsync(!lyric.isPublicView);
   };
 
+  // 新規注釈作成後に選択状態をクリア
   const handleAddAnnotation = async (payload: {
     start: number;
     end: number;
@@ -103,6 +111,7 @@ export const EditorPage = () => {
     setSelection(null);
   };
 
+  // 注釈編集完了時のハンドラ
   const handleUpdateAnnotation = async (payload: {
     annotationId: string;
     start: number;
@@ -119,6 +128,7 @@ export const EditorPage = () => {
   }
 
   return (
+    // 画面全体を縦並びのセクションで構築
     <section className="flex flex-col gap-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>

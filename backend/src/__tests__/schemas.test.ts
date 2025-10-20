@@ -1,3 +1,4 @@
+// zod スキーマの基本的なバリデーション動作を確認する単体テスト。
 import { describe, expect, it } from 'vitest';
 import { annotationSchema, createLyricSchema } from '../schemas/lyrics';
 

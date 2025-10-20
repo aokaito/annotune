@@ -1,3 +1,4 @@
+// Annotune 全体の AWS リソースをまとめて定義する CDK スタック。
 import * as path from 'path';
 import { Duration, RemovalPolicy, Stack, StackProps, aws_iam as iam } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
@@ -36,6 +37,7 @@ export class AnnotuneStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
+    // ---- DynamoDB テーブル定義 ----
     const lyricsTable = new Table(this, 'LyricsTable', {
       tableName: 'AnnotuneLyrics',
       partitionKey: { name: 'docId', type: AttributeType.STRING },
@@ -66,6 +68,7 @@ export class AnnotuneStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY
     });
 
+    // ---- 認証（Cognito）リソース ----
     const userPool = new UserPool(this, 'AnnotuneUserPool', {
       selfSignUpEnabled: true,
       signInAliases: { email: true },
@@ -82,6 +85,7 @@ export class AnnotuneStack extends Stack {
       }
     });
 
+    // ---- Lambda（バックエンド） ----
     const handler = new NodejsFunction(this, 'AnnotuneApiHandler', {
       entry: path.join(__dirname, '../../backend/src/handlers/router.ts'),
       runtime: Runtime.NODEJS_20_X,
@@ -118,6 +122,7 @@ export class AnnotuneStack extends Stack {
       userPoolClients: [userPoolClient]
     });
 
+    // ---- API Gateway ----
     const httpApi = new HttpApi(this, 'AnnotuneHttpApi', {
       corsPreflight: {
         allowHeaders: ['Authorization', 'Content-Type', 'X-Doc-Version'],
@@ -135,6 +140,7 @@ export class AnnotuneStack extends Stack {
 
     const integration = new HttpLambdaIntegration('AnnotuneIntegration', handler);
 
+    // 認証が必要なルートの一覧
     const protectedRoutes: { path: string; method: HttpMethod; handler: string }[] = [
       { path: '/v1/lyrics', method: HttpMethod.POST, handler: 'createLyricHandler' },
       { path: '/v1/lyrics', method: HttpMethod.GET, handler: 'listLyricsHandler' },
@@ -188,6 +194,7 @@ export class AnnotuneStack extends Stack {
       authorizer: undefined
     });
 
+    // ---- フロントエンド配信（S3 + CloudFront）----
     const frontendBucket = new Bucket(this, 'AnnotuneWebBucket', {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -204,6 +211,7 @@ export class AnnotuneStack extends Stack {
       defaultRootObject: 'index.html'
     });
 
+    // ビルド済みフロントエンドを S3 に配置し、CloudFront を更新
     new BucketDeployment(this, 'AnnotuneBucketDeployment', {
       sources: [Source.asset(path.join(__dirname, '../../frontend/dist'))],
       destinationBucket: frontendBucket,
@@ -211,6 +219,7 @@ export class AnnotuneStack extends Stack {
       distributionPaths: ['/*']
     });
 
+    // 主要リソースの識別子を CloudFormation Output として出力
     this.exportValue(httpApi.url ?? '', { name: 'AnnotuneHttpApiUrl' });
     this.exportValue(distribution.domainName, { name: 'AnnotuneWebDistributionDomain' });
     this.exportValue(userPool.userPoolId, { name: 'AnnotuneUserPoolId' });

@@ -1,3 +1,4 @@
+// ダッシュボード画面：歌詞ドキュメントの一覧表示と新規作成を担当。
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -9,14 +10,17 @@ type FormValues = {
 };
 
 const CreateLyricForm = ({ onClose }: { onClose(): void }) => {
+  // フォームの初期値とバリデーションを設定
   const form = useForm<FormValues>({
     defaultValues: {
       title: 'New Song',
       text: ''
     }
   });
+  // 歌詞ドキュメント作成用のミューテーション
   const mutation = useCreateLyric();
 
+  // 送信時に API を呼び出し、完了後にダイアログを閉じる
   const onSubmit = form.handleSubmit(async (values) => {
     await mutation.mutateAsync(values);
     onClose();
@@ -65,6 +69,7 @@ export const DashboardPage = () => {
   const [open, setOpen] = useState(false);
 
   return (
+    // 一覧・ホルダー・モーダルを段組みで構成
     <section className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
@@ -89,6 +94,7 @@ export const DashboardPage = () => {
           {lyrics.map((lyric) => (
             <li key={lyric.docId} className="rounded-lg border border-border bg-card p-5 shadow-sm">
               <div className="flex items-start justify-between">
+                {/* タイトル・更新日・公開状態を表示 */}
                 <div>
                   <h2 className="text-xl font-semibold">{lyric.title}</h2>
                   <p className="text-xs text-muted-foreground">

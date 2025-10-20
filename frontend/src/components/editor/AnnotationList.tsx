@@ -1,3 +1,4 @@
+// 注釈の一覧をカード表示し、編集・削除操作を提供する。
 import { Annotation } from '../../types';
 import { getTagStyle } from './tagColors';
 

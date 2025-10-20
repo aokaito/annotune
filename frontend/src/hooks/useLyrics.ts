@@ -1,3 +1,4 @@
+// 歌詞ドキュメントとアノテーションの React Query ラッパーをまとめたフック群。
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import type { LyricDocument, LyricVersionSnapshot, Annotation } from '../types';
@@ -12,6 +13,7 @@ const keys = {
 export const useLyricsList = () => {
   const { api, userId } = useAnnotuneApi();
   return useQuery({
+    // 一覧取得（mine=true 相当）
     queryKey: keys.list(userId),
     queryFn: () => api.listLyrics(userId),
     staleTime: 1000 * 10
@@ -91,6 +93,7 @@ export const useAnnotationMutations = (docId: string) => {
   const queryClient = useQueryClient();
 
   const invalidate = () => {
+    // 詳細画面のキャッシュを更新
     queryClient.invalidateQueries({ queryKey: keys.lyric(docId) });
   };
 

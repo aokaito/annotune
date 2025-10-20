@@ -1,3 +1,4 @@
+// DynamoDB を操作し歌詞・アノテーションの CRUD を提供するリポジトリ。
 import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
 import { GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
@@ -6,8 +7,10 @@ import { HttpError } from '../utils/http';
 import type { AnnotationRecord, DocVersionRecord, LyricDocument } from '../types';
 import type { TableConfig } from '../config/env';
 
+// ISO 文字列の現在時刻を返すヘルパー
 const now = () => new Date().toISOString();
 
+// 二つの範囲が重なるかを判定するユーティリティ
 const overlaps = (aStart: number, aEnd: number, bStart: number, bEnd: number) =>
   !(aEnd <= bStart || aStart >= bEnd);
 
@@ -37,6 +40,7 @@ export class LyricsRepository {
         })
       );
     } catch (error) {
+      // 条件付き書き込みが失敗した場合は 409 を投げる
       this.handleConditionalError(error, 'Document already exists');
     }
 
@@ -99,6 +103,7 @@ export class LyricsRepository {
     }
 
     const annotations = await this.loadAnnotations(docId);
+    // アノテーションを付加した複合オブジェクトを返す
     return { ...lyric, annotations };
   }
 
@@ -151,6 +156,7 @@ export class LyricsRepository {
         })
       );
     } catch (error) {
+      // バージョン不一致または権限不足
       this.handleConditionalError(error, 'Version conflict or forbidden', 409);
     }
 
@@ -160,6 +166,7 @@ export class LyricsRepository {
 
     const updated = result.Attributes as LyricDocument;
 
+    // バージョンスナップショットを保存して履歴を残す
     await this.storeVersionSnapshot({
       docId,
       version: updated.version,
@@ -254,6 +261,7 @@ export class LyricsRepository {
         })
       );
     } catch (error) {
+      // 同じ ID が存在するケースは理論上少ないが 409 を返す
       this.handleConditionalError(error, 'Annotation already exists');
     }
 
@@ -308,6 +316,7 @@ export class LyricsRepository {
     }
 
     if (!result.Attributes) {
+      // 条件付き更新が成功しても Attributes が無い場合は存在しなかったとみなす
       throw new HttpError(404, 'Annotation not found');
     }
 
@@ -315,6 +324,7 @@ export class LyricsRepository {
   }
 
   async deleteAnnotation(docId: string, ownerId: string, annotationId: string): Promise<void> {
+    // 所有者チェックのみ実施し、その後削除
     await this.getLyric(docId, ownerId);
     await this.client.send(
       new DeleteCommand({
@@ -382,6 +392,7 @@ export class LyricsRepository {
       throw new HttpError(404, 'Document not found');
     }
     if (record.Item.ownerId !== ownerId) {
+      // 所有者と異なる場合は編集権限なし
       throw new HttpError(403, 'Forbidden');
     }
   }

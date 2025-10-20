@@ -1,14 +1,17 @@
+/* Tailwind のレイヤーを読み込み、全体テーマを設定する */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  /* 標準フォントと配色モードを定義 */
   font-family: 'Inter', 'Noto Sans JP', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
     sans-serif;
   color-scheme: light;
 }
 
 body {
+  /* ページ全体の背景色と文字色をブラウン系で統一 */
   margin: 0;
   background-color: #f7f0e8;
   color: #3f2a20;

@@ -1,3 +1,4 @@
+// 公開リンク用の閲覧専用ページ。認証不要で表示される。
 import { useParams } from 'react-router-dom';
 import { useLyric } from '../hooks/useLyrics';
 import { LyricDisplay } from '../components/editor/LyricDisplay';
@@ -15,6 +16,7 @@ export const PublicViewPage = () => {
   }
 
   return (
+    // 公開情報と注釈をカードレイアウトで表示
     <article className="mx-auto max-w-3xl space-y-6 rounded-xl border border-border bg-card p-8 shadow-sm">
       <header className="space-y-1">
         <p className="text-xs uppercase tracking-wide text-secondary">Public View</p>

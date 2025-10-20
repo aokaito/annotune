@@ -1,3 +1,4 @@
+# Backend CI: バックエンドとインフラの検証・デプロイを自動化
 name: Backend CI
 
 on:
