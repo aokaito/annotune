@@ -1,0 +1,18 @@
+import type { APIGatewayProxyEventV2 } from 'aws-lambda';
+import { HttpError } from './http';
+import type { AnnotuneUser } from '../types';
+
+export const getAuthenticatedUser = (event: APIGatewayProxyEventV2): AnnotuneUser => {
+  const claims = event.requestContext.authorizer?.jwt?.claims as
+    | { sub?: string; name?: string }
+    | undefined;
+
+  if (!claims?.sub) {
+    throw new HttpError(401, 'Unauthorized');
+  }
+
+  return {
+    userId: claims.sub,
+    displayName: claims.name
+  };
+};

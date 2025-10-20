@@ -1,0 +1,31 @@
+import { Route, Routes } from 'react-router-dom';
+import { Suspense } from 'react';
+import { DashboardPage } from './routes/DashboardPage';
+import { EditorPage } from './routes/EditorPage';
+import { AuthCallbackPage } from './routes/AuthCallbackPage';
+import { PublicViewPage } from './routes/PublicViewPage';
+import { Header } from './components/layout/Header';
+import { VersionsPage } from './routes/VersionsPage';
+import { Toaster } from 'react-hot-toast';
+
+const App = () => {
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="mx-auto max-w-6xl px-6 pb-24 pt-10">
+        <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/editor/:docId" element={<EditorPage />} />
+            <Route path="/public/:docId" element={<PublicViewPage />} />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
+            <Route path="/versions/:docId" element={<VersionsPage />} />
+          </Routes>
+        </Suspense>
+      </main>
+      <Toaster position="top-right" />
+    </div>
+  );
+};
+
+export default App;
