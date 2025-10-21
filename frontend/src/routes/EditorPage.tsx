@@ -1,5 +1,5 @@
 // エディタ画面：歌詞本文の編集、注釈 CRUD、共有トグルをまとめた中核ページ。
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
@@ -42,6 +42,17 @@ export const EditorPage = () => {
       version: 1
     }
   });
+  const {
+    ref: textFieldRef,
+    ...textFieldProps
+  } = form.register('text', { required: true });
+  const bindTextareaRef = useCallback(
+    (element: HTMLTextAreaElement | null) => {
+      textareaRef.current = element;
+      textFieldRef(element);
+    },
+    [textFieldRef]
+  );
 
   // 取得した歌詞データでフォーム値を初期化
   useEffect(() => {
@@ -170,10 +181,10 @@ export const EditorPage = () => {
           <label className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-foreground">歌詞</span>
             <textarea
-              ref={textareaRef}
+              ref={bindTextareaRef}
               rows={10}
               className="rounded border border-border bg-card px-3 py-2 font-mono"
-              {...form.register('text', { required: true })}
+              {...textFieldProps}
             />
           </label>
           <div className="flex justify-end gap-2 text-sm">
@@ -214,8 +225,7 @@ export const EditorPage = () => {
           annotation={editing}
           onClose={() => setEditing(null)}
           onSave={handleUpdateAnnotation}
-          {/* 編集操作中のみ更新ボタンを無効化 */}
-          isSaving={annotations.update.isPending}
+          isSaving={annotations.update.isPending /* 編集操作中のみ更新ボタンを無効化 */}
         />
       )}
     </section>
