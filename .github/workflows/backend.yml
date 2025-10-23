@@ -22,8 +22,8 @@ jobs:
           node-version: 20
           cache: 'npm'
           cache-dependency-path: |
-            backend/package-lock.json
-            infra/package-lock.json
+            backend/package.json
+            infra/package.json
       - name: Install backend deps
         run: npm install
         working-directory: backend
