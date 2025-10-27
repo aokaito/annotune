@@ -13,7 +13,7 @@ import { AnnotationPalette } from '../components/editor/AnnotationPalette';
 import { LyricDisplay } from '../components/editor/LyricDisplay';
 import { AnnotationList } from '../components/editor/AnnotationList';
 import { AnnotationEditDialog } from '../components/editor/AnnotationEditDialog';
-import type { Annotation } from '../types';
+import type { Annotation, AnnotationProps } from '../types';
 
 interface FormValues {
   title: string;
@@ -26,7 +26,7 @@ export const EditorPage = () => {
   const navigate = useNavigate();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const lyricDisplayRef = useRef<HTMLDivElement | null>(null);
-  const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
+  const [selection, setSelection] = useState<{ start: number; end: number; text: string } | null>(null);
   const [editing, setEditing] = useState<Annotation | null>(null);
   const [isEditingLyrics, setIsEditingLyrics] = useState(false);
 
@@ -77,8 +77,9 @@ export const EditorPage = () => {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       if (start !== end) {
-        setSelection({ start, end });
-      } else {
+        const text = textarea.value.slice(start, end);
+        setSelection({ start, end, text });
+      } else if (document.activeElement === textarea) {
         setSelection(null);
       }
     };
@@ -99,7 +100,6 @@ export const EditorPage = () => {
       if (!container) return;
       const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-        setSelection(null);
         return;
       }
       const range = selection.getRangeAt(0);
@@ -112,12 +112,12 @@ export const EditorPage = () => {
       preRange.selectNodeContents(container);
       preRange.setEnd(range.startContainer, range.startOffset);
       const start = preRange.toString().length;
-      const selectedTextLength = range.toString().length;
+      const selectedText = range.toString();
+      const selectedTextLength = selectedText.length;
       if (selectedTextLength === 0) {
-        setSelection(null);
         return;
       }
-      setSelection({ start, end: start + selectedTextLength });
+      setSelection({ start, end: start + selectedTextLength, text: selectedText });
     };
     document.addEventListener('selectionchange', handleSelectionChange);
     return () => {
@@ -155,7 +155,7 @@ export const EditorPage = () => {
     end: number;
     tag: string;
     comment?: string;
-    props?: { intensity?: string; length?: string };
+    props?: AnnotationProps;
   }) => {
     // ミューテーションを呼び出したあと選択を解除し、次の入力に備える
     await annotations.create.mutateAsync(payload);
@@ -169,7 +169,7 @@ export const EditorPage = () => {
     end: number;
     tag: string;
     comment?: string;
-    props?: { intensity?: string; length?: string };
+    props?: AnnotationProps;
   }) => {
     await annotations.update.mutateAsync(payload);
   };

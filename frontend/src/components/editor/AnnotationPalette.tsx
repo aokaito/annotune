@@ -1,15 +1,16 @@
 // 注釈追加用フォーム。選択範囲とタグ／コメントを入力させる。
 import { useForm } from 'react-hook-form';
+import type { AnnotationProps } from '../../types';
 import { presetTags } from './tagColors';
 
 interface AnnotationPaletteProps {
-  selection: { start: number; end: number } | null;
+  selection: { start: number; end: number; text: string } | null;
   onSubmit: (payload: {
     start: number;
     end: number;
     tag: string;
     comment?: string;
-    props?: { intensity?: string; length?: string };
+    props?: AnnotationProps;
   }) => Promise<void>;
   isSubmitting: boolean;
 }
@@ -17,8 +18,8 @@ interface AnnotationPaletteProps {
 interface PaletteForm {
   tag: string;
   comment?: string;
-  intensity?: string;
-  length?: string;
+  intensity: 'low' | 'medium' | 'high';
+  length: 'short' | 'medium' | 'long';
 }
 
 export const AnnotationPalette = ({ selection, onSubmit, isSubmitting }: AnnotationPaletteProps) => {
@@ -57,12 +58,16 @@ export const AnnotationPalette = ({ selection, onSubmit, isSubmitting }: Annotat
       </div>
       <div className="flex min-h-[76px] items-center justify-center rounded border border-dashed border-border bg-card/70 px-4 text-sm">
         {selection ? (
-          <p className="text-foreground">
-            選択範囲: <span className="font-mono">{selection.start}</span> –{' '}
-            <span className="font-mono">{selection.end}</span>
-          </p>
+          <div className="flex w-full flex-col gap-2 text-foreground">
+            <p>
+              選択範囲: <span className="font-mono">{selection.start}</span> –{' '}
+              <span className="font-mono">{selection.end}</span>
+            </p>
+            <div className="rounded bg-muted px-3 py-2 font-mono text-sm whitespace-pre-wrap">
+              {selection.text}
+            </div>
+          </div>
         ) : (
-          // まだ歌詞が選択されていない場合のガイド
           <p className="text-center text-muted-foreground">歌詞を選択するとここに表示されます。</p>
         )}
       </div>
