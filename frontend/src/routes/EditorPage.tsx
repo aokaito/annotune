@@ -25,8 +25,10 @@ export const EditorPage = () => {
   const { docId = '' } = useParams();
   const navigate = useNavigate();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const lyricDisplayRef = useRef<HTMLDivElement | null>(null);
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
   const [editing, setEditing] = useState<Annotation | null>(null);
+  const [isEditingLyrics, setIsEditingLyrics] = useState(false);
 
   // 歌詞データと各種ミューテーションを取得
   const { data: lyric, isLoading } = useLyric(docId);
@@ -53,6 +55,7 @@ export const EditorPage = () => {
     },
     [textFieldRef]
   );
+  const watchedText = form.watch('text') ?? '';
 
   // 取得した歌詞データでフォーム値を初期化
   useEffect(() => {
@@ -67,16 +70,15 @@ export const EditorPage = () => {
 
   // テキストエリアの選択範囲を監視し、注釈パレットへ渡す
   useEffect(() => {
+    if (!isEditingLyrics) return;
     const textarea = textareaRef.current;
     if (!textarea) return;
     const handleSelection = () => {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       if (start !== end) {
-        // 範囲が選択されている場合は開始位置と終了位置を保持
         setSelection({ start, end });
       } else {
-        // 選択が解除されたらパレット表示もリセット
         setSelection(null);
       }
     };
@@ -88,7 +90,40 @@ export const EditorPage = () => {
       textarea.removeEventListener('mouseup', handleSelection);
       textarea.removeEventListener('keyup', handleSelection);
     };
-  }, []);
+  }, [isEditingLyrics]);
+
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      if (isEditingLyrics) return;
+      const container = lyricDisplayRef.current;
+      if (!container) return;
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+        setSelection(null);
+        return;
+      }
+      const range = selection.getRangeAt(0);
+      const { startContainer, endContainer } = range;
+      if (!container.contains(startContainer) || !container.contains(endContainer)) {
+        setSelection(null);
+        return;
+      }
+      const preRange = range.cloneRange();
+      preRange.selectNodeContents(container);
+      preRange.setEnd(range.startContainer, range.startOffset);
+      const start = preRange.toString().length;
+      const selectedTextLength = range.toString().length;
+      if (selectedTextLength === 0) {
+        setSelection(null);
+        return;
+      }
+      setSelection({ start, end: start + selectedTextLength });
+    };
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, [isEditingLyrics]);
 
   // 保存ボタン押下で歌詞ドキュメントを更新
   const handleSave = form.handleSubmit(async (values) => {
@@ -97,6 +132,8 @@ export const EditorPage = () => {
       text: values.text,
       version: values.version
     });
+    setIsEditingLyrics(false);
+    setSelection(null);
   });
 
   // ドキュメント削除を実行しダッシュボードに戻る
@@ -180,20 +217,39 @@ export const EditorPage = () => {
           </label>
           <label className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-foreground">歌詞</span>
-            <textarea
-              ref={bindTextareaRef}
-              rows={10}
-              className="rounded border border-border bg-card px-3 py-2 font-mono"
-              {...textFieldProps}
-            />
+            {isEditingLyrics ? (
+              <textarea
+                ref={bindTextareaRef}
+                rows={10}
+                className="rounded border border-border bg-card px-3 py-2 font-mono"
+                {...textFieldProps}
+              />
+            ) : (
+              <div
+                ref={lyricDisplayRef}
+                className="min-h-[160px] rounded border border-border bg-card px-3 py-2 font-mono whitespace-pre-wrap"
+              >
+                {watchedText}
+              </div>
+            )}
           </label>
           <div className="flex justify-end gap-2 text-sm">
             <button
+              type="button"
+              className="rounded border border-border bg-card px-5 py-2 font-semibold text-foreground disabled:opacity-50"
+              onClick={() => {
+                setIsEditingLyrics(true);
+                setSelection(null);
+              }}
+              disabled={isEditingLyrics}
+            >
+              編集
+            </button>
+            <button
               type="submit"
               className="rounded bg-primary px-5 py-2 font-semibold text-primary-foreground disabled:opacity-50"
-              disabled={updateLyric.isPending}
+              disabled={!isEditingLyrics || updateLyric.isPending}
             >
-              {/* 保存中はボタンを無効化して状態を表示 */}
               {updateLyric.isPending ? '保存中…' : '保存'}
             </button>
           </div>

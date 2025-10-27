@@ -86,16 +86,16 @@ export class AnnotuneStack extends Stack {
     });
 
     // ---- Lambda（バックエンド） ----
-    const handler = new NodejsFunction(this, 'AnnotuneApiHandler', {
+  const handler = new NodejsFunction(this, 'AnnotuneApiHandler', {
       entry: path.join(__dirname, '../../backend/src/handlers/router.ts'),
       runtime: Runtime.NODEJS_20_X,
       memorySize: 512,
       timeout: Duration.seconds(10),
       handler: 'handler',
       projectRoot: path.join(__dirname, '../../backend'),
-      tsconfig: path.join(__dirname, '../../backend/tsconfig.json'),
       bundling: {
-        externalModules: ['aws-sdk'] // ランタイムに同梱されている aws-sdk をバンドル対象から除外
+        externalModules: ['aws-sdk'], // ランタイムに同梱されている aws-sdk をバンドル対象から除外
+        tsconfig: path.join(__dirname, '../../backend/tsconfig.json')
       },
       environment: {
         LYRICS_TABLE_NAME: lyricsTable.tableName,
@@ -127,11 +127,11 @@ export class AnnotuneStack extends Stack {
       corsPreflight: {
         allowHeaders: ['Authorization', 'Content-Type', 'X-Doc-Version'],
         allowMethods: [
-          HttpMethod.GET,
-          HttpMethod.POST,
-          HttpMethod.PUT,
-          HttpMethod.DELETE,
-          HttpMethod.OPTIONS
+          CorsHttpMethod.GET,
+          CorsHttpMethod.POST,
+          CorsHttpMethod.PUT,
+          CorsHttpMethod.DELETE,
+          CorsHttpMethod.OPTIONS
         ],
         allowOrigins: ['*'],
         maxAge: Duration.days(1)
@@ -180,10 +180,7 @@ export class AnnotuneStack extends Stack {
         path: route.path,
         methods: [route.method],
         integration,
-        authorizer,
-        authorizerOptions: {
-          authorizerName: 'AnnotuneUserAuthorizer'
-        }
+        authorizer
       });
     });
 
