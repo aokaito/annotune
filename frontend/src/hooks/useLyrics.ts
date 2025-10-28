@@ -1,7 +1,7 @@
 // 歌詞ドキュメントとアノテーションの React Query ラッパーをまとめたフック群。
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import type { LyricDocument, LyricVersionSnapshot, Annotation } from '../types';
+import type { LyricVersionSnapshot, Annotation } from '../types';
 import { useAnnotuneApi } from './useAnnotuneApi';
 
 const keys = {
