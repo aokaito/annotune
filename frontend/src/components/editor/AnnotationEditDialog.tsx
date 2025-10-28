@@ -1,6 +1,6 @@
 // 既存アノテーションを編集するモーダルダイアログ。
 import { useForm } from 'react-hook-form';
-import { Annotation } from '../../types';
+import { Annotation, AnnotationProps } from '../../types';
 import { presetTags } from './tagColors';
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
     end: number;
     tag: string;
     comment?: string;
-    props?: { intensity?: string; length?: string };
+    props?: AnnotationProps;
   }) => Promise<void>;
   isSaving: boolean;
 }
@@ -22,8 +22,8 @@ type FormValues = {
   end: number;
   tag: string;
   comment?: string;
-  intensity?: string;
-  length?: string;
+  intensity?: 'low' | 'medium' | 'high';
+  length?: 'short' | 'medium' | 'long';
 };
 
 export const AnnotationEditDialog = ({ annotation, onClose, onSave, isSaving }: Props) => {
@@ -33,8 +33,8 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, isSaving }: 
       end: annotation.end,
       tag: annotation.tag,
       comment: annotation.comment,
-      intensity: annotation.props?.intensity as string,
-      length: annotation.props?.length as string
+      intensity: annotation.props?.intensity,
+      length: annotation.props?.length
     }
   });
 
