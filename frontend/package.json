@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "lint": "eslint \"src/**/*.{ts,tsx}\""
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.5",
@@ -33,6 +34,7 @@
     "@types/react-dom": "^18.3.2",
     "@typescript-eslint/eslint-plugin": "^7.16.1",
     "@typescript-eslint/parser": "^7.16.1",
+    "@playwright/test": "^1.48.2",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
     "eslint": "^8.57.0",

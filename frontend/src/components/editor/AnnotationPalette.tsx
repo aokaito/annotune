@@ -1,5 +1,7 @@
 // 注釈追加用フォーム。選択範囲とタグ／コメントを入力させる。
+// NOTE: デスクトップとモバイル Sheet の両方で再利用するためクラス付与を柔軟化。代替案: variant props を追加しても良い
 import { useForm } from 'react-hook-form';
+import { clsx } from 'clsx';
 import type { AnnotationProps } from '../../types';
 import { presetTags } from './tagColors';
 
@@ -13,6 +15,7 @@ interface AnnotationPaletteProps {
     props?: AnnotationProps;
   }) => Promise<void>;
   isSubmitting: boolean;
+  className?: string;
 }
 
 interface PaletteForm {
@@ -22,7 +25,7 @@ interface PaletteForm {
   length: 'short' | 'medium' | 'long';
 }
 
-export const AnnotationPalette = ({ selection, onSubmit, isSubmitting }: AnnotationPaletteProps) => {
+export const AnnotationPalette = ({ selection, onSubmit, isSubmitting, className }: AnnotationPaletteProps) => {
   const form = useForm<PaletteForm>({
     defaultValues: {
       tag: 'vibrato',
@@ -49,7 +52,7 @@ export const AnnotationPalette = ({ selection, onSubmit, isSubmitting }: Annotat
   });
 
   return (
-    <aside className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
+    <aside className={clsx('flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-sm', className)}>
       <div>
         <h3 className="text-lg font-semibold text-foreground">アノテーションパレット</h3>
         <p className="text-sm text-muted-foreground">

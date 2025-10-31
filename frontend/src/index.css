@@ -4,15 +4,32 @@
 @tailwind utilities;
 
 :root {
-  /* 標準フォントと配色モードを定義 */
+  /* NOTE: モバイルでも読みやすい流体タイポを CSS 変数で定義。代替案: tailwind のテーマ拡張で text-* を再定義しても良い */
   font-family: 'Inter', 'Noto Sans JP', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
     sans-serif;
   color-scheme: light;
+  font-size: clamp(14px, 1.6vw, 16px);
+  --radius: 0.5rem;
 }
 
 body {
-  /* ページ全体の背景色と文字色をブラウン系で統一 */
+  /* NOTE: 余白・行高を調整し横スクロールを防止。代替案: Tailwind の base レイヤーで body スタイルを上書き */
   margin: 0;
+  line-height: 1.6;
   background-color: #f7f0e8;
   color: #3f2a20;
+  -webkit-text-size-adjust: 100%;
+}
+
+img,
+video {
+  /* NOTE: メディアのはみ出し防止。代替案: Tailwind の prose クラスを利用してもよい */
+  max-width: 100%;
+  height: auto;
+}
+
+.wrap-anywhere {
+  /* NOTE: 長文・コードブロックの折返しを強制。代替案: Tailwind の break-anywhere ユーティリティを隣接要素ごとに付与 */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }

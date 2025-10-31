@@ -2,8 +2,12 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
+    <!-- NOTE: モバイルの表示崩れ抑止と安全領域対応のために viewport / PWA メタを追加。代替案: react-helmet で動的に挿入しても良いが、初期描画優先でここに記載 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#f7f0e8" />
     <link rel="icon" type="image/svg+xml" href="/annotune.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Annotune</title>
   </head>
   <body class="bg-background text-foreground">

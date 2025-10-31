@@ -73,14 +73,14 @@ export const DashboardPage = () => {
 
   return (
     // 一覧・ホルダー・モーダルを段組みで構成
-    <section className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold">あなたの歌詞ノート</h1>
-          <p className="text-muted-foreground">歌詞に注釈を付けて練習メモを整理しましょう。</p>
+    <section className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold sm:text-3xl">あなたの歌詞ノート</h1>
+          <p className="text-sm text-muted-foreground">歌詞に注釈を付けて練習メモを整理しましょう。</p>
         </div>
         <button
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 sm:w-auto"
           onClick={() => setOpen(true)}
         >
           {/* 新規ドキュメント作成モーダルを開く */}
@@ -94,19 +94,22 @@ export const DashboardPage = () => {
         </div>
       )}
       {lyrics && lyrics.length > 0 && (
-        <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {lyrics.map((lyric) => (
-            <li key={lyric.docId} className="rounded-lg border border-border bg-card p-5 shadow-sm">
-              <div className="flex items-start justify-between">
+            <li
+              key={lyric.docId}
+              className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-sm transition hover:shadow-md"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 {/* タイトル・更新日・公開状態を表示 */}
-                <div>
-                  <h2 className="text-xl font-semibold">{lyric.title}</h2>
-                  <p className="text-xs text-muted-foreground">
+                <div className="min-w-0 space-y-1">
+                  <h2 className="truncate text-lg font-semibold sm:text-xl">{lyric.title}</h2>
+                  <p className="text-xs text-muted-foreground sm:text-sm">
                     バージョン {lyric.version} ・ 最終更新 {new Date(lyric.updatedAt).toLocaleString()}
                   </p>
                 </div>
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${
+                  className={`inline-flex min-h-8 items-center rounded-full px-3 text-xs font-medium ${
                     lyric.isPublicView
                       ? 'bg-secondary text-secondary-foreground'
                       : 'bg-muted text-muted-foreground'
@@ -116,21 +119,21 @@ export const DashboardPage = () => {
                   {lyric.isPublicView ? '公開中' : '非公開'}
                 </span>
               </div>
-              <p className="mt-3 max-h-24 overflow-hidden whitespace-pre-line text-sm text-muted-foreground">
+              <p className="wrap-anywhere whitespace-pre-line text-sm text-muted-foreground">
                 {lyric.text}
               </p>
-              <div className="mt-4 flex items-center justify-between text-sm">
+              <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
                 <span className="text-muted-foreground">アノテーション {lyric.annotations.length} 件</span>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Link
-                    className="rounded-md border border-border px-3 py-1 text-muted-foreground hover:text-foreground"
+                    className="inline-flex min-h-10 items-center rounded-md border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"
                     to={`/editor/${lyric.docId}`}
                   >
                     {/* 詳細エディタ画面へ遷移 */}
                     編集
                   </Link>
                   <Link
-                    className="rounded-md border border-border px-3 py-1 text-muted-foreground hover:text-foreground"
+                    className="inline-flex min-h-10 items-center rounded-md border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"
                     to={`/versions/${lyric.docId}`}
                   >
                     {/* バージョン履歴画面へ遷移 */}
@@ -143,11 +146,15 @@ export const DashboardPage = () => {
         </ul>
       )}
       {open && (
-        <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-lg rounded-lg bg-card p-6 shadow-xl">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-xl bg-card p-6 shadow-xl">
             <div className="flex items-center justify-between pb-4">
               <h2 className="text-lg font-semibold">新しい歌詞ドキュメント</h2>
-              <button onClick={() => setOpen(false)} className="text-muted-foreground">
+              <button
+                onClick={() => setOpen(false)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted"
+                aria-label="モーダルを閉じる"
+              >
                 {/* モーダルを閉じるボタン */}
                 ✕
               </button>

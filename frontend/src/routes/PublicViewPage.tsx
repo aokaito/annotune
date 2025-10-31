@@ -1,4 +1,5 @@
 // 公開リンク用の閲覧専用ページ。認証不要で表示される。
+// NOTE: 1カラムで読みやすさを優先し、横スクロールを防ぐ wrap-anywhere を適用。代替案: prose クラスで typograpy を調整
 import { useParams } from 'react-router-dom';
 import { useLyric } from '../hooks/useLyrics';
 import { LyricDisplay } from '../components/editor/LyricDisplay';
@@ -18,20 +19,20 @@ export const PublicViewPage = () => {
 
   return (
     // 公開情報と注釈をカードレイアウトで表示
-    <article className="mx-auto max-w-3xl space-y-6 rounded-xl border border-border bg-card p-8 shadow-sm">
-      <header className="space-y-1">
-        <p className="text-xs uppercase tracking-wide text-secondary">公開ビュー</p>
-        <h1 className="text-3xl font-bold text-foreground">{lyric.title}</h1>
+    <article className="mx-auto w-full max-w-3xl space-y-6 rounded-2xl border border-border bg-card/90 px-4 py-6 shadow-sm sm:px-8 sm:py-8">
+      <header className="space-y-2">
+        <p className="text-xs uppercase tracking-wide text-secondary sm:text-sm">公開ビュー</p>
+        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{lyric.title}</h1>
         <p className="text-sm text-muted-foreground">
           バージョン {lyric.version} ・ 最終更新 {new Date(lyric.updatedAt).toLocaleString()}
         </p>
       </header>
       <LyricDisplay text={lyric.text} annotations={lyric.annotations} />
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold text-foreground">アノテーション一覧</h2>
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-foreground sm:text-xl">アノテーション一覧</h2>
         <ul className="space-y-2 text-sm text-muted-foreground">
           {lyric.annotations.map((annotation) => (
-            <li key={annotation.annotationId}>
+            <li key={annotation.annotationId} className="wrap-anywhere">
               {/* シンプルなテキスト形式でタグ・コメント・範囲を表示 */}
               [{annotation.tag}] {annotation.comment ?? 'コメントなし'} ({annotation.start} – {annotation.end})
             </li>

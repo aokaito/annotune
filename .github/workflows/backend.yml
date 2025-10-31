@@ -2,11 +2,13 @@
 name: Backend CI
 
 on:
+#対象パスが変わったら実行
   push:
     paths:
       - 'backend/**'
       - 'infra/**'
       - '.github/workflows/backend.yml'
+#PR 作成/更新時にも検証が走る
   pull_request:
     paths:
       - 'backend/**'
@@ -14,6 +16,7 @@ on:
 
 jobs:
   build:
+    #実行ランナー（最新のUbuntuイメージ）
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
