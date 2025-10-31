@@ -1,4 +1,5 @@
 // 歌詞本文とアノテーションを分割表示し、タグに応じた装飾を行う。
+// NOTE: 横スクロール防止とタイポグラフィ改善のため wrap-anywhere を適用。代替案: prose クラスを用いても良いが装飾制御を優先
 import { Annotation } from '../../types';
 import { getTagStyle } from './tagColors';
 
@@ -39,7 +40,7 @@ export const LyricDisplay = ({ text, annotations }: LyricDisplayProps) => {
   const segments = buildSegments(text, annotations);
 
   return (
-    <div className="whitespace-pre-wrap rounded-lg border border-border bg-card p-6 font-medium text-foreground shadow-sm">
+    <div className="wrap-anywhere whitespace-pre-wrap rounded-lg border border-border bg-card p-6 font-medium leading-relaxed text-foreground shadow-sm">
       {segments.map((segment, index) => {
         if (!segment.annotation) {
           // アノテーションが付いていない部分はそのまま表示

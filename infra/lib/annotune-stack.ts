@@ -1,5 +1,7 @@
 // このスタックでは Annotune 全体の AWS リソースをまとめて定義する。
+import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { Duration, RemovalPolicy, Stack, StackProps, aws_iam as iam } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import {
@@ -32,6 +34,21 @@ import {
 } from 'aws-cdk-lib/aws-cloudfront';
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const infraDir = currentDir.includes(`${path.sep}dist${path.sep}`)
+  ? path.resolve(currentDir, '..', '..')
+  : path.resolve(currentDir, '..');
+const repoRoot = path.resolve(infraDir, '..');
+const backendDir = path.join(repoRoot, 'backend');
+const frontendDistDir = path.join(repoRoot, 'frontend/dist');
+const frontendAssetDir = fs.existsSync(frontendDistDir)
+  ? frontendDistDir
+  : (() => {
+      const placeholderDir = path.join(infraDir, '.tmp', 'frontend-empty');
+      fs.mkdirSync(placeholderDir, { recursive: true });
+      return placeholderDir;
+    })();
 
 export class AnnotuneStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -87,15 +104,16 @@ export class AnnotuneStack extends Stack {
 
     // ---- Lambda（バックエンド） ----
   const handler = new NodejsFunction(this, 'AnnotuneApiHandler', {
-      entry: path.join(__dirname, '../../backend/src/handlers/router.ts'),
+      entry: path.join(backendDir, 'src/handlers/router.ts'),
       runtime: Runtime.NODEJS_20_X,
       memorySize: 512,
       timeout: Duration.seconds(10),
       handler: 'handler',
-      projectRoot: path.join(__dirname, '../../backend'),
+      projectRoot: repoRoot,
+      depsLockFilePath: path.join(repoRoot, 'package-lock.json'),
       bundling: {
         externalModules: ['aws-sdk'], // ランタイムに同梱されている aws-sdk をバンドル対象から除外
-        tsconfig: path.join(__dirname, '../../backend/tsconfig.json')
+        tsconfig: path.join(backendDir, 'tsconfig.json')
       },
       environment: {
         LYRICS_TABLE_NAME: lyricsTable.tableName,
@@ -210,7 +228,7 @@ export class AnnotuneStack extends Stack {
 
     // ビルド済みフロントエンドを S3 に配置し、CloudFront を更新
     new BucketDeployment(this, 'AnnotuneBucketDeployment', {
-      sources: [Source.asset(path.join(__dirname, '../../frontend/dist'))],
+      sources: [Source.asset(frontendAssetDir)],
       destinationBucket: frontendBucket,
       distribution,
       distributionPaths: ['/*']

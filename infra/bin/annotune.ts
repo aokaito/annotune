@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // このファイルは CDK アプリケーションのエントリーポイントであり、スタックをデプロイする。
-import 'source-map-support/register';
+import 'source-map-support/register.js';
 import * as cdk from 'aws-cdk-lib';
-import { AnnotuneStack } from '../lib/annotune-stack';
+import { AnnotuneStack } from '../lib/annotune-stack.js';
 
 const app = new cdk.App();
 

@@ -1,4 +1,5 @@
 // 注釈の一覧をカード表示し、編集・削除操作を提供する。
+// NOTE: モバイルでの折返しとタップ領域確保のためレイアウトを調整。代替案: テーブル表示に切り替えることも可能
 import { Annotation } from '../../types';
 import { getTagStyle } from './tagColors';
 
@@ -20,25 +21,25 @@ export const AnnotationList = ({ annotations, onEdit, onDelete }: AnnotationList
   return (
     <ul className="flex flex-col gap-3">
       {annotations.map((annotation) => (
-        <li key={annotation.annotationId} className="rounded-lg border border-border bg-card p-4 shadow-sm">
-          <div className="flex items-center justify-between">
+        <li key={annotation.annotationId} className="space-y-3 rounded-lg border border-border bg-card p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             {/* タグ名と位置情報をまとめて表示 */}
-            <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${getTagStyle(annotation.tag)}`}>
+            <span className={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${getTagStyle(annotation.tag)} wrap-anywhere`}>
               {annotation.tag}
-              <span className="font-mono text-[10px] text-muted-foreground">
+              <span className="font-mono text-[11px] text-muted-foreground">
                 {annotation.start} – {annotation.end}
               </span>
             </span>
-            <div className="flex gap-2 text-xs">
+            <div className="flex flex-wrap gap-2 text-xs">
               <button
-                className="rounded border border-border px-2 py-1 text-muted-foreground hover:text-foreground"
+                className="inline-flex min-h-11 items-center rounded border border-border px-3 text-sm text-muted-foreground transition hover:text-foreground"
                 onClick={() => onEdit(annotation)}
               >
                 {/* ダイアログを開いて編集 */}
                 編集
               </button>
               <button
-                className="rounded border border-red-200 bg-card px-2 py-1 text-red-600 hover:bg-red-50"
+                className="inline-flex min-h-11 items-center rounded border border-red-200 bg-card px-3 text-sm text-red-600 transition hover:bg-red-50"
                 onClick={() => onDelete(annotation.annotationId)}
               >
                 {/* 即削除。バックエンドでも所有者チェックあり */}
@@ -47,9 +48,7 @@ export const AnnotationList = ({ annotations, onEdit, onDelete }: AnnotationList
             </div>
           </div>
           {annotation.comment && (
-            <p className="mt-2 text-sm text-muted-foreground whitespace-pre-line">
-              {annotation.comment}
-            </p>
+            <p className="text-sm text-muted-foreground whitespace-pre-line wrap-anywhere">{annotation.comment}</p>
           )}
           {annotation.props && (
             <dl className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
