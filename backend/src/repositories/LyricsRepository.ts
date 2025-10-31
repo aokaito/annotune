@@ -7,7 +7,7 @@ import { HttpError } from '../utils/http';
 import type { AnnotationRecord, DocVersionRecord, LyricDocument } from '../types';
 import type { TableConfig } from '../config/env';
 
-// 現在時刻を ISO 形式の文字列で返すヘルパー
+// 現在時刻を ISO 形式の文字列で返すヘルパ
 const now = () => new Date().toISOString();
 
 // 二つの範囲が重なるかを判定するユーティリティ
