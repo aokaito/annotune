@@ -1,5 +1,6 @@
 // このストアは Cognito 認証情報を保持し、アプリ全体から参照できるようにする。
 import { create, type StateCreator } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface AuthState {
   userId: string;
@@ -55,6 +56,26 @@ const createAuthStore: StateCreator<AuthState> = (set) => ({
   signOut: () => set({ ...INITIAL_STATE })
 });
 
-export const useAuthStore = create<AuthState>()(createAuthStore);
+const noopStorage: Storage = {
+  getItem: () => null,
+  setItem: () => undefined,
+  removeItem: () => undefined,
+  clear: () => undefined,
+  key: () => null,
+  get length() {
+    return 0;
+  }
+};
+
+export const useAuthStore = create<AuthState>()(
+  persist(createAuthStore, {
+    name: 'annotune-auth',
+    storage: createJSONStorage(() =>
+      typeof window !== 'undefined'
+        ? window.localStorage
+        : noopStorage
+    )
+  })
+);
 
 export type { AuthState };
