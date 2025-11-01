@@ -3,20 +3,31 @@ import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '../ui/sheet';
+import { useAnnotuneApi } from '../../hooks/useAnnotuneApi';
+import { useAuthStore } from '../../store/auth';
+import type { AuthState } from '../../store/auth';
 
 const navItems: ReadonlyArray<{ key: string; label: string; to: string; end?: boolean }> = [
-  { key: 'dashboard', label: 'ダッシュボード', to: '/', end: true },
-  { key: 'versions', label: '履歴', to: '/versions/demo' }
+  { key: 'dashboard', label: 'ダッシュボード', to: '/', end: true }
 ];
 
-const authLink = {
-  key: 'signin',
-  label: 'サインイン',
-  href: import.meta.env.VITE_COGNITO_LOGIN_URL || '#'
-};
-
 export const Header = () => {
+  const { mode, isAuthenticated } = useAnnotuneApi();
+  const displayName = useAuthStore((state: AuthState) => state.displayName);
+  const signOut = useAuthStore((state: AuthState) => state.signOut);
   const [open, setOpen] = useState(false);
+  const loginHref = import.meta.env.VITE_COGNITO_LOGIN_URL?.trim() || '#';
+  const logoutHref = import.meta.env.VITE_COGNITO_LOGOUT_URL?.trim();
+
+  const effectiveDisplayName =
+    displayName || (mode === 'mock' ? 'Demo Vocalist' : 'サインインしてください');
+
+  const handleSignOut = () => {
+    signOut();
+    if (logoutHref && typeof window !== 'undefined') {
+      window.location.href = logoutHref;
+    }
+  };
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition ${
@@ -37,12 +48,31 @@ export const Header = () => {
               {item.label}
             </NavLink>
           ))}
-          <a
-            className="inline-flex min-h-11 items-center rounded-md bg-secondary px-4 text-sm font-semibold text-secondary-foreground transition hover:bg-secondary/90"
-            href={authLink.href}
-          >
-            {authLink.label}
-          </a>
+          {mode === 'mock' && (
+            <span className="inline-flex min-h-11 items-center rounded-md border border-border px-4 text-sm font-semibold text-muted-foreground">
+              デモモード
+            </span>
+          )}
+          {mode === 'http' && !isAuthenticated && (
+            <a
+              className="inline-flex min-h-11 items-center rounded-md bg-secondary px-4 text-sm font-semibold text-secondary-foreground transition hover:bg-secondary/90"
+              href={loginHref}
+            >
+              サインイン
+            </a>
+          )}
+          {mode === 'http' && isAuthenticated && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">{effectiveDisplayName}</span>
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center rounded-md border border-border px-4 text-sm font-semibold text-muted-foreground transition hover:bg-muted"
+                onClick={handleSignOut}
+              >
+                サインアウト
+              </button>
+            </div>
+          )}
         </nav>
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
@@ -61,7 +91,7 @@ export const Header = () => {
                   <NavLink
                     to={item.to}
                     end={item.end}
-                    className={({ isActive }) =>
+                    className={({ isActive }: { isActive: boolean }) =>
                       `inline-flex w-full items-center rounded-md px-4 py-3 text-base font-medium transition ${
                         isActive ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted'
                       }`
@@ -71,14 +101,32 @@ export const Header = () => {
                   </NavLink>
                 </SheetClose>
               ))}
-              <SheetClose asChild>
-                <a
-                  className="inline-flex w-full items-center rounded-md bg-secondary px-4 py-3 text-base font-semibold text-secondary-foreground transition hover:bg-secondary/90"
-                  href={authLink.href}
-                >
-                  {authLink.label}
-                </a>
-              </SheetClose>
+              {mode === 'mock' && (
+                <span className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-3 text-base font-semibold text-muted-foreground">
+                  デモモード
+                </span>
+              )}
+              {mode === 'http' && !isAuthenticated && (
+                <SheetClose asChild>
+                  <a
+                    className="inline-flex w-full items-center justify-center rounded-md bg-secondary px-4 py-3 text-base font-semibold text-secondary-foreground transition hover:bg-secondary/90"
+                    href={loginHref}
+                  >
+                    サインイン
+                  </a>
+                </SheetClose>
+              )}
+              {mode === 'http' && isAuthenticated && (
+                <SheetClose asChild>
+                  <button
+                    type="button"
+                    className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-3 text-base font-semibold text-muted-foreground transition hover:bg-muted"
+                    onClick={handleSignOut}
+                  >
+                    サインアウト
+                  </button>
+                </SheetClose>
+              )}
             </div>
           </SheetContent>
         </Sheet>

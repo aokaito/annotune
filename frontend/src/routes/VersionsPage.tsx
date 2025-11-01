@@ -1,11 +1,19 @@
 // バージョン履歴を一覧表示するページ。スナップショットを時系列で確認できる。
 import { useParams } from 'react-router-dom';
 import { useLyric, useLyricVersions } from '../hooks/useLyrics';
+import { useAnnotuneApi } from '../hooks/useAnnotuneApi';
+import type { LyricVersionSnapshot } from '../types';
 
 export const VersionsPage = () => {
   const { docId = '' } = useParams();
   const { data: lyric } = useLyric(docId);
   const { data: versions, isLoading } = useLyricVersions(docId);
+  const { mode, isAuthenticated } = useAnnotuneApi();
+  const requiresSignIn = mode === 'http' && !isAuthenticated;
+
+  if (requiresSignIn) {
+    return <p className="text-muted-foreground">バージョン履歴を表示するにはサインインしてください。</p>;
+  }
 
   if (isLoading) {
     return <p className="text-muted-foreground">バージョン履歴を読み込み中です…</p>;
@@ -23,7 +31,7 @@ export const VersionsPage = () => {
         <p className="text-sm text-muted-foreground">最新が上に表示されます。</p>
       </header>
       <ul className="space-y-4">
-        {versions.map((version) => (
+        {versions.map((version: LyricVersionSnapshot) => (
           <li key={version.version} className="rounded-lg border border-border bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between">
               {/* バージョン番号と作成日時を表示 */}

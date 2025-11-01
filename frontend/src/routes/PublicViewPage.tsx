@@ -1,12 +1,13 @@
 // 公開リンク用の閲覧専用ページ。認証不要で表示される。
 // NOTE: 1カラムで読みやすさを優先し、横スクロールを防ぐ wrap-anywhere を適用。代替案: prose クラスで typograpy を調整
 import { useParams } from 'react-router-dom';
-import { useLyric } from '../hooks/useLyrics';
+import { usePublicLyric } from '../hooks/useLyrics';
 import { LyricDisplay } from '../components/editor/LyricDisplay';
+import type { Annotation } from '../types';
 
 export const PublicViewPage = () => {
   const { docId = '' } = useParams();
-  const { data: lyric, isLoading } = useLyric(docId);
+  const { data: lyric, isLoading } = usePublicLyric(docId);
 
   if (isLoading) {
     return <p className="text-muted-foreground">公開ページを読み込み中です…</p>;
@@ -31,7 +32,7 @@ export const PublicViewPage = () => {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground sm:text-xl">アノテーション一覧</h2>
         <ul className="space-y-2 text-sm text-muted-foreground">
-          {lyric.annotations.map((annotation) => (
+          {lyric.annotations.map((annotation: Annotation) => (
             <li key={annotation.annotationId} className="wrap-anywhere">
               {/* シンプルなテキスト形式でタグ・コメント・範囲を表示 */}
               [{annotation.tag}] {annotation.comment ?? 'コメントなし'} ({annotation.start} – {annotation.end})

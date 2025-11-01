@@ -16,6 +16,7 @@ import { AnnotationList } from '../components/editor/AnnotationList';
 import { AnnotationEditDialog } from '../components/editor/AnnotationEditDialog';
 import { AnnotationMobileAction } from '../components/editor/AnnotationMobileAction';
 import type { Annotation, AnnotationProps } from '../types';
+import { useAnnotuneApi } from '../hooks/useAnnotuneApi';
 
 interface FormValues {
   title: string;
@@ -39,6 +40,8 @@ export const EditorPage = () => {
   const deleteLyric = useDeleteLyric(docId);
   const shareLyric = useShareLyric(docId);
   const annotations = useAnnotationMutations(docId);
+  const { mode, isAuthenticated } = useAnnotuneApi();
+  const requiresSignIn = mode === 'http' && !isAuthenticated;
 
   const form = useForm<FormValues>({
     defaultValues: {
@@ -185,6 +188,10 @@ export const EditorPage = () => {
   }) => {
     await annotations.update.mutateAsync(payload);
   };
+
+  if (requiresSignIn) {
+    return <p className="text-muted-foreground">エディタを利用するにはサインインしてください。</p>;
+  }
 
   if (isLoading || !lyric) {
     return <p className="text-muted-foreground">エディタを読み込み中です…</p>;

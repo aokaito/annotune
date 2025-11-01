@@ -33,8 +33,13 @@ npm run dev --prefix frontend
 実際の Cognito Hosted UI が利用可能になったら、`frontend/.env.local` に以下を追加してください。
 
 ```
-VITE_COGNITO_LOGIN_URL=https://your-domain.auth.ap-northeast-1.amazoncognito.com/login?... 
+VITE_API_BASE_URL=https://your-api-id.execute-api.ap-northeast-1.amazonaws.com/prod/
+VITE_COGNITO_LOGIN_URL=https://your-domain.auth.ap-northeast-1.amazoncognito.com/login?...
+# 任意: ホスト UI でサインアウト後に遷移させる URL を設定する場合
+VITE_COGNITO_LOGOUT_URL=https://your-domain.auth.ap-northeast-1.amazoncognito.com/logout?...
 ```
+
+`VITE_API_BASE_URL` を設定するとフロントエンドはモック API ではなく API Gateway を利用します。値が未設定の場合は従来通りインメモリのモック実装が使われます。
 
 ## バックエンド概要
 

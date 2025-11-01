@@ -1,7 +1,7 @@
 // 歌詞ドキュメントとアノテーションの React Query ラッパーをまとめたフック群。
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import type { LyricVersionSnapshot, Annotation } from '../types';
+import type { LyricDocument, LyricVersionSnapshot, Annotation } from '../types';
 import { useAnnotuneApi } from './useAnnotuneApi';
 
 const keys = {
@@ -14,37 +14,47 @@ const keys = {
 };
 
 export const useLyricsList = () => {
-  const { api, userId } = useAnnotuneApi();
-  return useQuery({
+  const { api, userId, isAuthenticated, mode } = useAnnotuneApi();
+  return useQuery<LyricDocument[]>({
     // 一覧取得（mine=true 相当）
     queryKey: keys.list(userId),
     queryFn: () => api.listLyrics(userId),
-    staleTime: 1000 * 10
+    staleTime: 1000 * 10,
+    enabled: mode === 'mock' || isAuthenticated
   });
 };
 
 export const useLyric = (docId: string) => {
-  const { api } = useAnnotuneApi();
-  return useQuery({
+  const { api, mode, isAuthenticated } = useAnnotuneApi();
+  return useQuery<LyricDocument | undefined>({
     queryKey: keys.lyric(docId),
     queryFn: () => api.getLyric(docId),
     // まだ docId が決まっていない場合（URL 読み込み中など）は実行しない
+    enabled: Boolean(docId) && (mode === 'mock' || isAuthenticated)
+  });
+};
+
+export const usePublicLyric = (docId: string) => {
+  const { api } = useAnnotuneApi();
+  return useQuery<LyricDocument | undefined>({
+    queryKey: ['lyrics', 'public', docId],
+    queryFn: () => api.getPublicLyric(docId),
     enabled: Boolean(docId)
   });
 };
 
 export const useLyricVersions = (docId: string) => {
-  const { api } = useAnnotuneApi();
+  const { api, mode, isAuthenticated } = useAnnotuneApi();
   return useQuery<LyricVersionSnapshot[]>({
     queryKey: keys.versions(docId),
     queryFn: () => api.listVersions(docId),
     // ドキュメント ID が空のときは API を呼ばず、無駄なリクエストを避ける
-    enabled: Boolean(docId)
+    enabled: Boolean(docId) && (mode === 'mock' || isAuthenticated)
   });
 };
 
 export const useCreateLyric = () => {
-  const { api, userId } = useAnnotuneApi();
+  const { api, userId, mode, isAuthenticated } = useAnnotuneApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: { title: string; text: string }) => api.createLyric(userId, payload),
@@ -52,6 +62,12 @@ export const useCreateLyric = () => {
       // 作成後に一覧を再取得し、成功トーストを表示
       queryClient.invalidateQueries({ queryKey: keys.list(userId) });
       toast.success('ドキュメントを作成しました');
+    },
+    retry: (failureCount: number, error: unknown) => {
+      if (mode === 'mock' || isAuthenticated) {
+        return failureCount < 3;
+      }
+      return false;
     }
   });
 };
@@ -62,7 +78,7 @@ export const useUpdateLyric = (docId: string) => {
   return useMutation({
     mutationFn: (payload: { title: string; text: string; version: number }) =>
       api.updateLyric(docId, payload),
-    onSuccess: (lyric) => {
+    onSuccess: (lyric: LyricDocument) => {
       // 詳細・一覧双方のキャッシュを更新
       queryClient.invalidateQueries({ queryKey: keys.lyric(docId) });
       queryClient.invalidateQueries({ queryKey: keys.list(lyric.ownerId) });
@@ -89,7 +105,7 @@ export const useShareLyric = (docId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (isPublic: boolean) => api.shareLyric(docId, isPublic),
-    onSuccess: (lyric) => {
+    onSuccess: (lyric: LyricDocument) => {
       // 詳細キャッシュを更新し、公開状態に応じたメッセージを表示
       queryClient.invalidateQueries({ queryKey: keys.lyric(docId) });
       toast.success(lyric.isPublicView ? '公開リンクを有効にしました' : '公開リンクを無効にしました');

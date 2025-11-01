@@ -1,14 +1,31 @@
-// モック API と認証情報をまとめて提供するフック。
-import { mockApi } from '../api/client';
+// API クライアントと認証情報をまとめて提供するフック。
+import { useMemo } from 'react';
+import { createHttpApi, mockApi } from '../api/client';
 import { useAuthStore } from '../store/auth';
+import type { AuthState } from '../store/auth';
 
 export const useAnnotuneApi = () => {
-  const userId = useAuthStore((state) => state.userId);
+  const baseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+  const userId = useAuthStore((state: AuthState) => state.userId);
+  const isAuthenticated = useAuthStore((state: AuthState) => state.isAuthenticated);
+
+  const mode = baseUrl ? 'http' : 'mock';
+
+  const api = useMemo(() => {
+    if (!baseUrl) {
+      return mockApi;
+    }
+    const normalized = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    return createHttpApi({
+      baseUrl: normalized,
+      getIdToken: () => useAuthStore.getState().idToken
+    });
+  }, [baseUrl]);
 
   return {
-    // 本番ではここを実 API クライアントに差し替える想定
-    api: mockApi,
-    // ログイン中ユーザーの ID（モックでは固定値）
-    userId
+    api,
+    mode,
+    userId: mode === 'mock' ? 'demo-user' : userId,
+    isAuthenticated: mode === 'mock' ? true : isAuthenticated
   };
 };
