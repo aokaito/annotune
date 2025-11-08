@@ -35,7 +35,7 @@ export const AnnotationPalette = ({ selection, onSubmit, isSubmitting, className
     }
   });
 
-  const handleSubmit = form.handleSubmit(async (values) => {
+  const submitAnnotation = form.handleSubmit(async (values) => {
     if (!selection) return;
     // 現在の範囲選択とフォーム入力を合わせて送信
     await onSubmit({
@@ -74,7 +74,13 @@ export const AnnotationPalette = ({ selection, onSubmit, isSubmitting, className
           <p className="text-center text-muted-foreground">歌詞を選択するとここに表示されます。</p>
         )}
       </div>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+      <form
+        className="flex flex-col gap-4"
+        onSubmit={(event) => {
+          event.stopPropagation();
+          submitAnnotation(event);
+        }}
+      >
         <label className="flex flex-col gap-2 text-sm">
           <span className="font-medium text-foreground">タグ</span>
           {/* プリセットタグから選択する。将来的にカスタムタグも追加予定 */}
