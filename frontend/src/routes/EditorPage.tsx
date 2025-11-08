@@ -227,11 +227,11 @@ export const EditorPage = () => {
           </button>
         </div>
       </div>
-      <form
-        className="grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
-        onSubmit={handleSave}
-      >
-        <section className="flex flex-col gap-5 rounded-xl border border-border bg-card/80 p-4 shadow-sm backdrop-blur sm:p-6">
+      <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <form
+          className="flex flex-col gap-5 rounded-xl border border-border bg-card/80 p-4 shadow-sm backdrop-blur sm:p-6"
+          onSubmit={handleSave}
+        >
           <input type="hidden" {...form.register('version', { valueAsNumber: true })} />
           <div className="flex flex-col gap-2 text-sm">
             <label className="flex flex-col gap-2">
@@ -285,7 +285,7 @@ export const EditorPage = () => {
             <h2 className="text-lg font-semibold">レンダリング例</h2>
             <LyricDisplay text={watchedText} annotations={lyric.annotations} />
           </div>
-        </section>
+        </form>
         <div className="hidden md:block md:sticky md:top-28">
           <AnnotationPalette
             selection={selection}
@@ -294,7 +294,7 @@ export const EditorPage = () => {
             className="max-h-[calc(100dvh-10rem)] overflow-y-auto"
           />
         </div>
-      </form>
+      </div>
       <section className="space-y-4 rounded-xl border border-border bg-card/80 p-4 shadow-sm sm:p-6">
         <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold sm:text-xl">アノテーション一覧</h2>
