@@ -197,6 +197,15 @@ export const EditorPage = () => {
               />
             </label>
           </div>
+          <div className="space-y-3 text-sm">
+            <span className="font-medium text-foreground">レンダリング例</span>
+            <p className="text-xs text-muted-foreground">
+              この表示で範囲を選択し、右側のパレットからアノテーションを追加してください。
+            </p>
+            <div ref={lyricDisplayRef} className="rounded-lg border border-border bg-card p-3">
+              <LyricDisplay text={watchedText} annotations={lyric.annotations} />
+            </div>
+          </div>
           <div className="flex flex-wrap items-center justify-end gap-3 text-sm">
             <button
               type="button"
@@ -206,24 +215,15 @@ export const EditorPage = () => {
                 setSelection(null);
               }}
             >
-              歌詞を編集
+              編集
             </button>
             <button
               type="submit"
               className="inline-flex min-h-10 items-center rounded-md bg-primary px-5 font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
               disabled={updateLyric.isPending}
             >
-              {updateLyric.isPending ? '保存中…' : '変更を保存'}
+              {updateLyric.isPending ? '保存中…' : '保存'}
             </button>
-          </div>
-          <div className="space-y-3 text-sm">
-            <span className="font-medium text-foreground">レンダリング例</span>
-            <p className="text-xs text-muted-foreground">
-              この表示で範囲を選択し、右側のパレットからアノテーションを追加してください。
-            </p>
-            <div ref={lyricDisplayRef} className="rounded-lg border border-border bg-card/80 p-3">
-              <LyricDisplay text={watchedText} annotations={lyric.annotations} />
-            </div>
           </div>
         </form>
         <div className="hidden md:block md:sticky md:top-28">
