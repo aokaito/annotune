@@ -202,8 +202,14 @@ export const EditorPage = () => {
             <p className="text-xs text-muted-foreground">
               この表示で範囲を選択し、右側のパレットからアノテーションを追加してください。
             </p>
-            <div ref={lyricDisplayRef} className="rounded-lg border border-border bg-card p-3">
-              <LyricDisplay text={watchedText} annotations={lyric.annotations} />
+            <div ref={lyricDisplayRef} className="rounded-lg border border-border bg-card p-3 shadow-sm">
+              <LyricDisplay
+                text={watchedText}
+                annotations={lyric.annotations}
+                framed={false}
+                showTagIndicators
+                className="p-0 shadow-none"
+              />
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-3 text-sm">
@@ -238,7 +244,6 @@ export const EditorPage = () => {
       <section className="space-y-4 rounded-xl border border-border bg-card/80 p-4 shadow-sm sm:p-6">
         <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold sm:text-xl">アノテーション一覧</h2>
-          <span className="text-xs text-muted-foreground sm:text-sm">{lyric.annotations.length} 件</span>
         </header>
         <AnnotationList
           annotations={lyric.annotations}

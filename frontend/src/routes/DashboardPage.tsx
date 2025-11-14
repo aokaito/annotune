@@ -128,7 +128,7 @@ export const DashboardPage = () => {
                   </p>
                 </div>
                 <span
-                  className={`inline-flex min-h-8 items-center rounded-full px-3 text-xs font-medium ${
+                  className={`inline-flex min-h-8 items-center whitespace-nowrap rounded-full px-3 text-xs font-medium ${
                     lyric.isPublicView
                       ? 'bg-secondary text-secondary-foreground'
                       : 'bg-muted text-muted-foreground'
@@ -142,7 +142,6 @@ export const DashboardPage = () => {
                 {lyric.text}
               </p>
               <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-muted-foreground">アノテーション {lyric.annotations.length} 件</span>
                 <div className="flex flex-wrap gap-2">
                   <Link
                     className="inline-flex min-h-10 items-center rounded-md border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"

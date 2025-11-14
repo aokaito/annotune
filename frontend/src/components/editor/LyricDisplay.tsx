@@ -1,17 +1,32 @@
 // 歌詞本文とアノテーションを分割表示し、タグに応じた装飾を行う。
 // NOTE: 横スクロール防止とタイポグラフィ改善のため wrap-anywhere を適用。代替案: prose クラスを用いても良いが装飾制御を優先
+import clsx from 'clsx';
 import { Annotation } from '../../types';
 import { getTagStyle } from './tagColors';
 
 interface LyricDisplayProps {
   text: string;
   annotations: Annotation[];
+  className?: string;
+  framed?: boolean;
+  showTagIndicators?: boolean;
 }
 
 interface Segment {
   text: string;
   annotation?: Annotation;
 }
+
+const tagSymbolMap: Record<string, string> = {
+  vibrato: '〰',
+  scoop: '↗',
+  fall: '↘',
+  slide: '⇄',
+  hold: '―',
+  breath: '●'
+};
+
+const getTagSymbol = (tag: string) => tagSymbolMap[tag] ?? '★';
 
 const buildSegments = (text: string, annotations: Annotation[]): Segment[] => {
   if (annotations.length === 0) {
@@ -36,25 +51,39 @@ const buildSegments = (text: string, annotations: Annotation[]): Segment[] => {
   return segments;
 };
 
-export const LyricDisplay = ({ text, annotations }: LyricDisplayProps) => {
+export const LyricDisplay = ({
+  text,
+  annotations,
+  className,
+  framed = true,
+  showTagIndicators = false
+}: LyricDisplayProps) => {
   const segments = buildSegments(text, annotations);
+  const containerClass = clsx(
+    'wrap-anywhere whitespace-pre-wrap rounded-lg font-medium leading-relaxed text-foreground',
+    framed && 'border border-border bg-card p-6 shadow-sm',
+    className
+  );
 
   return (
-    <div className="wrap-anywhere whitespace-pre-wrap rounded-lg border border-border bg-card p-6 font-medium leading-relaxed text-foreground shadow-sm">
+    <div className={containerClass}>
       {segments.map((segment, index) => {
         if (!segment.annotation) {
-          // アノテーションが付いていない部分はそのまま表示
           return <span key={`plain-${index}`}>{segment.text}</span>;
         }
         const style = getTagStyle(segment.annotation.tag);
         return (
           <span
             key={segment.annotation.annotationId}
-            className={`rounded px-1 underline decoration-2 ${style}`}
+            className="inline-flex flex-col items-center"
             title={segment.annotation.comment ?? segment.annotation.tag}
           >
-            {/* タグ付きの範囲は色付き背景と下線で強調 */}
-            {segment.text}
+            <span className={`rounded px-1 underline decoration-2 ${style}`}>{segment.text}</span>
+            {showTagIndicators && (
+              <span className="mt-1 text-[10px] font-semibold text-muted-foreground">
+                {getTagSymbol(segment.annotation.tag)}
+              </span>
+            )}
           </span>
         );
       })}
