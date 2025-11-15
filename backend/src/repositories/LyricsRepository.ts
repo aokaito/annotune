@@ -19,6 +19,11 @@ const normalizeLyricRecord = (record: Partial<LyricDocument>): LyricDocument => 
   artist: record.artist ?? ''
 });
 
+const normalizeVersionRecord = (record: Partial<DocVersionRecord>): DocVersionRecord => ({
+  ...(record as DocVersionRecord),
+  artist: record.artist ?? ''
+});
+
 export class LyricsRepository {
   constructor(private readonly client: DynamoDBDocumentClient, private readonly config: TableConfig) {}
 
@@ -374,7 +379,7 @@ export class LyricsRepository {
       })
     );
 
-    return (result.Items ?? []) as DocVersionRecord[];
+      return (result.Items ?? []).map((item) => normalizeVersionRecord(item as DocVersionRecord));
   }
 
   // 指定バージョンのスナップショットを取得する
@@ -391,7 +396,7 @@ export class LyricsRepository {
       throw new HttpError(404, 'Version not found');
     }
 
-    return result.Item as DocVersionRecord;
+    return normalizeVersionRecord(result.Item as DocVersionRecord);
   }
 
   private async loadAnnotations(docId: string): Promise<AnnotationRecord[]> {

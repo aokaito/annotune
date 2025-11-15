@@ -1,5 +1,5 @@
-// NOTE: 共通ヘッダーをモバイル対応するため Sheet ナビを追加。代替案: Headless UI の Dialog を使う実装もあるが既存依存に合わせ shadcn 構成
-import { useEffect, useState } from 'react';
+// NOTE: 共通ヘッダー。アカウント操作は Material Symbols のアイコンボタンからメニューを表示する。
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '../ui/sheet';
@@ -17,8 +17,9 @@ export const Header = () => {
   const setDisplayName = useAuthStore((state: AuthState) => state.setDisplayName);
   const signOut = useAuthStore((state: AuthState) => state.signOut);
   const [open, setOpen] = useState(false);
-  const [accountModal, setAccountModal] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [accountNameInput, setAccountNameInput] = useState(displayName);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const loginHref = import.meta.env.VITE_COGNITO_LOGIN_URL?.trim() || '#';
   const logoutHref = import.meta.env.VITE_COGNITO_LOGOUT_URL?.trim();
 
@@ -29,15 +30,37 @@ export const Header = () => {
     setAccountNameInput(displayName);
   }, [displayName]);
 
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const handleClick = (event: MouseEvent) => {
+      if (!menuRef.current || menuRef.current.contains(event.target as Node)) {
+        return;
+      }
+      setAccountMenuOpen(false);
+    };
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setAccountMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [accountMenuOpen]);
+
   const handleSaveAccountName = () => {
     const trimmed = accountNameInput.trim();
     if (trimmed) {
       setDisplayName(trimmed);
     }
-    setAccountModal(false);
+    setAccountMenuOpen(false);
   };
 
   const handleSignOut = () => {
+    setAccountMenuOpen(false);
     signOut();
     if (logoutHref && typeof window !== 'undefined') {
       window.location.href = logoutHref;
@@ -50,6 +73,20 @@ export const Header = () => {
         ? 'bg-primary text-primary-foreground'
         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
     }`;
+
+  const accountButton = (
+    <button
+      type="button"
+      className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border text-foreground transition hover:bg-muted"
+      onClick={() => {
+        setAccountNameInput(effectiveDisplayName);
+        setAccountMenuOpen((prev) => !prev);
+      }}
+      aria-label="アカウント設定"
+    >
+      <span className="material-symbols-rounded text-2xl">account_circle</span>
+    </button>
+  );
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-card/85 backdrop-blur">
@@ -76,27 +113,7 @@ export const Header = () => {
               サインイン
             </a>
           )}
-          {mode === 'http' && isAuthenticated && (
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
-                onClick={() => {
-                  setAccountNameInput(effectiveDisplayName);
-                  setAccountModal(true);
-                }}
-              >
-                {effectiveDisplayName}
-              </button>
-              <button
-                type="button"
-                className="inline-flex min-h-11 items-center rounded-md border border-border px-4 text-sm font-semibold text-muted-foreground transition hover:bg-muted"
-                onClick={handleSignOut}
-              >
-                サインアウト
-              </button>
-            </div>
-          )}
+          {mode === 'http' && isAuthenticated && <div className="relative">{accountButton}</div>}
         </nav>
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
@@ -140,7 +157,7 @@ export const Header = () => {
                   </a>
                 </SheetClose>
               )}
-             {mode === 'http' && isAuthenticated && (
+              {mode === 'http' && isAuthenticated && (
                 <>
                   <SheetClose asChild>
                     <button
@@ -148,10 +165,10 @@ export const Header = () => {
                       className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-3 text-base font-semibold text-muted-foreground transition hover:bg-muted"
                       onClick={() => {
                         setAccountNameInput(effectiveDisplayName);
-                        setAccountModal(true);
+                        setAccountMenuOpen(true);
                       }}
                     >
-                      アカウント名
+                      アカウント
                     </button>
                   </SheetClose>
                   <SheetClose asChild>
@@ -169,32 +186,26 @@ export const Header = () => {
           </SheetContent>
         </Sheet>
       </div>
-      {accountModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">アカウント名を設定</h3>
-              <button
-                type="button"
-                className="text-muted-foreground transition hover:text-foreground"
-                onClick={() => setAccountModal(false)}
-              >
-                ×
-              </button>
-            </div>
+      {accountMenuOpen && mode === 'http' && isAuthenticated && (
+        <div className="absolute inset-x-0 top-full flex justify-end px-4 sm:px-6">
+          <div
+            ref={menuRef}
+            className="mt-2 w-full max-w-xs rounded-2xl border border-border bg-card p-4 shadow-lg md:max-w-sm"
+          >
+            <p className="text-sm font-medium text-foreground">アカウント名</p>
             <input
               type="text"
-              className="w-full rounded-md border border-border bg-card px-3 py-2"
+              className="mt-2 w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
               value={accountNameInput}
               onChange={(event) => setAccountNameInput(event.target.value)}
             />
-            <div className="mt-4 flex justify-end gap-3 text-sm">
+            <div className="mt-4 flex justify-end gap-2 text-sm">
               <button
                 type="button"
                 className="rounded-md border border-border px-4 py-2 text-muted-foreground transition hover:text-foreground"
-                onClick={() => setAccountModal(false)}
+                onClick={() => setAccountMenuOpen(false)}
               >
-                キャンセル
+                閉じる
               </button>
               <button
                 type="button"
@@ -202,6 +213,13 @@ export const Header = () => {
                 onClick={handleSaveAccountName}
               >
                 保存
+              </button>
+              <button
+                type="button"
+                className="rounded-md border border-red-200 px-4 py-2 font-semibold text-red-600 transition hover:bg-red-50"
+                onClick={handleSignOut}
+              >
+                サインアウト
               </button>
             </div>
           </div>
