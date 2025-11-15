@@ -1,13 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#d8c3a6" />
-      <stop offset="100%" stop-color="#c7ad8c" />
+      <stop offset="0%" stop-color="#dec9ab" />
+      <stop offset="100%" stop-color="#cdb18f" />
     </linearGradient>
   </defs>
-  <rect width="128" height="128" rx="20" ry="20" fill="url(#bg)" />
-  <rect x="10" y="10" width="108" height="108" rx="22" ry="22" fill="none" stroke="#6b3f1d" stroke-width="8" />
-  <path fill="#6b3f1d" d="M42 44v40.5a13 13 0 1 0 8 12.3V56h26v26.5a13 13 0 1 0 8 12.3V36H42z" />
-  <path fill="#6b3f1d" d="M96 40L66 92v8l32-2 18-32z" />
-  <circle cx="103" cy="98" r="7" fill="#d8c3a6" />
+  <rect width="160" height="160" rx="26" ry="26" fill="url(#bg)" />
+  <rect x="12" y="12" width="136" height="136" rx="24" ry="24" fill="none" stroke="#5a321a" stroke-width="10" />
+  <!-- musical note -->
+  <path d="M52 108a12 12 0 1 0 8 11.3V60h28v30.3a12 12 0 1 0 8 11.3V44H52z" fill="#5a321a" />
+  <!-- pencil -->
+  <g transform="rotate(-20 108 92)">
+    <rect x="92" y="54" width="12" height="70" rx="6" fill="#5a321a" />
+    <rect x="104" y="54" width="20" height="70" rx="6" fill="#744427" />
+    <polygon points="124,124 136,150 112,150" fill="#5a321a" />
+    <polygon points="112,150 136,150 128,160" fill="#d8c9b5" />
+  </g>
 </svg>
