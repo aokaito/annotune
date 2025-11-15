@@ -30,7 +30,7 @@ export class LyricsRepository {
   // 歌詞ドキュメントを新規作成し、初回のバージョンスナップショットも保存する
   async createLyric(
     ownerId: string,
-    payload: { title: string; text: string; artist?: string }
+    payload: { title: string; artist: string; text: string }
   ): Promise<LyricDocument> {
     const docId = nanoid();
     const timestamp = now();
@@ -38,7 +38,7 @@ export class LyricsRepository {
       docId,
       ownerId,
       title: payload.title,
-      artist: payload.artist ?? '',
+      artist: payload.artist,
       text: payload.text,
       version: 1,
       createdAt: timestamp,
@@ -152,7 +152,7 @@ export class LyricsRepository {
   async updateLyric(
     docId: string,
     ownerId: string,
-    payload: { title: string; artist?: string; text: string; version: number }
+    payload: { title: string; artist: string; text: string; version: number }
   ): Promise<LyricDocument> {
     const timestamp = now();
     let result;
@@ -171,7 +171,7 @@ export class LyricsRepository {
             ':ownerId': ownerId,
             ':expectedVersion': payload.version,
             ':title': payload.title,
-            ':artist': payload.artist ?? '',
+            ':artist': payload.artist,
             ':text': payload.text,
             ':updatedAt': timestamp,
             ':inc': 1

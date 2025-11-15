@@ -137,7 +137,7 @@ export const DashboardPage = () => {
                     {lyric.artist || 'アーティスト未設定'}
                   </p>
                   <p className="text-xs text-muted-foreground sm:text-sm">
-                    バージョン {lyric.version} ・ 最終更新 {new Date(lyric.updatedAt).toLocaleString()}
+                    最終更新 {new Date(lyric.updatedAt).toLocaleString()}
                   </p>
                 </div>
                 <span

@@ -7,6 +7,7 @@ import { AuthCallbackPage } from './routes/AuthCallbackPage';
 import { PublicViewPage } from './routes/PublicViewPage';
 import { ViewerPage } from './routes/ViewerPage';
 import { VersionsPage } from './routes/VersionsPage';
+import { AccountSettingsPage } from './routes/AccountSettingsPage';
 import { AppLayout } from './components/layout/AppLayout';
 
 const App = () => (
@@ -18,6 +19,7 @@ const App = () => (
           <Route path="/editor/:docId" element={<EditorPage />} />
           <Route path="/viewer/:docId" element={<ViewerPage />} />
           <Route path="/public/:docId" element={<PublicViewPage />} />
+          <Route path="/account" element={<AccountSettingsPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/versions/:docId" element={<VersionsPage />} />
         </Routes>

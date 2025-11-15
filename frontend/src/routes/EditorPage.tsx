@@ -161,7 +161,6 @@ export const EditorPage = () => {
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">{lyric.title}</h1>
           <p className="text-sm text-muted-foreground">{lyric.artist || 'アーティスト未設定'}</p>
-          <p className="text-xs text-muted-foreground sm:text-sm">ドキュメント ID: {lyric.docId}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
