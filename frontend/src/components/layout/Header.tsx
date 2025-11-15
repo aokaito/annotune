@@ -1,14 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '../ui/sheet';
 import { useAnnotuneApi } from '../../hooks/useAnnotuneApi';
 import { useAuthStore } from '../../store/auth';
 import type { AuthState } from '../../store/auth';
-
-const navItems: ReadonlyArray<{ key: string; label: string; to: string; end?: boolean }> = [
-  { key: 'dashboard', label: 'ダッシュボード', to: '/', end: true }
-];
 
 export const Header = () => {
   const { mode, isAuthenticated } = useAnnotuneApi();
@@ -53,13 +49,6 @@ export const Header = () => {
     }
   };
 
-  const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition ${
-      isActive
-        ? 'bg-primary text-primary-foreground'
-        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-    }`;
-
   const accountButton = (
     <button
       type="button"
@@ -74,15 +63,17 @@ export const Header = () => {
   return (
     <header className="relative sticky top-0 z-30 border-b border-border bg-card/85 backdrop-blur">
       <div className="mx-auto flex w-full max-w-screen-xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <Link to="/" className="text-lg font-semibold text-foreground md:text-xl">
-          Annotune
-        </Link>
+        <div className="flex items-center gap-3">
+          <img
+            src="/annotune.svg"
+            alt="Annotune icon"
+            className="h-9 w-9 rounded-xl border border-border bg-card shadow-sm"
+          />
+          <Link to="/" className="text-lg font-semibold text-foreground md:text-xl">
+            Annotune
+          </Link>
+        </div>
         <nav className="hidden items-center gap-2 md:flex">
-          {navItems.map((item) => (
-            <NavLink key={item.key} to={item.to} end={item.end} className={linkClass}>
-              {item.label}
-            </NavLink>
-          ))}
           {mode === 'mock' && (
             <span className="inline-flex min-h-11 items-center rounded-md border border-border px-4 text-sm font-semibold text-muted-foreground">
               デモモード
@@ -110,21 +101,6 @@ export const Header = () => {
               <SheetTitle>メニュー</SheetTitle>
             </SheetHeader>
             <div className="mt-6 flex flex-col gap-3">
-              {navItems.map((item) => (
-                <SheetClose asChild key={item.key}>
-                  <NavLink
-                    to={item.to}
-                    end={item.end}
-                    className={({ isActive }: { isActive: boolean }) =>
-                      `inline-flex w-full items-center rounded-md px-4 py-3 text-base font-medium transition ${
-                        isActive ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted'
-                      }`
-                    }
-                  >
-                    {item.label}
-                  </NavLink>
-                </SheetClose>
-              ))}
               {mode === 'mock' && (
                 <span className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-3 text-base font-semibold text-muted-foreground">
                   デモモード
