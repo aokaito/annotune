@@ -20,6 +20,7 @@ import { useAnnotuneApi } from '../hooks/useAnnotuneApi';
 
 interface FormValues {
   title: string;
+  artist: string;
   text: string;
   version: number;
 }
@@ -44,6 +45,7 @@ export const EditorPage = () => {
   const form = useForm<FormValues>({
     defaultValues: {
       title: '',
+      artist: '',
       text: '',
       version: 1
     }
@@ -55,6 +57,7 @@ export const EditorPage = () => {
     if (lyric) {
       form.reset({
         title: lyric.title,
+        artist: lyric.artist,
         text: lyric.text,
         version: lyric.version
       });
@@ -102,6 +105,7 @@ export const EditorPage = () => {
   const handleSave = form.handleSubmit(async (values) => {
     await updateLyric.mutateAsync({
       title: values.title,
+      artist: values.artist,
       text: values.text,
       version: values.version
     });
@@ -156,6 +160,7 @@ export const EditorPage = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">{lyric.title}</h1>
+          <p className="text-sm text-muted-foreground">{lyric.artist || 'アーティスト未設定'}</p>
           <p className="text-xs text-muted-foreground sm:text-sm">ドキュメント ID: {lyric.docId}</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -194,6 +199,16 @@ export const EditorPage = () => {
                 type="text"
                 className="min-h-11 rounded-md border border-border bg-card px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 {...form.register('title', { required: true })}
+              />
+            </label>
+          </div>
+          <div className="flex flex-col gap-2 text-sm">
+            <label className="flex flex-col gap-2">
+              <span className="font-medium text-foreground">アーティスト</span>
+              <input
+                type="text"
+                className="min-h-11 rounded-md border border-border bg-card px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                {...form.register('artist', { required: true })}
               />
             </label>
           </div>

@@ -2,11 +2,13 @@ import type { Annotation, LyricDocument, LyricVersionSnapshot } from '../types';
 
 export interface CreateLyricPayload {
   title: string;
+  artist?: string;
   text: string;
 }
 
 export interface UpdateLyricPayload {
   title: string;
+  artist?: string;
   text: string;
   version: number;
 }

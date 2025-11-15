@@ -21,6 +21,7 @@ const createSeedData = (ownerId: string): MockDatabase => {
     docId: 'demo-doc',
     ownerId,
     title: '夜空ノムコウ',
+    artist: 'SMAP',
     text: `あれから ぼくたちは
 何かを信じてこれたかな
 夜空の向こうには
@@ -53,6 +54,7 @@ const createSeedData = (ownerId: string): MockDatabase => {
             docId: lyric.docId,
             version: 1,
             title: lyric.title,
+            artist: lyric.artist,
             text: lyric.text,
             createdAt: lyric.createdAt,
             authorId: ownerId
@@ -99,6 +101,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
         docId,
         ownerId: requestOwnerId,
         title: payload.title,
+        artist: payload.artist ?? '',
         text: payload.text,
         version: 1,
         createdAt: now,
@@ -112,6 +115,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
           docId,
           version: 1,
           title: lyric.title,
+          artist: lyric.artist,
           text: lyric.text,
           createdAt: now,
           authorId: requestOwnerId
@@ -148,6 +152,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       const updated: LyricDocument = {
         ...existing,
         title: payload.title,
+        artist: payload.artist ?? existing.artist,
         text: payload.text,
         version: nextVersion,
         updatedAt: new Date().toISOString()
@@ -158,6 +163,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
         docId,
         version: nextVersion,
         title: updated.title,
+        artist: updated.artist,
         text: updated.text,
         createdAt: updated.updatedAt,
         authorId: existing.ownerId

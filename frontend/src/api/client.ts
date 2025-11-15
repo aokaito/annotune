@@ -39,6 +39,7 @@ type LyricResponse = {
   docId: string;
   ownerId: string;
   title: string;
+  artist?: string;
   text: string;
   version: number;
   createdAt: string;
@@ -63,6 +64,7 @@ const toLyricDocument = (payload: LyricResponse): LyricDocument => ({
   docId: payload.docId,
   ownerId: payload.ownerId,
   title: payload.title,
+  artist: payload.artist ?? '',
   text: payload.text,
   version: payload.version,
   createdAt: payload.createdAt,
@@ -76,6 +78,7 @@ const normalizeVersions = (payload: LyricVersionSnapshot[]): LyricVersionSnapsho
     docId: item.docId,
     version: item.version,
     title: item.title,
+    artist: item.artist ?? '',
     text: item.text,
     createdAt: item.createdAt,
     authorId: item.authorId
@@ -200,6 +203,7 @@ export const createHttpApi = (config: HttpApiConfig): AnnotuneApi => {
         method: 'PUT',
         body: {
           title: payload.title,
+          artist: payload.artist,
           text: payload.text,
           version: payload.version
         },

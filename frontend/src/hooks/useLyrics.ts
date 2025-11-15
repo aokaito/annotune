@@ -57,7 +57,8 @@ export const useCreateLyric = () => {
   const { api, userId, mode, isAuthenticated } = useAnnotuneApi();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { title: string; text: string }) => api.createLyric(userId, payload),
+    mutationFn: (payload: { title: string; artist?: string; text: string }) =>
+      api.createLyric(userId, payload),
     onSuccess: () => {
       // 作成後に一覧を再取得し、成功トーストを表示
       queryClient.invalidateQueries({ queryKey: keys.list(userId) });
@@ -76,7 +77,7 @@ export const useUpdateLyric = (docId: string) => {
   const { api } = useAnnotuneApi();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { title: string; text: string; version: number }) =>
+    mutationFn: (payload: { title: string; artist?: string; text: string; version: number }) =>
       api.updateLyric(docId, payload),
     onSuccess: (lyric: LyricDocument) => {
       // 詳細・一覧双方のキャッシュを更新

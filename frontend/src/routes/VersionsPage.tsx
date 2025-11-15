@@ -28,6 +28,7 @@ export const VersionsPage = () => {
       <header>
         {/* 対象ドキュメント名と説明 */}
         <h1 className="text-2xl font-semibold text-foreground">{lyric?.title ?? 'Lyric'} のバージョン履歴</h1>
+        <p className="text-sm text-muted-foreground">{lyric?.artist || 'アーティスト未設定'}</p>
         <p className="text-sm text-muted-foreground">最新が上に表示されます。</p>
       </header>
       <ul className="space-y-4">
@@ -40,6 +41,7 @@ export const VersionsPage = () => {
                 {new Date(version.createdAt).toLocaleString()}
               </span>
             </div>
+            <p className="text-sm text-muted-foreground">{version.artist || 'アーティスト未設定'}</p>
             <pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap rounded bg-muted/60 p-4 text-sm text-foreground">
               {/* その時点の歌詞全文を表示。長文の場合はスクロール可能 */}
               {version.text}

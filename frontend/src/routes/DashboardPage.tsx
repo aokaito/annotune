@@ -8,6 +8,7 @@ import type { LyricDocument } from '../types';
 
 type FormValues = {
   title: string;
+  artist: string;
   text: string;
 };
 
@@ -16,6 +17,7 @@ const CreateLyricForm = ({ onClose }: { onClose(): void }) => {
   const form = useForm<FormValues>({
     defaultValues: {
       title: 'New Song',
+      artist: '',
       text: ''
     }
   });
@@ -37,6 +39,14 @@ const CreateLyricForm = ({ onClose }: { onClose(): void }) => {
           type="text"
           className="rounded border border-border bg-card px-3 py-2"
           {...form.register('title', { required: true })}
+        />
+      </label>
+      <label className="flex flex-col gap-2 text-sm">
+        <span className="font-medium text-foreground">Artist</span>
+        <input
+          type="text"
+          className="rounded border border-border bg-card px-3 py-2"
+          {...form.register('artist', { required: true })}
         />
       </label>
       <label className="flex flex-col gap-2 text-sm">
@@ -123,6 +133,9 @@ export const DashboardPage = () => {
                 {/* タイトル・更新日・公開状態を表示 */}
                 <div className="min-w-0 space-y-1">
                   <h2 className="truncate text-lg font-semibold sm:text-xl">{lyric.title}</h2>
+                  <p className="truncate text-xs text-muted-foreground sm:text-sm">
+                    {lyric.artist || 'アーティスト未設定'}
+                  </p>
                   <p className="text-xs text-muted-foreground sm:text-sm">
                     バージョン {lyric.version} ・ 最終更新 {new Date(lyric.updatedAt).toLocaleString()}
                   </p>
@@ -138,7 +151,7 @@ export const DashboardPage = () => {
                   {lyric.isPublicView ? '公開中' : '非公開'}
                 </span>
               </div>
-              <p className="wrap-anywhere whitespace-pre-line text-sm text-muted-foreground">
+              <p className="wrap-anywhere whitespace-pre-line text-sm text-muted-foreground line-clamp-5">
                 {lyric.text}
               </p>
               <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
@@ -149,6 +162,12 @@ export const DashboardPage = () => {
                   >
                     {/* 詳細エディタ画面へ遷移 */}
                     編集
+                  </Link>
+                  <Link
+                    className="inline-flex min-h-10 items-center rounded-md border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"
+                    to={`/viewer/${lyric.docId}`}
+                  >
+                    閲覧
                   </Link>
                   <Link
                     className="inline-flex min-h-10 items-center rounded-md border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"

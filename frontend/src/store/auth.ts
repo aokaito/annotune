@@ -16,10 +16,11 @@ interface AuthState {
     accessToken?: string | null;
     expiresAt?: number | null;
   }): void;
+  setDisplayName(displayName: string): void;
   signOut(): void;
 }
 
-const INITIAL_STATE: Omit<AuthState, 'setAuthenticated' | 'signOut'> = {
+const INITIAL_STATE: Omit<AuthState, 'setAuthenticated' | 'setDisplayName' | 'signOut'> = {
   userId: '',
   displayName: '',
   idToken: null,
@@ -28,7 +29,7 @@ const INITIAL_STATE: Omit<AuthState, 'setAuthenticated' | 'signOut'> = {
   isAuthenticated: false
 };
 
-const createAuthStore: StateCreator<AuthState> = (set) => ({
+const createAuthStore: StateCreator<AuthState> = (set, get) => ({
   ...INITIAL_STATE,
   // サインインが完了した際に呼び出し、ユーザー情報とトークンを保存
   setAuthenticated: ({
@@ -44,14 +45,19 @@ const createAuthStore: StateCreator<AuthState> = (set) => ({
     accessToken?: string | null;
     expiresAt?: number | null;
   }) =>
-    set({
+    set(() => ({
       userId,
-      displayName,
+      displayName: get().displayName || displayName,
       idToken,
       accessToken: accessToken ?? null,
       expiresAt: expiresAt ?? null,
       isAuthenticated: true
-    }),
+    })),
+  setDisplayName: (displayName: string) =>
+    set((state) => ({
+      ...state,
+      displayName
+    })),
   // サインアウト時に状態をクリア
   signOut: () => set({ ...INITIAL_STATE })
 });

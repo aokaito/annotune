@@ -24,11 +24,12 @@ export const PublicViewPage = () => {
       <header className="space-y-2">
         <p className="text-xs uppercase tracking-wide text-secondary sm:text-sm">公開ビュー</p>
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{lyric.title}</h1>
+        <p className="text-sm text-muted-foreground">{lyric.artist || 'アーティスト未設定'}</p>
         <p className="text-sm text-muted-foreground">
           バージョン {lyric.version} ・ 最終更新 {new Date(lyric.updatedAt).toLocaleString()}
         </p>
       </header>
-      <LyricDisplay text={lyric.text} annotations={lyric.annotations} />
+      <LyricDisplay text={lyric.text} annotations={lyric.annotations} showTagIndicators />
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground sm:text-xl">アノテーション一覧</h2>
         <ul className="space-y-2 text-sm text-muted-foreground">
