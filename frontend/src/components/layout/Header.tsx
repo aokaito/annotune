@@ -65,7 +65,7 @@ export const Header = () => {
       <div className="mx-auto flex w-full max-w-screen-xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3">
           <img
-            src="/annotune.svg"
+            src="/annotune-icon.svg"
             alt="Annotune icon"
             className="h-9 w-9 rounded-xl border border-border bg-card shadow-sm"
           />
