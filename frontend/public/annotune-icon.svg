@@ -6,16 +6,15 @@
     <stop offset="100%" stop-color="#cdb18f"/>
   </linearGradient>
 </defs>
-<rect width="576" height="576" rx="120" fill="url(#annotune-bg)" />
 <rect
   x="18"
   y="18"
   width="540"
   height="540"
   rx="108"
-  fill="none"
+  fill="url(#annotune-bg)"
   stroke="#5a321a"
-  stroke-width="36"
+  stroke-width="24"
 />
 <path fill="#5a321a" opacity="1.000000" stroke="none" 
 	d="
