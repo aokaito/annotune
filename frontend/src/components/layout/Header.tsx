@@ -67,7 +67,7 @@ export const Header = () => {
           <img
             src="/annotune-icon.svg"
             alt="Annotune icon"
-            className="h-9 w-9 rounded-xl border border-border bg-card shadow-sm"
+            className="h-9 w-9 rounded-xl shadow-sm"
           />
           <Link to="/" className="text-lg font-semibold text-foreground md:text-xl">
             Annotune
