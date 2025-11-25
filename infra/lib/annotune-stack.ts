@@ -204,6 +204,12 @@ export class AnnotuneStack extends Stack {
     });
 
     httpApi.addRoutes({
+      path: '/v1/public/lyrics',
+      methods: [HttpMethod.GET],
+      integration,
+      authorizer: undefined
+    });
+    httpApi.addRoutes({
       path: '/v1/public/lyrics/{docId}',
       methods: [HttpMethod.GET],
       integration,
