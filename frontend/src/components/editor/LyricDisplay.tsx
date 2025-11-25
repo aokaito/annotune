@@ -68,15 +68,21 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
             return <span key={`plain-${index}`}>{segment.text}</span>;
           }
           const style = getTagStyle(segment.annotation.tag);
+          const comment = segment.annotation.comment?.trim();
           return (
             <span
               key={segment.annotation.annotationId}
-              className="inline-flex flex-col items-center"
-              title={segment.annotation.comment ?? segment.annotation.tag}
+              className="inline-flex flex-col items-start gap-1"
+              title={comment || segment.annotation.tag}
             >
               <span className={`rounded px-1 underline decoration-2 ${style}`}>{segment.text}</span>
+              {comment && (
+                <p className="text-sm text-muted-foreground whitespace-pre-line wrap-anywhere">
+                  {comment}
+                </p>
+              )}
               {showTagIndicators && (
-                <span className="mt-1 text-[10px] font-semibold text-muted-foreground">
+                <span className="text-[10px] font-semibold text-muted-foreground">
                   {getTagSymbol(segment.annotation.tag)}
                 </span>
               )}

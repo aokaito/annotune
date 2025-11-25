@@ -1,54 +1,51 @@
 # Annotune
 
-Annotune は、歌詞テキストの特定範囲に歌唱テクニック（ビブラート／しゃくり等）やコメントを付与し、履歴管理や共有を可能にするボーカル練習ノートです。本リポジトリは以下の 3 パッケージで構成されています。
+Annotune is a vocal-practice notebook that lets singers annotate lyric passages with performance techniques (e.g., vibrato, scoop, fall), comments, and props metadata while keeping track of versions and sharing states. This monorepo houses the frontend editor/viewer, the backend Lambda API, and the infrastructure stack that wires Cognito, API Gateway, DynamoDB, and an S3/CloudFront hosting layer.
 
-- `frontend/`：歌詞の閲覧・編集を行う React + Vite 製 SPA（Tailwind ベースの UI）
-- `backend/`：MVP 要件を満たす REST API を提供する TypeScript Lambda ハンドラ群
-- `infra/`：Cognito・API Gateway・Lambda・DynamoDB・S3/CloudFront を構築する AWS CDK（TypeScript）
-
-## リポジトリ構成
+## Repository layout
 
 ```
-.
-├── frontend/          # React SPA（TanStack Query, Zustand, react-hook-form, Tailwind）
-├── backend/           # Lambda ハンドラ、zod スキーマ、DynamoDB リポジトリ
-├── infra/             # AWS サーバレス構成を展開する CDK スタック
-└── .github/workflows/ # フロント／バックエンド向け CI ワークフロー
+. 
+├── frontend/          # React + Vite SPA (Tailwind CSS, TanStack Query, Zustand, react-hook-form)
+├── backend/           # Node.js Lambda handlers, zod schemas, DynamoDB repository helpers
+├── infra/             # AWS CDK stack spinning up Cognito/API Gateway/Lambda/Dynamo
+└── .github/workflows/ # CI workflows for frontend/backend
 ```
 
-## フロントエンド概要
+## Frontend highlights
 
-- ルーティング：React Router 6 によるダッシュボード／エディタ／バージョン／公開ビュー
-- 状態管理：TanStack Query で API キャッシュ、Zustand で Cognito ユーザー情報を保持
-- UI：範囲選択→注釈追加パレット、タグ色分けレンダリング、トースト通知によるフィードバック
-- モック API：`src/api/client.ts` にインメモリ実装を用意しているため、バックエンド未構築でも動作確認可能
+- **Lyric editor & viewer**: Select text ranges, apply tags, add comments, and optionally snap to annotations on mobile.
+- **Inline comments**: Comments attached to a lyric segment now render directly beneath the highlighted span, matching the same experience as vibrato/breath indicators.
+- **Mockable API**: `src/api/client.ts` exposes an in-memory implementation so you can iterate without a deployed backend; swap to a real API by setting `VITE_API_BASE_URL`.
+- **Annotation palette & list**: Tag chips, intensity/length props, and mobile actions provide quick CRUD over annotations.
+- **Cognito-aware UX**: Zustand stores authenticated user info while TanStack Query manages lyric metadata, access control, and mutation states.
 
-### ローカル開発
+### Local frontend development
 
 ```bash
 npm install --prefix frontend
 npm run dev --prefix frontend
 ```
 
-実際の Cognito Hosted UI が利用可能になったら、`frontend/.env.local` に以下を追加してください。
+When hitting a real Cognito + API Gateway deployment, drop an `.env.local` containing:
 
 ```
 VITE_API_BASE_URL=https://your-api-id.execute-api.ap-northeast-1.amazonaws.com/prod/
 VITE_COGNITO_LOGIN_URL=https://your-domain.auth.ap-northeast-1.amazoncognito.com/login?...
-# 任意: ホスト UI でサインアウト後に遷移させる URL を設定する場合
+# Optional: redirect after hosted UI logout
 VITE_COGNITO_LOGOUT_URL=https://your-domain.auth.ap-northeast-1.amazoncognito.com/logout?...
 ```
 
-`VITE_API_BASE_URL` を設定するとフロントエンドはモック API ではなく API Gateway を利用します。値が未設定の場合は従来通りインメモリのモック実装が使われます。
+`VITE_API_BASE_URL` determines whether the SPA uses the mock client or the deployed HTTP API.
 
-## バックエンド概要
+## Backend overview
 
-- ハンドラ：`src/handlers/router.ts` が API Gateway のルートから各処理にディスパッチ
-- バリデーション：`src/schemas/lyrics.ts` で zod による入力検証を実施
-- データアクセス：`LyricsRepository` が DynamoDB の CRUD、楽観ロック、範囲重複チェック、スナップショット保存を一元管理
-- テスト：Vitest によるスキーマ検証テストを `src/__tests__/schemas.test.ts` に配置
+- **Router**: `src/handlers/router.ts` dispatches HTTP API routes to handler modules.
+- **Validation**: `zod` schemas in `src/schemas/lyrics.ts` guard lyric/annotation payloads.
+- **Repository**: `LyricsRepository` ensures optimistic locking, overlap checks, and DynamoDB persistence for lyrics, annotations, and versions.
+- **Tests**: Vitest validates schemas and helper logic in `src/__tests__/schemas.test.ts`.
 
-### ローカル確認
+### Running backend locally
 
 ```bash
 npm install --prefix backend
@@ -56,25 +53,24 @@ npm test --prefix backend
 npm run build --prefix backend
 ```
 
-ローカル実行・Lambda で必要な環境変数：
-
+Environment variables required by the Lambda handler:
 - `LYRICS_TABLE_NAME`
 - `LYRICS_OWNER_INDEX_NAME`
 - `ANNOTATIONS_TABLE_NAME`
 - `VERSIONS_TABLE_NAME`
 - `ALLOWED_ORIGIN`
 
-## インフラ概要
+## Infrastructure
 
-CDK スタックで以下を展開します。
+CDK stacks provision the following resources:
 
-- **Amazon Cognito**：ユーザープール + Hosted UI 用クライアント
-- **Amazon DynamoDB**：`AnnotuneLyrics` / `AnnotuneAnnotations` / `AnnotuneDocVersions` テーブル（オーナー GSI、PITR 有効）
-- **AWS Lambda (Node.js 20)**：バックエンドハンドラを束ねた単一関数
-- **Amazon API Gateway (HTTP API)**：JWT オーソライザー、CORS、公開用ルートを設定
-- **Amazon S3 + CloudFront**：SPA 配信用バケットとディストリビューション（事前ビルド済み `frontend/dist` を想定）
+- **Amazon Cognito**: User pool + Hosted UI client for authentication.
+- **Amazon DynamoDB**: Tables for lyrics (`AnnotuneLyrics`), annotations (`AnnotuneAnnotations`), document versions (`AnnotuneDocVersions`) with owner GSI + PITR.
+- **AWS Lambda (Node.js 20)**: Single function hosting the REST API.
+- **Amazon API Gateway (HTTP API)**: JWT authorizer, CORS, route mappings.
+- **Amazon S3 + CloudFront**: Hosts the SPA (`frontend/dist`) with an invalidation-ready distribution.
 
-### デプロイ手順
+### Deploying infra
 
 ```bash
 npm install --prefix infra
@@ -83,39 +79,39 @@ npm run synth --prefix infra
 npm run deploy --prefix infra
 ```
 
-デプロイ前にフロントエンドをビルドしておくと、バケットへアセットを配置できます。
+Build the frontend ahead of deployment so you can publish the latest `frontend/dist` artifacts:
 
-```bash
+```
 npm run build --prefix frontend
 ```
 
-CI/CD 用には以下のシークレットを GitHub に登録してください。
+GitHub Actions requires the following secrets:
+- `AWS_DEPLOY_ROLE`
+- `WEB_BUCKET`
+- `CLOUDFRONT_DISTRIBUTION`
 
-- `AWS_DEPLOY_ROLE`：GitHub Actions が Assume する IAM ロール ARN
-- `WEB_BUCKET`, `CLOUDFRONT_DISTRIBUTION`：フロントエンドデプロイ先 S3 バケットと CloudFront ID
+## API reference (v1)
 
-## API リファレンス (v1)
+- `POST /v1/lyrics`: Create lyrics document.
+- `GET /v1/lyrics?mine=true`: List owned documents.
+- `GET /v1/lyrics/{docId}`: Fetch lyrics + annotations (owner only).
+- `PUT /v1/lyrics/{docId}`: Update lyrics (optimistic lock via `X-Doc-Version`).
+- `DELETE /v1/lyrics/{docId}`: Delete (owner only).
+- `POST /v1/lyrics/{docId}/share`: Toggle public visibility.
+- `POST /v1/lyrics/{docId}/annotations`: Add annotation (400 on overlaps).
+- `PUT /v1/lyrics/{docId}/annotations/{annotationId}`: Update annotation.
+- `DELETE /v1/lyrics/{docId}/annotations/{annotationId}`: Delete annotation.
+- `GET /v1/lyrics/{docId}/versions`: List versions.
+- `GET /v1/lyrics/{docId}/versions/{version}`: Retrieve snapshot.
+- `GET /v1/public/lyrics/{docId}`: Public view (requires `isPublicView: true`).
 
-- `POST /v1/lyrics`：歌詞ドキュメント作成
-- `GET /v1/lyrics?mine=true`：自分のドキュメント一覧
-- `GET /v1/lyrics/{docId}`：歌詞＋アノテーション取得（本人のみ）
-- `PUT /v1/lyrics/{docId}`：歌詞更新（`X-Doc-Version` による楽観ロック必須）
-- `DELETE /v1/lyrics/{docId}`：歌詞削除（本人のみ）
-- `POST /v1/lyrics/{docId}/share`：公開可否を切り替え
-- `POST /v1/lyrics/{docId}/annotations`：アノテーション追加（重複範囲は 400）
-- `PUT /v1/lyrics/{docId}/annotations/{annotationId}`：アノテーション編集
-- `DELETE /v1/lyrics/{docId}/annotations/{annotationId}`：アノテーション削除
-- `GET /v1/lyrics/{docId}/versions`：バージョン一覧
-- `GET /v1/lyrics/{docId}/versions/{version}`：特定バージョンのスナップショット取得
-- `GET /v1/public/lyrics/{docId}`：公開ビュー（`isPublicView` が true の場合のみ）
+Errors follow HTTP conventions: 400 validation, 403 unauthorized, 404 not found, 409 version mismatch, etc.
 
-エラーコードは HTTP の慣習に従います（400 範囲エラー、403 権限、404 未検出、409 バージョン不一致等）。
+## Next steps
 
-## 今後の推奨ステップ
+1. Point the SPA at a real API Gateway + Cognito setup and swap the mock client for the HTTP client.
+2. Expand backend tests (integration or DynamoDB Local) and add React Testing Library coverage as needed.
+3. Harden infra with WAF/rate limiting, structured logging, and CloudWatch alarms.
+4. Build CI/CD to deploy the SPA automatically and invalidate the CloudFront cache after each release.
 
-1. フロントエンドの API 呼び出しを実デプロイした API Gateway URL＋Cognito JWT に切り替える。
-2. モック API を Fetch ベースの実装へ差し替え、`X-Doc-Version` ヘッダーを付与。
-3. インフラ面で WAF / レート制御 / ログ保持等を強化し、メトリクスにアラームを設定。
-4. DynamoDB Local を用いた統合テストや React Testing Library による UI テストを拡充。
-
-メロディへの注釈付けをお楽しみください！ 🎶
+Enjoy annotating melodies! 🎶
