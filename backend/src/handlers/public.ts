@@ -20,3 +20,19 @@ export const getPublicLyricHandler = async (
     return handleError(error);
   }
 };
+
+export const listPublicLyricsHandler = async (
+  event: APIGatewayProxyEventV2
+): Promise<APIGatewayProxyResultV2> => {
+  try {
+    const title = event.queryStringParameters?.title?.trim();
+    const artist = event.queryStringParameters?.artist?.trim();
+    const items = await repository.listPublicLyrics({
+      title: title?.length ? title : undefined,
+      artist: artist?.length ? artist : undefined
+    });
+    return jsonResponse(200, items);
+  } catch (error) {
+    return handleError(error);
+  }
+};

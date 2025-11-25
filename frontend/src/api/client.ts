@@ -198,6 +198,17 @@ export const createHttpApi = (config: HttpApiConfig): AnnotuneApi => {
       });
       return data ? toLyricDocument(data) : undefined;
     },
+    async searchPublicLyrics(query?: { title?: string; artist?: string }) {
+      const payload =
+        (await request<LyricResponse[]>('/v1/public/lyrics', {
+          method: 'GET',
+          query,
+          auth: false
+        })) ?? [];
+      return payload.map((item) =>
+        toLyricDocument({ ...item, annotations: item.annotations ?? [] })
+      );
+    },
     async updateLyric(docId: string, payload: UpdateLyricPayload) {
       const data = await request<LyricResponse>(`/v1/lyrics/${docId}`, {
         method: 'PUT',

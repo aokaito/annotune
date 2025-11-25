@@ -94,14 +94,22 @@ export const DashboardPage = () => {
           <h1 className="text-2xl font-semibold sm:text-3xl">あなたの歌詞ノート</h1>
           <p className="text-sm text-muted-foreground">歌詞に注釈を付けて練習メモを整理しましょう。</p>
         </div>
-        <button
-          className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 sm:w-auto"
-          disabled={requiresSignIn}
-          onClick={() => setOpen(true)}
-        >
-          {/* 新規ドキュメント作成モーダルを開く */}
-          新規ドキュメント
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to="/discover"
+            className="inline-flex min-h-11 items-center justify-center rounded-md border border-border px-4 text-sm font-semibold text-foreground transition hover:text-foreground"
+          >
+            公開歌詞を探す
+          </Link>
+          <button
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 sm:w-auto"
+            disabled={requiresSignIn}
+            onClick={() => setOpen(true)}
+          >
+            {/* 新規ドキュメント作成モーダルを開く */}
+            新規ドキュメント
+          </button>
+        </div>
       </div>
       {requiresSignIn && (
         <div className="rounded-lg border border-dashed border-border bg-card/80 p-10 text-center text-muted-foreground">

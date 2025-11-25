@@ -148,6 +148,32 @@ export class LyricsRepository {
     return { ...lyric, annotations };
   }
 
+  async listPublicLyrics(filters?: { title?: string; artist?: string }): Promise<LyricDocument[]> {
+    const scanResult = await this.client.send(
+      new ScanCommand({
+        TableName: this.config.lyricsTable,
+        FilterExpression: 'isPublicView = :public',
+        ExpressionAttributeValues: {
+          ':public': true
+        }
+      })
+    );
+
+    const items = (scanResult.Items ?? []).map((item) => normalizeLyricRecord(item as LyricDocument));
+    if (!filters || (!filters.title && !filters.artist)) {
+      return items;
+    }
+
+    const matches = (value: string, filter?: string) =>
+      !filter || filter.length === 0
+        ? true
+        : value.toLowerCase().includes(filter.toLowerCase());
+
+    return items.filter(
+      (item) => matches(item.title, filters.title) && matches(item.artist, filters.artist)
+    );
+  }
+
   // 歌詞本文とタイトルを更新し、バージョンを進める
   async updateLyric(
     docId: string,

@@ -74,6 +74,12 @@ export const Header = () => {
           </Link>
         </div>
         <nav className="hidden items-center gap-2 md:flex">
+          <Link
+            to="/discover"
+            className="inline-flex min-h-11 items-center justify-center rounded-md border border-border px-4 text-sm font-semibold text-foreground transition hover:bg-muted"
+          >
+            公開ライブラリ
+          </Link>
           {mode === 'mock' && (
             <span className="inline-flex min-h-11 items-center rounded-md border border-border px-4 text-sm font-semibold text-muted-foreground">
               デモモード
@@ -101,6 +107,14 @@ export const Header = () => {
               <SheetTitle>メニュー</SheetTitle>
             </SheetHeader>
             <div className="mt-6 flex flex-col gap-3">
+              <SheetClose asChild>
+                <Link
+                  className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-3 text-base font-semibold text-foreground transition hover:bg-muted"
+                  to="/discover"
+                >
+                  公開ライブラリを見る
+                </Link>
+              </SheetClose>
               {mode === 'mock' && (
                 <span className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-3 text-base font-semibold text-muted-foreground">
                   デモモード

@@ -138,6 +138,15 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       }
       return touch(item);
     },
+    async searchPublicLyrics(query) {
+      const entries = [...db.lyrics.values()].filter((lyric) => lyric.isPublicView);
+      const matches = (value: string, filter?: string) =>
+        !filter ? true : value.toLowerCase().includes(filter.toLowerCase());
+      const filtered = entries.filter(
+        (lyric) => matches(lyric.title, query?.title) && matches(lyric.artist, query?.artist)
+      );
+      return filtered.map(touch);
+    },
     // 歌詞ドキュメントを更新し、バージョンを 1 進める
     async updateLyric(docId, payload) {
       const existing = db.lyrics.get(docId);

@@ -26,6 +26,7 @@ export interface AnnotuneApi {
   createLyric(ownerId: string, payload: CreateLyricPayload): Promise<LyricDocument>;
   getLyric(docId: string): Promise<LyricDocument | undefined>;
   getPublicLyric(docId: string): Promise<LyricDocument | undefined>;
+  searchPublicLyrics(query?: { title?: string; artist?: string }): Promise<LyricDocument[]>;
   updateLyric(docId: string, payload: UpdateLyricPayload): Promise<LyricDocument>;
   deleteLyric(docId: string): Promise<void>;
   shareLyric(docId: string, isPublicView: boolean): Promise<LyricDocument>;
