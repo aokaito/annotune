@@ -4,14 +4,24 @@ import { createHttpApi, mockApi } from '../api/client';
 import { useAuthStore } from '../store/auth';
 import type { AuthState } from '../store/auth';
 
+const normalizeBaseUrl = (value: string) => {
+  try {
+    const parsed = new URL(value);
+    return `${parsed.protocol}//${parsed.host}/`;
+  } catch {
+    return value.endsWith('/') ? value.slice(0, -1) : value;
+  }
+};
+
 export const useAnnotuneApi = () => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+  const rawBase = import.meta.env.VITE_API_BASE_URL?.trim();
+  const normalizedBase = rawBase ? normalizeBaseUrl(rawBase) : undefined;
   const userId = useAuthStore((state: AuthState) => state.userId);
   const isAuthenticated = useAuthStore((state: AuthState) => state.isAuthenticated);
   const expiresAt = useAuthStore((state: AuthState) => state.expiresAt);
   const signOut = useAuthStore((state: AuthState) => state.signOut);
 
-  const mode = baseUrl ? 'http' : 'mock';
+  const mode = normalizedBase ? 'http' : 'mock';
 
   useEffect(() => {
     if (!expiresAt) return;
@@ -21,15 +31,17 @@ export const useAnnotuneApi = () => {
   }, [expiresAt, signOut]);
 
   const api = useMemo(() => {
-    if (!baseUrl) {
+    if (!normalizedBase) {
       return mockApi;
     }
-    const normalized = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const normalized = normalizedBase.endsWith('/')
+      ? normalizedBase.slice(0, -1)
+      : normalizedBase;
     return createHttpApi({
       baseUrl: normalized,
       getIdToken: () => useAuthStore.getState().idToken
     });
-  }, [baseUrl]);
+  }, [normalizedBase]);
 
   return {
     api,

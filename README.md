@@ -30,13 +30,13 @@ npm run dev --prefix frontend
 本番の Cognito + API Gateway を利用する際は `frontend/.env.local` に以下を追記してください。
 
 ```
-VITE_API_BASE_URL=https://your-api-id.execute-api.ap-northeast-1.amazonaws.com/prod/
+VITE_API_BASE_URL=https://your-api-id.execute-api.ap-northeast-1.amazonaws.com/
 VITE_COGNITO_LOGIN_URL=https://your-domain.auth.ap-northeast-1.amazoncognito.com/login?...
 # 任意：Hosted UI からのサインアウト後遷移先
 VITE_COGNITO_LOGOUT_URL=https://your-domain.auth.ap-northeast-1.amazoncognito.com/logout?...
 ```
 
-`VITE_API_BASE_URL` を設定すると、SPA はモックではなく API Gateway を呼び出します。
+`VITE_API_BASE_URL` を設定すると、SPA はモックではなく API Gateway を呼び出します。`/prod` などステージ名は不要で、`<api-id>.execute-api.<region>.amazonaws.com/` の形式でアクセスしてください（CDK では `$default` ステージを使います）。
 
 ## バックエンド概要
 
