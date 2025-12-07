@@ -93,6 +93,7 @@ export const updateLyricHandler = async (
     // バージョン番号を指定して楽観ロック更新
     const updated = await repository.updateLyric(docId, user.userId, {
       title: body.title,
+      artist: body.artist,
       text: body.text,
       version
     });

@@ -3,9 +3,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useCreateLyric, useLyricsList } from '../hooks/useLyrics';
+import { useAnnotuneApi } from '../hooks/useAnnotuneApi';
+import type { LyricDocument } from '../types';
 
 type FormValues = {
   title: string;
+  artist: string;
   text: string;
 };
 
@@ -14,6 +17,7 @@ const CreateLyricForm = ({ onClose }: { onClose(): void }) => {
   const form = useForm<FormValues>({
     defaultValues: {
       title: 'New Song',
+      artist: '',
       text: ''
     }
   });
@@ -21,7 +25,7 @@ const CreateLyricForm = ({ onClose }: { onClose(): void }) => {
   const mutation = useCreateLyric();
 
   // 送信時に API を呼び出し、完了後にダイアログを閉じる
-  const onSubmit = form.handleSubmit(async (values) => {
+  const onSubmit = form.handleSubmit(async (values: FormValues) => {
     await mutation.mutateAsync(values);
     onClose();
   });
@@ -35,6 +39,14 @@ const CreateLyricForm = ({ onClose }: { onClose(): void }) => {
           type="text"
           className="rounded border border-border bg-card px-3 py-2"
           {...form.register('title', { required: true })}
+        />
+      </label>
+      <label className="flex flex-col gap-2 text-sm">
+        <span className="font-medium text-foreground">Artist</span>
+        <input
+          type="text"
+          className="rounded border border-border bg-card px-3 py-2"
+          {...form.register('artist', { required: true })}
         />
       </label>
       <label className="flex flex-col gap-2 text-sm">
@@ -69,7 +81,10 @@ const CreateLyricForm = ({ onClose }: { onClose(): void }) => {
 
 export const DashboardPage = () => {
   const { data: lyrics, isLoading } = useLyricsList();
+  const { mode, isAuthenticated } = useAnnotuneApi();
   const [open, setOpen] = useState(false);
+  const loginHref = import.meta.env.VITE_COGNITO_LOGIN_URL?.trim() || '#';
+  const requiresSignIn = mode === 'http' && !isAuthenticated;
 
   return (
     // 一覧・ホルダー・モーダルを段組みで構成
@@ -79,23 +94,45 @@ export const DashboardPage = () => {
           <h1 className="text-2xl font-semibold sm:text-3xl">あなたの歌詞ノート</h1>
           <p className="text-sm text-muted-foreground">歌詞に注釈を付けて練習メモを整理しましょう。</p>
         </div>
-        <button
-          className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 sm:w-auto"
-          onClick={() => setOpen(true)}
-        >
-          {/* 新規ドキュメント作成モーダルを開く */}
-          新規ドキュメント
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to="/discover"
+            className="inline-flex min-h-11 items-center justify-center rounded-md border border-border px-4 text-sm font-semibold text-foreground transition hover:text-foreground"
+          >
+            公開歌詞を探す
+          </Link>
+          <button
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 sm:w-auto"
+            disabled={requiresSignIn}
+            onClick={() => setOpen(true)}
+          >
+            {/* 新規ドキュメント作成モーダルを開く */}
+            新規ドキュメント
+          </button>
+        </div>
       </div>
-      {isLoading && <p className="text-muted-foreground">歌詞一覧を読み込み中です…</p>}
-      {lyrics && lyrics.length === 0 && (
+      {requiresSignIn && (
+        <div className="rounded-lg border border-dashed border-border bg-card/80 p-10 text-center text-muted-foreground">
+          <p className="mb-4">歌詞ノートを利用するにはサインインしてください。</p>
+          <a
+            className="inline-flex min-h-10 items-center rounded-md bg-secondary px-4 text-sm font-semibold text-secondary-foreground transition hover:bg-secondary/90"
+            href={loginHref}
+          >
+            サインインページへ移動
+          </a>
+        </div>
+      )}
+      {isLoading && !requiresSignIn && (
+        <p className="text-muted-foreground">歌詞一覧を読み込み中です…</p>
+      )}
+      {lyrics && lyrics.length === 0 && !requiresSignIn && (
         <div className="rounded-lg border border-dashed border-border bg-card/80 p-10 text-center text-muted-foreground">
           <p>まだ歌詞ドキュメントがありません。右上のボタンから作成しましょう。</p>
         </div>
       )}
-      {lyrics && lyrics.length > 0 && (
+      {lyrics && lyrics.length > 0 && !requiresSignIn && (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {lyrics.map((lyric) => (
+          {lyrics.map((lyric: LyricDocument) => (
             <li
               key={lyric.docId}
               className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-sm transition hover:shadow-md"
@@ -104,12 +141,15 @@ export const DashboardPage = () => {
                 {/* タイトル・更新日・公開状態を表示 */}
                 <div className="min-w-0 space-y-1">
                   <h2 className="truncate text-lg font-semibold sm:text-xl">{lyric.title}</h2>
+                  <p className="truncate text-xs text-muted-foreground sm:text-sm">
+                    {lyric.artist || 'アーティスト未設定'}
+                  </p>
                   <p className="text-xs text-muted-foreground sm:text-sm">
-                    バージョン {lyric.version} ・ 最終更新 {new Date(lyric.updatedAt).toLocaleString()}
+                    最終更新 {new Date(lyric.updatedAt).toLocaleString()}
                   </p>
                 </div>
                 <span
-                  className={`inline-flex min-h-8 items-center rounded-full px-3 text-xs font-medium ${
+                  className={`inline-flex min-h-8 items-center whitespace-nowrap rounded-full px-3 text-xs font-medium ${
                     lyric.isPublicView
                       ? 'bg-secondary text-secondary-foreground'
                       : 'bg-muted text-muted-foreground'
@@ -119,11 +159,10 @@ export const DashboardPage = () => {
                   {lyric.isPublicView ? '公開中' : '非公開'}
                 </span>
               </div>
-              <p className="wrap-anywhere whitespace-pre-line text-sm text-muted-foreground">
+              <p className="wrap-anywhere whitespace-pre-line text-sm text-muted-foreground line-clamp-5">
                 {lyric.text}
               </p>
               <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-muted-foreground">アノテーション {lyric.annotations.length} 件</span>
                 <div className="flex flex-wrap gap-2">
                   <Link
                     className="inline-flex min-h-10 items-center rounded-md border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"
@@ -131,6 +170,12 @@ export const DashboardPage = () => {
                   >
                     {/* 詳細エディタ画面へ遷移 */}
                     編集
+                  </Link>
+                  <Link
+                    className="inline-flex min-h-10 items-center rounded-md border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"
+                    to={`/viewer/${lyric.docId}`}
+                  >
+                    閲覧
                   </Link>
                   <Link
                     className="inline-flex min-h-10 items-center rounded-md border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"

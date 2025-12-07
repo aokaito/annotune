@@ -5,8 +5,11 @@ import { DashboardPage } from './routes/DashboardPage';
 import { EditorPage } from './routes/EditorPage';
 import { AuthCallbackPage } from './routes/AuthCallbackPage';
 import { PublicViewPage } from './routes/PublicViewPage';
+import { ViewerPage } from './routes/ViewerPage';
 import { VersionsPage } from './routes/VersionsPage';
+import { AccountSettingsPage } from './routes/AccountSettingsPage';
 import { AppLayout } from './components/layout/AppLayout';
+import { DiscoverPage } from './routes/DiscoverPage';
 
 const App = () => (
   <AppLayout>
@@ -14,8 +17,11 @@ const App = () => (
       <Suspense fallback={<p className="text-muted-foreground">読み込み中です…</p>}>
         <Routes>
           <Route path="/" element={<DashboardPage />} />
+          <Route path="/discover" element={<DiscoverPage />} />
           <Route path="/editor/:docId" element={<EditorPage />} />
+          <Route path="/viewer/:docId" element={<ViewerPage />} />
           <Route path="/public/:docId" element={<PublicViewPage />} />
+          <Route path="/account" element={<AccountSettingsPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/versions/:docId" element={<VersionsPage />} />
         </Routes>

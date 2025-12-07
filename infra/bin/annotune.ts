@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// このファイルは CDK アプリケーションのエントリーポイントであり、スタックをデプロイする。
+// このファイルは CDK アプリケーションのエントリーポイントでタックをデプロイする。
 import 'source-map-support/register.js';
 import * as cdk from 'aws-cdk-lib';
 import { AnnotuneStack } from '../lib/annotune-stack.js';

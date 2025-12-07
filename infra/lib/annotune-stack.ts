@@ -103,7 +103,7 @@ export class AnnotuneStack extends Stack {
     });
 
     // ---- Lambda（バックエンド） ----
-  const handler = new NodejsFunction(this, 'AnnotuneApiHandler', {
+    const handler = new NodejsFunction(this, 'AnnotuneApiHandler', {
       entry: path.join(backendDir, 'src/handlers/router.ts'),
       runtime: Runtime.NODEJS_20_X,
       memorySize: 512,
@@ -113,6 +113,7 @@ export class AnnotuneStack extends Stack {
       depsLockFilePath: path.join(repoRoot, 'package-lock.json'),
       bundling: {
         externalModules: ['aws-sdk'], // ランタイムに同梱されている aws-sdk をバンドル対象から除外
+        nodeModules: ['@aws-sdk/client-dynamodb', '@aws-sdk/lib-dynamodb', 'zod'],
         tsconfig: path.join(backendDir, 'tsconfig.json')
       },
       environment: {
@@ -202,6 +203,12 @@ export class AnnotuneStack extends Stack {
       });
     });
 
+    httpApi.addRoutes({
+      path: '/v1/public/lyrics',
+      methods: [HttpMethod.GET],
+      integration,
+      authorizer: undefined
+    });
     httpApi.addRoutes({
       path: '/v1/public/lyrics/{docId}',
       methods: [HttpMethod.GET],

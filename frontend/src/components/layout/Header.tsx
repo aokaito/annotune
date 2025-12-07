@@ -1,48 +1,99 @@
-// NOTE: 共通ヘッダーをモバイル対応するため Sheet ナビを追加。代替案: Headless UI の Dialog を使う実装もあるが既存依存に合わせ shadcn 構成
-import { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '../ui/sheet';
-
-const navItems: ReadonlyArray<{ key: string; label: string; to: string; end?: boolean }> = [
-  { key: 'dashboard', label: 'ダッシュボード', to: '/', end: true },
-  { key: 'versions', label: '履歴', to: '/versions/demo' }
-];
-
-const authLink = {
-  key: 'signin',
-  label: 'サインイン',
-  href: import.meta.env.VITE_COGNITO_LOGIN_URL || '#'
-};
+import { useAnnotuneApi } from '../../hooks/useAnnotuneApi';
+import { useAuthStore } from '../../store/auth';
+import type { AuthState } from '../../store/auth';
 
 export const Header = () => {
+  const { mode, isAuthenticated } = useAnnotuneApi();
+  const displayName = useAuthStore((state: AuthState) => state.displayName);
+  const signOut = useAuthStore((state: AuthState) => state.signOut);
   const [open, setOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const loginHref = import.meta.env.VITE_COGNITO_LOGIN_URL?.trim() || '#';
+  const logoutHref = import.meta.env.VITE_COGNITO_LOGOUT_URL?.trim();
+  const navigate = useNavigate();
 
-  const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition ${
-      isActive
-        ? 'bg-primary text-primary-foreground'
-        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-    }`;
+  const effectiveDisplayName =
+    displayName || (mode === 'mock' ? 'Demo Vocalist' : 'サインインしてください');
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const handleClick = (event: MouseEvent) => {
+      if (!menuRef.current || menuRef.current.contains(event.target as Node)) {
+        return;
+      }
+      setAccountMenuOpen(false);
+    };
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setAccountMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [accountMenuOpen]);
+
+  const handleSignOut = () => {
+    setAccountMenuOpen(false);
+    signOut();
+    if (logoutHref && typeof window !== 'undefined') {
+      window.location.href = logoutHref;
+    }
+  };
+
+  const accountButton = (
+    <button
+      type="button"
+      className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border text-foreground transition hover:bg-muted"
+      onClick={() => setAccountMenuOpen((prev) => !prev)}
+      aria-label="アカウントメニューを開く"
+    >
+      <span className="material-symbols-rounded text-2xl">account_circle</span>
+    </button>
+  );
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-card/85 backdrop-blur">
+    <header className="relative sticky top-0 z-30 border-b border-border bg-card/85 backdrop-blur">
       <div className="mx-auto flex w-full max-w-screen-xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <Link to="/" className="text-lg font-semibold text-foreground md:text-xl">
-          Annotune
-        </Link>
+        <div className="flex items-center gap-3">
+          <img
+            src="/annotune-icon.svg"
+            alt="Annotune icon"
+            className="h-9 w-9 shadow-sm"
+          />
+          <Link to="/" className="text-lg font-semibold text-foreground md:text-xl">
+            Annotune
+          </Link>
+        </div>
         <nav className="hidden items-center gap-2 md:flex">
-          {navItems.map((item) => (
-            <NavLink key={item.key} to={item.to} end={item.end} className={linkClass}>
-              {item.label}
-            </NavLink>
-          ))}
-          <a
-            className="inline-flex min-h-11 items-center rounded-md bg-secondary px-4 text-sm font-semibold text-secondary-foreground transition hover:bg-secondary/90"
-            href={authLink.href}
+          <Link
+            to="/discover"
+            className="inline-flex min-h-11 items-center justify-center rounded-md border border-border px-4 text-sm font-semibold text-foreground transition hover:bg-muted"
           >
-            {authLink.label}
-          </a>
+            公開ライブラリ
+          </Link>
+          {mode === 'mock' && (
+            <span className="inline-flex min-h-11 items-center rounded-md border border-border px-4 text-sm font-semibold text-muted-foreground">
+              デモモード
+            </span>
+          )}
+          {mode === 'http' && !isAuthenticated && (
+            <a
+              className="inline-flex min-h-11 items-center rounded-md bg-secondary px-4 text-sm font-semibold text-secondary-foreground transition hover:bg-secondary/90"
+              href={loginHref}
+            >
+              サインイン
+            </a>
+          )}
+          {mode === 'http' && isAuthenticated && <div className="relative">{accountButton}</div>}
         </nav>
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
@@ -56,33 +107,85 @@ export const Header = () => {
               <SheetTitle>メニュー</SheetTitle>
             </SheetHeader>
             <div className="mt-6 flex flex-col gap-3">
-              {navItems.map((item) => (
-                <SheetClose asChild key={item.key}>
-                  <NavLink
-                    to={item.to}
-                    end={item.end}
-                    className={({ isActive }) =>
-                      `inline-flex w-full items-center rounded-md px-4 py-3 text-base font-medium transition ${
-                        isActive ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted'
-                      }`
-                    }
-                  >
-                    {item.label}
-                  </NavLink>
-                </SheetClose>
-              ))}
               <SheetClose asChild>
-                <a
-                  className="inline-flex w-full items-center rounded-md bg-secondary px-4 py-3 text-base font-semibold text-secondary-foreground transition hover:bg-secondary/90"
-                  href={authLink.href}
+                <Link
+                  className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-3 text-base font-semibold text-foreground transition hover:bg-muted"
+                  to="/discover"
                 >
-                  {authLink.label}
-                </a>
+                  公開ライブラリを見る
+                </Link>
               </SheetClose>
+              {mode === 'mock' && (
+                <span className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-3 text-base font-semibold text-muted-foreground">
+                  デモモード
+                </span>
+              )}
+              {mode === 'http' && !isAuthenticated && (
+                <SheetClose asChild>
+                  <a
+                    className="inline-flex w-full items-center justify-center rounded-md bg-secondary px-4 py-3 text-base font-semibold text-secondary-foreground transition hover:bg-secondary/90"
+                    href={loginHref}
+                  >
+                    サインイン
+                  </a>
+                </SheetClose>
+              )}
+              {mode === 'http' && isAuthenticated && (
+                <>
+                  <SheetClose asChild>
+                    <button
+                      type="button"
+                      className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-3 text-base font-semibold text-muted-foreground transition hover:bg-muted"
+                      onClick={() => {
+                        setAccountMenuOpen(false);
+                        navigate('/account');
+                      }}
+                    >
+                      アカウント設定
+                    </button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <button
+                      type="button"
+                      className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-3 text-base font-semibold text-muted-foreground transition hover:bg-muted"
+                      onClick={handleSignOut}
+                    >
+                      サインアウト
+                    </button>
+                  </SheetClose>
+                </>
+              )}
             </div>
           </SheetContent>
         </Sheet>
       </div>
+      {mode === 'http' && isAuthenticated && accountMenuOpen && (
+        <div className="absolute inset-x-0 top-full flex justify-end px-4 sm:px-6">
+          <div
+            ref={menuRef}
+            className="mt-2 w-full max-w-xs space-y-2 rounded-2xl border border-border bg-card p-4 shadow-lg md:max-w-sm"
+          >
+            <p className="text-sm font-semibold text-foreground">{effectiveDisplayName}</p>
+            <button
+              type="button"
+              className="w-full rounded-md border border-border px-4 py-2 text-left text-sm font-medium text-foreground transition hover:bg-muted"
+              onClick={() => {
+                setAccountMenuOpen(false);
+                navigate('/account');
+              }}
+            >
+              アカウント設定
+            </button>
+            <button
+              type="button"
+              className="w-full rounded-md border border-red-200 px-4 py-2 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
+              onClick={handleSignOut}
+            >
+              サインアウト
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

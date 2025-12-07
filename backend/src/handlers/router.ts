@@ -13,7 +13,7 @@ import {
   updateAnnotationHandler,
   updateLyricHandler
 } from './lyrics';
-import { getPublicLyricHandler } from './public';
+import { getPublicLyricHandler, listPublicLyricsHandler } from './public';
 import { jsonResponse } from '../utils/http';
 
 const routeHandlers: Record<string, APIGatewayProxyHandlerV2> = {
@@ -28,6 +28,7 @@ const routeHandlers: Record<string, APIGatewayProxyHandlerV2> = {
   'DELETE /v1/lyrics/{docId}/annotations/{annotationId}': deleteAnnotationHandler,
   'GET /v1/lyrics/{docId}/versions': listVersionsHandler,
   'GET /v1/lyrics/{docId}/versions/{version}': getVersionHandler,
+  'GET /v1/public/lyrics': listPublicLyricsHandler,
   'GET /v1/public/lyrics/{docId}': getPublicLyricHandler
 };
 

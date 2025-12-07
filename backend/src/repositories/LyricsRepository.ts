@@ -7,24 +7,38 @@ import { HttpError } from '../utils/http';
 import type { AnnotationRecord, DocVersionRecord, LyricDocument } from '../types';
 import type { TableConfig } from '../config/env';
 
-// 現在時刻を ISO 形式の文字列で返すヘルパー
+// 現在時刻を ISO 形式の文字列で返すヘルパ
 const now = () => new Date().toISOString();
 
 // 二つの範囲が重なるかを判定するユーティリティ
 const overlaps = (aStart: number, aEnd: number, bStart: number, bEnd: number) =>
   !(aEnd <= bStart || aStart >= bEnd);
 
+const normalizeLyricRecord = (record: Partial<LyricDocument>): LyricDocument => ({
+  ...(record as LyricDocument),
+  artist: record.artist ?? ''
+});
+
+const normalizeVersionRecord = (record: Partial<DocVersionRecord>): DocVersionRecord => ({
+  ...(record as DocVersionRecord),
+  artist: record.artist ?? ''
+});
+
 export class LyricsRepository {
   constructor(private readonly client: DynamoDBDocumentClient, private readonly config: TableConfig) {}
 
   // 歌詞ドキュメントを新規作成し、初回のバージョンスナップショットも保存する
-  async createLyric(ownerId: string, payload: { title: string; text: string }): Promise<LyricDocument> {
+  async createLyric(
+    ownerId: string,
+    payload: { title: string; artist: string; text: string }
+  ): Promise<LyricDocument> {
     const docId = nanoid();
     const timestamp = now();
     const item: LyricDocument = {
       docId,
       ownerId,
       title: payload.title,
+      artist: payload.artist,
       text: payload.text,
       version: 1,
       createdAt: timestamp,
@@ -49,6 +63,7 @@ export class LyricsRepository {
       docId,
       version: 1,
       title: item.title,
+      artist: item.artist,
       text: item.text,
       createdAt: timestamp,
       authorId: ownerId
@@ -71,7 +86,7 @@ export class LyricsRepository {
           }
         })
       );
-      return (result.Items ?? []) as LyricDocument[];
+      return (result.Items ?? []).map((item) => normalizeLyricRecord(item as LyricDocument));
     }
 
     // グローバルセカンダリインデックスが無い場合は全件走査してフィルタする（少量データ前提）
@@ -85,7 +100,7 @@ export class LyricsRepository {
       })
     );
 
-    return (scanResult.Items ?? []) as LyricDocument[];
+    return (scanResult.Items ?? []).map((item) => normalizeLyricRecord(item as LyricDocument));
   }
 
   // ドキュメントと関連アノテーションを取得する（所有者チェックは任意）
@@ -101,7 +116,7 @@ export class LyricsRepository {
       throw new HttpError(404, 'Document not found');
     }
 
-    const lyric = record.Item as LyricDocument;
+    const lyric = normalizeLyricRecord(record.Item as LyricDocument);
 
     if (ownerId && lyric.ownerId !== ownerId) {
       throw new HttpError(403, 'Forbidden');
@@ -124,7 +139,7 @@ export class LyricsRepository {
     if (!record.Item) {
       throw new HttpError(404, 'Document not found');
     }
-    const lyric = record.Item as LyricDocument;
+    const lyric = normalizeLyricRecord(record.Item as LyricDocument);
     if (!lyric.isPublicView) {
       // 公開フラグが false の場合は閲覧を禁止
       throw new HttpError(403, 'Document is not public');
@@ -133,11 +148,37 @@ export class LyricsRepository {
     return { ...lyric, annotations };
   }
 
+  async listPublicLyrics(filters?: { title?: string; artist?: string }): Promise<LyricDocument[]> {
+    const scanResult = await this.client.send(
+      new ScanCommand({
+        TableName: this.config.lyricsTable,
+        FilterExpression: 'isPublicView = :public',
+        ExpressionAttributeValues: {
+          ':public': true
+        }
+      })
+    );
+
+    const items = (scanResult.Items ?? []).map((item) => normalizeLyricRecord(item as LyricDocument));
+    if (!filters || (!filters.title && !filters.artist)) {
+      return items;
+    }
+
+    const matches = (value: string, filter?: string) =>
+      !filter || filter.length === 0
+        ? true
+        : value.toLowerCase().includes(filter.toLowerCase());
+
+    return items.filter(
+      (item) => matches(item.title, filters.title) && matches(item.artist, filters.artist)
+    );
+  }
+
   // 歌詞本文とタイトルを更新し、バージョンを進める
   async updateLyric(
     docId: string,
     ownerId: string,
-    payload: { title: string; text: string; version: number }
+    payload: { title: string; artist: string; text: string; version: number }
   ): Promise<LyricDocument> {
     const timestamp = now();
     let result;
@@ -147,7 +188,7 @@ export class LyricsRepository {
           TableName: this.config.lyricsTable,
           Key: { docId },
           UpdateExpression:
-            'SET title = :title, #text = :text, version = version + :inc, updatedAt = :updatedAt',
+            'SET title = :title, artist = :artist, #text = :text, version = version + :inc, updatedAt = :updatedAt',
           ConditionExpression: 'ownerId = :ownerId AND version = :expectedVersion',
           ExpressionAttributeNames: {
             '#text': 'text'
@@ -156,6 +197,7 @@ export class LyricsRepository {
             ':ownerId': ownerId,
             ':expectedVersion': payload.version,
             ':title': payload.title,
+            ':artist': payload.artist,
             ':text': payload.text,
             ':updatedAt': timestamp,
             ':inc': 1
@@ -179,6 +221,7 @@ export class LyricsRepository {
       docId,
       version: updated.version,
       title: updated.title,
+      artist: updated.artist,
       text: updated.text,
       createdAt: timestamp,
       authorId: ownerId
@@ -362,7 +405,7 @@ export class LyricsRepository {
       })
     );
 
-    return (result.Items ?? []) as DocVersionRecord[];
+      return (result.Items ?? []).map((item) => normalizeVersionRecord(item as DocVersionRecord));
   }
 
   // 指定バージョンのスナップショットを取得する
@@ -379,7 +422,7 @@ export class LyricsRepository {
       throw new HttpError(404, 'Version not found');
     }
 
-    return result.Item as DocVersionRecord;
+    return normalizeVersionRecord(result.Item as DocVersionRecord);
   }
 
   private async loadAnnotations(docId: string): Promise<AnnotationRecord[]> {

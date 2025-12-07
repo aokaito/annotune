@@ -13,12 +13,14 @@ export const annotationPropsSchema = z
 // 新規歌詞ドキュメント作成時の入力要件
 export const createLyricSchema = z.object({
   title: z.string().min(1).max(200),
+  artist: z.string().min(1).max(200),
   text: z.string().min(1).max(20000)
 });
 
 // 既存歌詞更新時の入力要件（バージョン必須）
 export const updateLyricSchema = z.object({
   title: z.string().min(1).max(200),
+  artist: z.string().min(1).max(200),
   text: z.string().min(1).max(20000),
   version: z.number().int().positive()
 });

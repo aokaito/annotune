@@ -12,4 +12,4 @@ export {
   listVersionsHandler,
   getVersionHandler
 } from './lyrics';
-export { getPublicLyricHandler } from './public';
+export { getPublicLyricHandler, listPublicLyricsHandler } from './public';

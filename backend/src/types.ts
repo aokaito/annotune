@@ -18,6 +18,7 @@ export interface LyricDocument {
   docId: string;
   ownerId: string;
   title: string;
+  artist: string;
   text: string;
   version: number;
   createdAt: string;
@@ -43,6 +44,7 @@ export interface DocVersionRecord {
   docId: string;
   version: number;
   title: string;
+  artist: string;
   text: string;
   createdAt: string;
   authorId: string;
