@@ -2,7 +2,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { Duration, RemovalPolicy, Stack, StackProps, aws_iam as iam } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import {
   AttributeType,
@@ -18,7 +18,7 @@ import {
   CorsHttpMethod
 } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
-import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
+import { HttpNoneAuthorizer, HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import {
   UserPool,
   UserPoolClient,
@@ -30,7 +30,8 @@ import {
   Distribution,
   ViewerProtocolPolicy,
   AllowedMethods,
-  CachePolicy
+  CachePolicy,
+  OriginAccessIdentity
 } from 'aws-cdk-lib/aws-cloudfront';
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
@@ -125,21 +126,14 @@ export class AnnotuneStack extends Stack {
       }
     });
 
-    handler.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: ['dynamodb:*'],
-        resources: [
-          lyricsTable.tableArn,
-          annotationsTable.tableArn,
-          versionsTable.tableArn,
-          `${lyricsTable.tableArn}/index/*`
-        ]
-      })
-    );
+    lyricsTable.grantReadWriteData(handler);
+    annotationsTable.grantReadWriteData(handler);
+    versionsTable.grantReadWriteData(handler);
 
     const authorizer = new HttpUserPoolAuthorizer('AnnotuneAuthorizer', userPool, {
       userPoolClients: [userPoolClient]
     });
+    const publicAuthorizer = new HttpNoneAuthorizer();
 
     // ---- API Gateway ----
     const httpApi = new HttpApi(this, 'AnnotuneHttpApi', {
@@ -154,7 +148,9 @@ export class AnnotuneStack extends Stack {
         ],
         allowOrigins: ['*'],
         maxAge: Duration.days(1)
-      }
+      },
+      defaultAuthorizer: authorizer,
+      defaultAuthorizationScopes: ['openid', 'email', 'profile']
     });
 
     const integration = new HttpLambdaIntegration('AnnotuneIntegration', handler);
@@ -207,25 +203,31 @@ export class AnnotuneStack extends Stack {
       path: '/v1/public/lyrics',
       methods: [HttpMethod.GET],
       integration,
-      authorizer: undefined
+      authorizer: publicAuthorizer,
+      authorizationScopes: undefined
     });
     httpApi.addRoutes({
       path: '/v1/public/lyrics/{docId}',
       methods: [HttpMethod.GET],
       integration,
-      authorizer: undefined
+      authorizer: publicAuthorizer,
+      authorizationScopes: undefined
     });
 
     // ---- フロントエンド配信（S3 + CloudFront）----
     const frontendBucket = new Bucket(this, 'AnnotuneWebBucket', {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      enforceSSL: true,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true
     });
 
+    const originAccessIdentity = new OriginAccessIdentity(this, 'AnnotuneOAI');
+    frontendBucket.grantRead(originAccessIdentity);
+
     const distribution = new Distribution(this, 'AnnotuneDistribution', {
       defaultBehavior: {
-        origin: new S3Origin(frontendBucket),
+        origin: new S3Origin(frontendBucket, { originAccessIdentity }),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         cachePolicy: CachePolicy.CACHING_OPTIMIZED // 静的アセットを CloudFront のキャッシュに乗せる

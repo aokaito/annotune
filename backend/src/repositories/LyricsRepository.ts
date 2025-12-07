@@ -19,9 +19,15 @@ const normalizeLyricRecord = (record: Partial<LyricDocument>): LyricDocument => 
   artist: record.artist ?? ''
 });
 
+const normalizeAnnotationRecord = (record: Partial<AnnotationRecord>): AnnotationRecord => ({
+  ...(record as AnnotationRecord),
+  ownerId: record.ownerId ?? ''
+});
+
 const normalizeVersionRecord = (record: Partial<DocVersionRecord>): DocVersionRecord => ({
   ...(record as DocVersionRecord),
-  artist: record.artist ?? ''
+  artist: record.artist ?? '',
+  ownerId: record.ownerId ?? ''
 });
 
 export class LyricsRepository {
@@ -66,7 +72,8 @@ export class LyricsRepository {
       artist: item.artist,
       text: item.text,
       createdAt: timestamp,
-      authorId: ownerId
+      authorId: ownerId,
+      ownerId
     });
 
     return item;
@@ -122,7 +129,7 @@ export class LyricsRepository {
       throw new HttpError(403, 'Forbidden');
     }
 
-    const annotations = await this.loadAnnotations(docId);
+    const annotations = await this.loadAnnotations(docId, lyric.ownerId);
     // アノテーションを付加した複合オブジェクトを返す
     return { ...lyric, annotations };
   }
@@ -144,7 +151,7 @@ export class LyricsRepository {
       // 公開フラグが false の場合は閲覧を禁止
       throw new HttpError(403, 'Document is not public');
     }
-    const annotations = await this.loadAnnotations(docId);
+    const annotations = await this.loadAnnotations(docId, lyric.ownerId);
     return { ...lyric, annotations };
   }
 
@@ -224,7 +231,8 @@ export class LyricsRepository {
       artist: updated.artist,
       text: updated.text,
       createdAt: timestamp,
-      authorId: ownerId
+      authorId: ownerId,
+      ownerId
     });
 
     return updated;
@@ -296,6 +304,7 @@ export class LyricsRepository {
     const annotation: AnnotationRecord = {
       docId,
       annotationId: nanoid(),
+      ownerId,
       start: payload.start,
       end: payload.end,
       tag: payload.tag,
@@ -350,8 +359,8 @@ export class LyricsRepository {
           TableName: this.config.annotationsTable,
           Key: { docId, annotationId },
           UpdateExpression:
-            'SET #start = :start, #end = :end, tag = :tag, comment = :comment, props = :props, updatedAt = :updatedAt, version = version + :inc',
-          ConditionExpression: 'attribute_exists(annotationId)',
+            'SET #start = :start, #end = :end, tag = :tag, comment = :comment, props = :props, updatedAt = :updatedAt, version = version + :inc, ownerId = if_not_exists(ownerId, :ownerId)',
+          ConditionExpression: 'attribute_exists(annotationId) AND (ownerId = :ownerId OR attribute_not_exists(ownerId))',
           ExpressionAttributeNames: {
             '#start': 'start',
             '#end': 'end'
@@ -363,6 +372,7 @@ export class LyricsRepository {
             ':comment': payload.comment,
             ':props': payload.props,
             ':updatedAt': timestamp,
+            ':ownerId': ownerId,
             ':inc': 1
           },
           ReturnValues: 'ALL_NEW'
@@ -377,7 +387,7 @@ export class LyricsRepository {
       throw new HttpError(404, 'Annotation not found');
     }
 
-    return result.Attributes as AnnotationRecord;
+    return normalizeAnnotationRecord(result.Attributes as AnnotationRecord);
   }
 
   async deleteAnnotation(docId: string, ownerId: string, annotationId: string): Promise<void> {
@@ -386,7 +396,11 @@ export class LyricsRepository {
     await this.client.send(
       new DeleteCommand({
         TableName: this.config.annotationsTable,
-        Key: { docId, annotationId }
+        Key: { docId, annotationId },
+        ConditionExpression: 'ownerId = :ownerId OR attribute_not_exists(ownerId)',
+        ExpressionAttributeValues: {
+          ':ownerId': ownerId
+        }
       })
     );
   }
@@ -399,8 +413,10 @@ export class LyricsRepository {
         TableName: this.config.versionsTable,
         KeyConditionExpression: 'docId = :docId',
         ExpressionAttributeValues: {
-          ':docId': docId
+          ':docId': docId,
+          ':ownerId': ownerId
         },
+        FilterExpression: '(ownerId = :ownerId) OR attribute_not_exists(ownerId)',
         ScanIndexForward: false // 降順（新しい順）で取得
       })
     );
@@ -422,21 +438,36 @@ export class LyricsRepository {
       throw new HttpError(404, 'Version not found');
     }
 
-    return normalizeVersionRecord(result.Item as DocVersionRecord);
+    const record = result.Item as DocVersionRecord;
+    if (record.ownerId && record.ownerId !== ownerId) {
+      throw new HttpError(403, 'Forbidden');
+    }
+
+    return normalizeVersionRecord(record);
   }
 
-  private async loadAnnotations(docId: string): Promise<AnnotationRecord[]> {
-    const result = await this.client.send(
-      new QueryCommand({
-        TableName: this.config.annotationsTable,
-        KeyConditionExpression: 'docId = :docId',
-        ExpressionAttributeValues: {
-          ':docId': docId
-        }
-      })
-    );
+  private async loadAnnotations(docId: string, ownerId?: string): Promise<AnnotationRecord[]> {
+    const queryInput: {
+      TableName: string;
+      KeyConditionExpression: string;
+      ExpressionAttributeValues: Record<string, unknown>;
+      FilterExpression?: string;
+    } = {
+      TableName: this.config.annotationsTable,
+      KeyConditionExpression: 'docId = :docId',
+      ExpressionAttributeValues: {
+        ':docId': docId
+      }
+    };
 
-    return (result.Items ?? []) as AnnotationRecord[];
+    if (ownerId) {
+      queryInput.FilterExpression = '(ownerId = :ownerId) OR attribute_not_exists(ownerId)';
+      queryInput.ExpressionAttributeValues[':ownerId'] = ownerId;
+    }
+
+    const result = await this.client.send(new QueryCommand(queryInput));
+
+    return (result.Items ?? []).map((item) => normalizeAnnotationRecord(item as AnnotationRecord));
   }
 
   private async ensureOwner(docId: string, ownerId: string): Promise<void> {
