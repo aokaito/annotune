@@ -94,7 +94,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
         .map(touch);
     },
     // 新しい歌詞ドキュメントを作成する
-    async createLyric(requestOwnerId, payload) {
+    async createLyric(requestOwnerId: string, payload: CreateLyricPayload) {
       const docId = nanoid();
       const now = new Date().toISOString();
       const lyric: LyricDocument = {
@@ -148,7 +148,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       return filtered.map(touch);
     },
     // 歌詞ドキュメントを更新し、バージョンを 1 進める
-    async updateLyric(docId, payload) {
+    async updateLyric(docId: string, payload: UpdateLyricPayload) {
       const existing = db.lyrics.get(docId);
       if (!existing) {
         throw new Error('Lyric not found');
@@ -196,7 +196,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       return touch(updated);
     },
     // 新しいアノテーションを追加する
-    async createAnnotation(docId, authorId, payload) {
+    async createAnnotation(docId: string, authorId: string, payload: AnnotationPayload) {
       const existing = db.lyrics.get(docId);
       if (!existing) {
         throw new Error('Lyric not found');
@@ -227,7 +227,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       return cloneAnnotation(annotation);
     },
     // 既存のアノテーションを編集する
-    async updateAnnotation(docId, annotationId, payload) {
+    async updateAnnotation(docId: string, annotationId: string, payload: AnnotationPayload) {
       const existing = db.lyrics.get(docId);
       if (!existing) {
         throw new Error('Lyric not found');
