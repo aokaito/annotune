@@ -4,13 +4,24 @@ import { createHttpApi, mockApi } from '../api/client';
 import { useAuthStore } from '../store/auth';
 import type { AuthState } from '../store/auth';
 
-const normalizeBaseUrl = (value: string) => {
-  try {
-    const parsed = new URL(value);
-    return `${parsed.protocol}//${parsed.host}/`;
-  } catch {
-    return value.endsWith('/') ? value.slice(0, -1) : value;
+const normalizeBaseUrl = (value: string): string | undefined => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
   }
+  const candidates = [/^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`, trimmed];
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = new URL(candidate);
+      return `${parsed.protocol}//${parsed.host}/`;
+    } catch {
+      // noop
+    }
+  }
+
+  console.warn('VITE_API_BASE_URL が URL として解釈できません。モック API を利用します。', value);
+  return undefined;
 };
 
 export const useAnnotuneApi = () => {

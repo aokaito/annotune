@@ -173,7 +173,8 @@ export const createHttpApi = (config: HttpApiConfig): AnnotuneApi => {
   };
 
   return {
-    async listLyrics(_ownerId) {
+    async listLyrics(ownerId) {
+      void ownerId;
       const payload =
         (await request<LyricResponse[]>('/v1/lyrics', {
           method: 'GET',
@@ -181,7 +182,8 @@ export const createHttpApi = (config: HttpApiConfig): AnnotuneApi => {
         })) ?? [];
       return payload.map((item) => toLyricDocument({ ...item, annotations: item.annotations ?? [] }));
     },
-    async createLyric(_ownerId: string, payload: CreateLyricPayload) {
+    async createLyric(ownerId: string, payload: CreateLyricPayload) {
+      void ownerId;
       const data = await request<LyricResponse>('/v1/lyrics', {
         method: 'POST',
         body: payload
@@ -236,7 +238,8 @@ export const createHttpApi = (config: HttpApiConfig): AnnotuneApi => {
       });
       return toLyricDocument({ ...data, annotations: data.annotations ?? [] });
     },
-    async createAnnotation(docId: string, _authorId: string, payload: AnnotationPayload) {
+    async createAnnotation(docId: string, authorId: string, payload: AnnotationPayload) {
+      void authorId;
       const data = await request<AnnotationResponse>(`/v1/lyrics/${docId}/annotations`, {
         method: 'POST',
         body: payload
