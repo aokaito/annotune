@@ -18,7 +18,7 @@ import {
   CorsHttpMethod
 } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
-import { HttpNoneAuthorizer, HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
+import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import {
   UserPool,
   UserPoolClient,
@@ -133,7 +133,7 @@ export class AnnotuneStack extends Stack {
     const authorizer = new HttpUserPoolAuthorizer('AnnotuneAuthorizer', userPool, {
       userPoolClients: [userPoolClient]
     });
-    const publicAuthorizer = new HttpNoneAuthorizer();
+    const authorizationScopes = ['openid', 'email', 'profile'];
 
     // ---- API Gateway ----
     const httpApi = new HttpApi(this, 'AnnotuneHttpApi', {
@@ -149,8 +149,7 @@ export class AnnotuneStack extends Stack {
         allowOrigins: ['*'],
         maxAge: Duration.days(1)
       },
-      defaultAuthorizer: authorizer,
-      defaultAuthorizationScopes: ['openid', 'email', 'profile']
+      // ルート単位で認証を付与するため、デフォルトの authorizer は設定しない
     });
 
     const integration = new HttpLambdaIntegration('AnnotuneIntegration', handler);
@@ -195,23 +194,20 @@ export class AnnotuneStack extends Stack {
         path: route.path,
         methods: [route.method],
         integration,
-        authorizer
+        authorizer,
+        authorizationScopes
       });
     });
 
     httpApi.addRoutes({
       path: '/v1/public/lyrics',
       methods: [HttpMethod.GET],
-      integration,
-      authorizer: publicAuthorizer,
-      authorizationScopes: undefined
+      integration
     });
     httpApi.addRoutes({
       path: '/v1/public/lyrics/{docId}',
       methods: [HttpMethod.GET],
-      integration,
-      authorizer: publicAuthorizer,
-      authorizationScopes: undefined
+      integration
     });
 
     // ---- フロントエンド配信（S3 + CloudFront）----
