@@ -228,7 +228,19 @@ export class AnnotuneStack extends Stack {
         allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         cachePolicy: CachePolicy.CACHING_OPTIMIZED // 静的アセットを CloudFront のキャッシュに乗せる
       },
-      defaultRootObject: 'index.html'
+      defaultRootObject: 'index.html',
+      errorResponses: [
+        {
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html'
+        },
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html'
+        }
+      ]
     });
 
     // ビルド済みフロントエンドを S3 に配置し、CloudFront を更新
