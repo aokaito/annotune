@@ -31,6 +31,7 @@ export const useAnnotuneApi = () => {
   const isAuthenticated = useAuthStore((state: AuthState) => state.isAuthenticated);
   const expiresAt = useAuthStore((state: AuthState) => state.expiresAt);
   const signOut = useAuthStore((state: AuthState) => state.signOut);
+  const accessToken = useAuthStore((state: AuthState) => state.accessToken);
 
   const mode = normalizedBase ? 'http' : 'mock';
 
@@ -50,9 +51,9 @@ export const useAnnotuneApi = () => {
       : normalizedBase;
     return createHttpApi({
       baseUrl: normalized,
-      getIdToken: () => useAuthStore.getState().idToken
+      getIdToken: () => accessToken ?? useAuthStore.getState().idToken
     });
-  }, [normalizedBase]);
+  }, [accessToken, normalizedBase]);
 
   return {
     api,
