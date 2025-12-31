@@ -37,30 +37,23 @@ jobs:
           cache-dependency-path: |
             package-lock.json
 
-      # backend: 依存/Lint/Test
-      - name: Install backend deps
+      - name: Install workspace deps
         run: npm ci
-        working-directory: backend
+
+      # backend: 依存/Lint/Test
       - name: Lint backend
-        run: npm run lint
-        working-directory: backend
+        run: npm --workspace backend run lint
       - name: Test backend
-        run: npm test --if-present
-        working-directory: backend
+        run: npm --workspace backend run test --if-present
 
       # infra: 依存/Synth（テンプレ生成）
-      - name: Install infra deps
-        run: npm ci
-        working-directory: infra
       - name: CDK Synth
-        run: npm run build && npm run synth
-        working-directory: infra
+        run: npm --workspace infra run build && npm --workspace infra run synth
 
       # PR のときは差分プレビューだけ（任意）
       - name: CDK Diff (PR only)
         if: github.event_name == 'pull_request'
-        run: npx cdk diff
-        working-directory: infra
+        run: npm --workspace infra exec cdk diff
 
       # ===== ここから main のときだけデプロイ =====
       - name: Configure AWS (OIDC)
@@ -77,25 +70,17 @@ jobs:
       # 初回は必要。複数回実行しても安全（冪等）
       - name: CDK Bootstrap (safe if repeated)
         if: github.ref == 'refs/heads/main'
-        run: npx cdk bootstrap aws://$ACCOUNT_ID/ap-northeast-1
-        working-directory: infra
+        run: npm --workspace infra exec cdk bootstrap aws://$ACCOUNT_ID/ap-northeast-1
         env:
           ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
 
-      - name: Install frontend deps
-        if: github.ref == 'refs/heads/main'
-        run: npm ci
-        working-directory: frontend
-
       - name: Build frontend
         if: github.ref == 'refs/heads/main'
-        run: npm run build
-        working-directory: frontend
+        run: npm --workspace frontend run build
 
       - name: CDK Deploy
         if: github.ref == 'refs/heads/main'
-        run: npx cdk deploy --require-approval never
-        working-directory: infra
+        run: npm --workspace infra run deploy
 
       - name: Upload cdk.out (debug)
         if: always()
