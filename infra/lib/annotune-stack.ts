@@ -32,7 +32,8 @@ import {
   AllowedMethods,
   CachePolicy
 } from 'aws-cdk-lib/aws-cloudfront';
-import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
+import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
@@ -219,18 +220,44 @@ export class AnnotuneStack extends Stack {
     // ---- フロントエンド配信（S3 + CloudFront）----
     const frontendBucket = new Bucket(this, 'AnnotuneWebBucket', {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      enforceSSL: true,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true
     });
 
+    const webDomain = process.env.ANNOTUNE_WEB_DOMAIN ?? 'www.annotune.net';
+    const webCertArn =
+      process.env.ANNOTUNE_WEB_CERT_ARN ??
+      'arn:aws:acm:us-east-1:390403894106:certificate/fcf4e26f-9965-4af8-a6e0-9bb25eddc277';
+    const webCertificate = acm.Certificate.fromCertificateArn(
+      this,
+      'AnnotuneWebCertificate',
+      webCertArn
+    );
+    const frontendOrigin = S3BucketOrigin.withOriginAccessControl(frontendBucket);
+
     const distribution = new Distribution(this, 'AnnotuneDistribution', {
       defaultBehavior: {
-        origin: new S3Origin(frontendBucket),
+        origin: frontendOrigin,
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         cachePolicy: CachePolicy.CACHING_OPTIMIZED // 静的アセットを CloudFront のキャッシュに乗せる
       },
-      defaultRootObject: 'index.html'
+      defaultRootObject: 'index.html',
+      domainNames: [webDomain],
+      certificate: webCertificate,
+      errorResponses: [
+        {
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html'
+        },
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html'
+        }
+      ]
     });
 
     // ビルド済みフロントエンドを S3 に配置し、CloudFront を更新
