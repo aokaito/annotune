@@ -219,7 +219,12 @@ export class AnnotuneStack extends Stack {
       autoDeleteObjects: true
     });
 
-    const webDomain = process.env.ANNOTUNE_WEB_DOMAIN ?? 'www.annotune.net';
+    const webDomainEnv = process.env.ANNOTUNE_WEB_DOMAIN;
+    const webDomainNames = (webDomainEnv ? webDomainEnv.split(',') : [])
+      .map((name) => name.trim())
+      .filter(Boolean);
+    const effectiveDomainNames =
+      webDomainNames.length > 0 ? webDomainNames : ['www.annotune.net'];
     const webCertArn =
       process.env.ANNOTUNE_WEB_CERT_ARN ??
       'arn:aws:acm:us-east-1:390403894106:certificate/fcf4e26f-9965-4af8-a6e0-9bb25eddc277';
@@ -239,7 +244,7 @@ export class AnnotuneStack extends Stack {
       },
       defaultRootObject: 'index.html',
 
-      domainNames: [webDomain],
+      domainNames: effectiveDomainNames,
       certificate: webCertificate,
 
       errorResponses: [
