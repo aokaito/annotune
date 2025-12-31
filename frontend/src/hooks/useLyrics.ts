@@ -80,7 +80,7 @@ export const useCreateLyric = () => {
       queryClient.invalidateQueries({ queryKey: keys.list(userId) });
       toast.success('ドキュメントを作成しました');
     },
-    retry: (failureCount: number, error: unknown) => {
+    retry: (failureCount: number) => {
       if (mode === 'mock' || isAuthenticated) {
         return failureCount < 3;
       }

@@ -29,6 +29,7 @@ export interface LyricDocument {
 export interface AnnotationRecord {
   docId: string;
   annotationId: string;
+  ownerId: string;
   start: number;
   end: number;
   tag: AnnotationTag;
@@ -43,6 +44,7 @@ export interface AnnotationRecord {
 export interface DocVersionRecord {
   docId: string;
   version: number;
+  ownerId: string;
   title: string;
   artist: string;
   text: string;

@@ -2,7 +2,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { Duration, RemovalPolicy, Stack, StackProps, aws_iam as iam } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import {
   AttributeType,
@@ -30,7 +30,8 @@ import {
   Distribution,
   ViewerProtocolPolicy,
   AllowedMethods,
-  CachePolicy
+  CachePolicy,
+  OriginAccessIdentity
 } from 'aws-cdk-lib/aws-cloudfront';
 import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
@@ -126,21 +127,14 @@ export class AnnotuneStack extends Stack {
       }
     });
 
-    handler.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: ['dynamodb:*'],
-        resources: [
-          lyricsTable.tableArn,
-          annotationsTable.tableArn,
-          versionsTable.tableArn,
-          `${lyricsTable.tableArn}/index/*`
-        ]
-      })
-    );
+    lyricsTable.grantReadWriteData(handler);
+    annotationsTable.grantReadWriteData(handler);
+    versionsTable.grantReadWriteData(handler);
 
     const authorizer = new HttpUserPoolAuthorizer('AnnotuneAuthorizer', userPool, {
       userPoolClients: [userPoolClient]
     });
+    const authorizationScopes = ['openid', 'email', 'profile'];
 
     // ---- API Gateway ----
     const httpApi = new HttpApi(this, 'AnnotuneHttpApi', {
@@ -155,7 +149,8 @@ export class AnnotuneStack extends Stack {
         ],
         allowOrigins: ['*'],
         maxAge: Duration.days(1)
-      }
+      },
+      // ルート単位で認証を付与するため、デフォルトの authorizer は設定しない
     });
 
     const integration = new HttpLambdaIntegration('AnnotuneIntegration', handler);
@@ -200,21 +195,20 @@ export class AnnotuneStack extends Stack {
         path: route.path,
         methods: [route.method],
         integration,
-        authorizer
+        authorizer,
+        authorizationScopes
       });
     });
 
     httpApi.addRoutes({
       path: '/v1/public/lyrics',
       methods: [HttpMethod.GET],
-      integration,
-      authorizer: undefined
+      integration
     });
     httpApi.addRoutes({
       path: '/v1/public/lyrics/{docId}',
       methods: [HttpMethod.GET],
-      integration,
-      authorizer: undefined
+      integration
     });
 
     // ---- フロントエンド配信（S3 + CloudFront）----
@@ -244,8 +238,10 @@ export class AnnotuneStack extends Stack {
         cachePolicy: CachePolicy.CACHING_OPTIMIZED // 静的アセットを CloudFront のキャッシュに乗せる
       },
       defaultRootObject: 'index.html',
+
       domainNames: [webDomain],
       certificate: webCertificate,
+
       errorResponses: [
         {
           httpStatus: 403,
