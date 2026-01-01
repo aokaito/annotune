@@ -2,7 +2,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { Annotations, Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import {
   AttributeType,
@@ -36,6 +36,7 @@ import {
 import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
+import { CfnWebACL } from 'aws-cdk-lib/aws-wafv2';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const infraDir = currentDir.includes(`${path.sep}dist${path.sep}`)
@@ -235,6 +236,94 @@ export class AnnotuneStack extends Stack {
     );
     const frontendOrigin = S3BucketOrigin.withOriginAccessControl(frontendBucket);
 
+    const wafWebAclArn = process.env.ANNOTUNE_WAF_WEB_ACL_ARN;
+    let webAclArn = wafWebAclArn;
+    if (!webAclArn) {
+      if (Stack.of(this).region === 'us-east-1') {
+        const webAcl = new CfnWebACL(this, 'AnnotuneWebAcl', {
+          scope: 'CLOUDFRONT',
+          defaultAction: { allow: {} },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: 'annotune-web-acl',
+            sampledRequestsEnabled: true
+          },
+          rules: [
+            {
+              name: 'AWSManagedRulesCommonRuleSet',
+              priority: 0,
+              overrideAction: { none: {} },
+              statement: {
+                managedRuleGroupStatement: {
+                  name: 'AWSManagedRulesCommonRuleSet',
+                  vendorName: 'AWS'
+                }
+              },
+              visibilityConfig: {
+                cloudWatchMetricsEnabled: true,
+                metricName: 'common-rule-set',
+                sampledRequestsEnabled: true
+              }
+            },
+            {
+              name: 'AWSManagedRulesKnownBadInputsRuleSet',
+              priority: 1,
+              overrideAction: { none: {} },
+              statement: {
+                managedRuleGroupStatement: {
+                  name: 'AWSManagedRulesKnownBadInputsRuleSet',
+                  vendorName: 'AWS'
+                }
+              },
+              visibilityConfig: {
+                cloudWatchMetricsEnabled: true,
+                metricName: 'known-bad-inputs',
+                sampledRequestsEnabled: true
+              }
+            },
+            {
+              name: 'AWSManagedRulesSQLiRuleSet',
+              priority: 2,
+              overrideAction: { none: {} },
+              statement: {
+                managedRuleGroupStatement: {
+                  name: 'AWSManagedRulesSQLiRuleSet',
+                  vendorName: 'AWS'
+                }
+              },
+              visibilityConfig: {
+                cloudWatchMetricsEnabled: true,
+                metricName: 'sqli-rule-set',
+                sampledRequestsEnabled: true
+              }
+            },
+            {
+              name: 'AWSManagedRulesAmazonIpReputationList',
+              priority: 3,
+              overrideAction: { none: {} },
+              statement: {
+                managedRuleGroupStatement: {
+                  name: 'AWSManagedRulesAmazonIpReputationList',
+                  vendorName: 'AWS'
+                }
+              },
+              visibilityConfig: {
+                cloudWatchMetricsEnabled: true,
+                metricName: 'ip-reputation',
+                sampledRequestsEnabled: true
+              }
+            }
+          ]
+        });
+        webAclArn = webAcl.attrArn;
+      } else {
+        Annotations.of(this).addWarning(
+          'CloudFront WAF (CLOUDFRONT) must be created in us-east-1. ' +
+            'Set ANNOTUNE_WAF_WEB_ACL_ARN or deploy this stack in us-east-1.'
+        );
+      }
+    }
+
     const distribution = new Distribution(this, 'AnnotuneDistribution', {
       defaultBehavior: {
         origin: frontendOrigin,
@@ -246,6 +335,7 @@ export class AnnotuneStack extends Stack {
 
       domainNames: effectiveDomainNames,
       certificate: webCertificate,
+      webAclId: webAclArn,
 
       errorResponses: [
         {
