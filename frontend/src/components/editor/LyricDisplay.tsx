@@ -28,6 +28,7 @@ const tagSymbolMap: Record<string, string> = {
 };
 
 const getTagSymbol = (tag: string) => tagSymbolMap[tag] ?? '★';
+const expandLineBreaks = (value: string) => value.replace(/\n/g, '\n\n');
 
 const buildSegments = (text: string, annotations: Annotation[]): Segment[] => {
   if (annotations.length === 0) {
@@ -64,8 +65,9 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
     return (
       <div className={containerClass} ref={ref}>
         {segments.map((segment, index) => {
+          const displayText = expandLineBreaks(segment.text);
           if (!segment.annotation) {
-            return <span key={`plain-${index}`}>{segment.text}</span>;
+            return <span key={`plain-${index}`}>{displayText}</span>;
           }
           const style = getTagStyle(segment.annotation.tag);
           const comment = segment.annotation.comment?.trim();
@@ -75,7 +77,7 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
               className="inline-flex flex-col items-start gap-1"
               title={comment || segment.annotation.tag}
             >
-              <span className={`rounded px-1 underline decoration-2 ${style}`}>{segment.text}</span>
+              <span className={`rounded px-1 underline decoration-2 ${style}`}>{displayText}</span>
               {comment && (
                 <p className="text-sm text-muted-foreground whitespace-pre-line wrap-anywhere">
                   {comment}
