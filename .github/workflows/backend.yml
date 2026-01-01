@@ -82,6 +82,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: npm --workspace infra run deploy
         env:
+          ANNOTUNE_COGNITO_DOMAIN_PREFIX: annotune
           ANNOTUNE_WAF_WEB_ACL_ARN: arn:aws:wafv2:us-east-1:390403894106:global/webacl/annotune-cf-waf/a8e5b59d-8e93-45db-9a78-33927f17c179
 
       - name: Upload cdk.out (debug)

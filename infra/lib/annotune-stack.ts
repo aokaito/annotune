@@ -22,6 +22,7 @@ import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers
 import {
   UserPool,
   UserPoolClient,
+  ManagedLoginVersion,
   OAuthScope,
   AccountRecovery
 } from 'aws-cdk-lib/aws-cognito';
@@ -56,6 +57,23 @@ const frontendAssetDir = fs.existsSync(frontendDistDir)
 export class AnnotuneStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
+
+    const webDomainEnv = process.env.ANNOTUNE_WEB_DOMAIN;
+    const webDomainNames = (webDomainEnv ? webDomainEnv.split(',') : [])
+      .map((name) => name.trim())
+      .filter(Boolean);
+    const effectiveDomainNames =
+      webDomainNames.length > 0 ? webDomainNames : ['www.annotune.net'];
+    const oauthCallbackUrlsEnv = process.env.ANNOTUNE_OAUTH_CALLBACK_URLS;
+    const oauthLogoutUrlsEnv = process.env.ANNOTUNE_OAUTH_LOGOUT_URLS;
+    const oauthCallbackUrls =
+      oauthCallbackUrlsEnv && oauthCallbackUrlsEnv.trim().length > 0
+        ? oauthCallbackUrlsEnv.split(',').map((url) => url.trim()).filter(Boolean)
+        : effectiveDomainNames.map((domain) => `https://${domain}/auth/callback`);
+    const oauthLogoutUrls =
+      oauthLogoutUrlsEnv && oauthLogoutUrlsEnv.trim().length > 0
+        ? oauthLogoutUrlsEnv.split(',').map((url) => url.trim()).filter(Boolean)
+        : effectiveDomainNames.map((domain) => `https://${domain}/`);
 
     // ---- DynamoDB テーブル定義 ----
     const lyricsTable = new Table(this, 'LyricsTable', {
@@ -96,12 +114,30 @@ export class AnnotuneStack extends Stack {
       accountRecovery: AccountRecovery.EMAIL_ONLY
     });
 
+    const cognitoDomainPrefix = process.env.ANNOTUNE_COGNITO_DOMAIN_PREFIX;
+    if (cognitoDomainPrefix) {
+      userPool.addDomain('AnnotuneCognitoDomain', {
+        cognitoDomain: { domainPrefix: cognitoDomainPrefix },
+        managedLoginVersion: ManagedLoginVersion.NEWER_MANAGED_LOGIN
+      });
+    } else {
+      Annotations.of(this).addWarning(
+        'Cognito Hosted UI domain is not set. ' +
+          'Set ANNOTUNE_COGNITO_DOMAIN_PREFIX to enable the managed login UI.'
+      );
+    }
+
     const userPoolClient = new UserPoolClient(this, 'AnnotuneUserPoolClient', {
       userPool,
       generateSecret: false,
       preventUserExistenceErrors: true,
       oAuth: {
-        scopes: [OAuthScope.OPENID, OAuthScope.EMAIL, OAuthScope.PROFILE]
+        scopes: [OAuthScope.OPENID, OAuthScope.EMAIL, OAuthScope.PROFILE],
+        callbackUrls: oauthCallbackUrls,
+        logoutUrls: oauthLogoutUrls,
+        flows: {
+          implicitCodeGrant: true
+        }
       }
     });
 
@@ -220,12 +256,6 @@ export class AnnotuneStack extends Stack {
       autoDeleteObjects: true
     });
 
-    const webDomainEnv = process.env.ANNOTUNE_WEB_DOMAIN;
-    const webDomainNames = (webDomainEnv ? webDomainEnv.split(',') : [])
-      .map((name) => name.trim())
-      .filter(Boolean);
-    const effectiveDomainNames =
-      webDomainNames.length > 0 ? webDomainNames : ['www.annotune.net'];
     const webCertArn =
       process.env.ANNOTUNE_WEB_CERT_ARN ??
       'arn:aws:acm:us-east-1:390403894106:certificate/fcf4e26f-9965-4af8-a6e0-9bb25eddc277';
