@@ -256,14 +256,15 @@ export class AnnotuneStack extends Stack {
       autoDeleteObjects: true
     });
 
-    const webCertArn =
-      process.env.ANNOTUNE_WEB_CERT_ARN ??
-      'arn:aws:acm:us-east-1:390403894106:certificate/fcf4e26f-9965-4af8-a6e0-9bb25eddc277';
-    const webCertificate = acm.Certificate.fromCertificateArn(
-      this,
-      'AnnotuneWebCertificate',
-      webCertArn
-    );
+    const webCertArn = process.env.ANNOTUNE_WEB_CERT_ARN;
+    const webCertificate = webCertArn
+      ? acm.Certificate.fromCertificateArn(this, 'AnnotuneWebCertificate', webCertArn)
+      : undefined;
+    if (!webCertificate) {
+      Annotations.of(this).addWarning(
+        'ANNOTUNE_WEB_CERT_ARN is not set. CloudFront will use the default domain.'
+      );
+    }
     const frontendOrigin = S3BucketOrigin.withOriginAccessControl(frontendBucket);
 
     const wafWebAclArn = process.env.ANNOTUNE_WAF_WEB_ACL_ARN;
@@ -363,7 +364,7 @@ export class AnnotuneStack extends Stack {
       },
       defaultRootObject: 'index.html',
 
-      domainNames: effectiveDomainNames,
+      domainNames: webCertificate ? effectiveDomainNames : undefined,
       certificate: webCertificate,
       webAclId: webAclArn,
 
