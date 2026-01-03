@@ -38,6 +38,7 @@ type AnnotationResponse = {
 type LyricResponse = {
   docId: string;
   ownerId: string;
+  ownerName?: string;
   title: string;
   artist?: string;
   text: string;
@@ -63,6 +64,7 @@ const toAnnotation = (payload: AnnotationResponse): Annotation => ({
 const toLyricDocument = (payload: LyricResponse): LyricDocument => ({
   docId: payload.docId,
   ownerId: payload.ownerId,
+  ownerName: payload.ownerName,
   title: payload.title,
   artist: payload.artist ?? '',
   text: payload.text,

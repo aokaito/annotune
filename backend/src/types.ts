@@ -17,6 +17,7 @@ export interface AnnotationProps {
 export interface LyricDocument {
   docId: string;
   ownerId: string;
+  ownerName?: string;
   title: string;
   artist: string;
   text: string;

@@ -20,6 +20,7 @@ const createSeedData = (ownerId: string): MockDatabase => {
   const lyric: LyricDocument = {
     docId: 'demo-doc',
     ownerId,
+    ownerName: 'デモユーザー',
     title: '夜空ノムコウ',
     artist: 'SMAP',
     text: `あれから ぼくたちは
@@ -100,6 +101,7 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       const lyric: LyricDocument = {
         docId,
         ownerId: requestOwnerId,
+        ownerName: 'デモユーザー',
         title: payload.title,
         artist: payload.artist ?? '',
         text: payload.text,
@@ -143,7 +145,10 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       const matches = (value: string, filter?: string) =>
         !filter ? true : value.toLowerCase().includes(filter.toLowerCase());
       const filtered = entries.filter(
-        (lyric) => matches(lyric.title, query?.title) && matches(lyric.artist, query?.artist)
+        (lyric) =>
+          matches(lyric.title, query?.title) &&
+          matches(lyric.artist, query?.artist) &&
+          matches(lyric.ownerName ?? '', query?.author)
       );
       return filtered.map(touch);
     },

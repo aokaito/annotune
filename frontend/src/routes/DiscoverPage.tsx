@@ -7,28 +7,35 @@ import type { LyricDocument } from '../types';
 type SearchFormValues = {
   title: string;
   artist: string;
+  author: string;
 };
 
 export const DiscoverPage = () => {
   const form = useForm<SearchFormValues>({
     defaultValues: {
       title: '',
-      artist: ''
+      artist: '',
+      author: ''
     }
   });
-  const [filters, setFilters] = useState<SearchFormValues>({ title: '', artist: '' });
+  const [filters, setFilters] = useState<SearchFormValues>({
+    title: '',
+    artist: '',
+    author: ''
+  });
   const { data: lyrics, isLoading } = usePublicLyricsList(filters);
 
   const onSubmit = form.handleSubmit((values) => {
     setFilters({
       title: values.title.trim(),
-      artist: values.artist.trim()
+      artist: values.artist.trim(),
+      author: values.author.trim()
     });
   });
 
   const handleReset = () => {
     form.reset();
-    setFilters({ title: '', artist: '' });
+    setFilters({ title: '', artist: '', author: '' });
   };
 
   const showEmptyState = !isLoading && lyrics && lyrics.length === 0;
@@ -42,7 +49,7 @@ export const DiscoverPage = () => {
         </p>
       </header>
 
-      <form className="grid gap-3 rounded-xl border border-border bg-card/80 p-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_auto]" onSubmit={onSubmit}>
+      <form className="grid gap-3 rounded-xl border border-border bg-card/80 p-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,2fr)_auto]" onSubmit={onSubmit}>
         <label className="text-sm text-foreground">
           <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             曲名
@@ -61,6 +68,16 @@ export const DiscoverPage = () => {
             type="text"
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             {...form.register('artist')}
+          />
+        </label>
+        <label className="text-sm text-foreground">
+          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            作成者
+          </span>
+          <input
+            type="text"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            {...form.register('author')}
           />
         </label>
         <div className="flex items-end gap-2">
@@ -99,6 +116,9 @@ export const DiscoverPage = () => {
                 <div>
                   <h2 className="truncate text-lg font-semibold">{lyric.title}</h2>
                   <p className="text-xs text-muted-foreground">{lyric.artist || 'アーティスト未設定'}</p>
+                  <p className="text-xs text-muted-foreground">
+                    作成者: {lyric.ownerName?.trim() || '不明'}
+                  </p>
                 </div>
                 <span className="inline-flex min-h-8 items-center whitespace-nowrap rounded-full bg-secondary px-3 text-xs font-medium text-secondary-foreground">
                   公開中

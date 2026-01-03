@@ -43,17 +43,23 @@ export const usePublicLyric = (docId: string) => {
   });
 };
 
-export const usePublicLyricsList = (filters?: { title?: string; artist?: string }) => {
+export const usePublicLyricsList = (filters?: {
+  title?: string;
+  artist?: string;
+  author?: string;
+}) => {
   const { api } = useAnnotuneApi();
   const title = filters?.title?.trim() ?? '';
   const artist = filters?.artist?.trim() ?? '';
+  const author = filters?.author?.trim() ?? '';
 
   return useQuery<LyricDocument[]>({
-    queryKey: ['lyrics', 'public', title, artist],
+    queryKey: ['lyrics', 'public', title, artist, author],
     queryFn: () =>
       api.searchPublicLyrics({
         title: title || undefined,
-        artist: artist || undefined
+        artist: artist || undefined,
+        author: author || undefined
       }),
     staleTime: 1000 * 30
   });

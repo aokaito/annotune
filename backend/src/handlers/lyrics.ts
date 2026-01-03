@@ -32,7 +32,10 @@ export const createLyricHandler = async (
     const user = getAuthenticatedUser(event);
     // 入力値を zod で検証
     const payload = createLyricSchema.parse(parseBody(event));
-    const lyric = await repository.createLyric(user.userId, payload);
+    const lyric = await repository.createLyric(user.userId, {
+      ...payload,
+      ownerName: user.displayName
+    });
     return jsonResponse(201, lyric);
   } catch (error) {
     return handleError(error);

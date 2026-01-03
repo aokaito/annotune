@@ -57,7 +57,7 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
   ({ text, annotations, className, framed = true, showTagIndicators = false }, ref) => {
     const segments = buildSegments(text, annotations);
     const containerClass = clsx(
-      'wrap-anywhere whitespace-pre-wrap rounded-lg font-medium leading-relaxed text-foreground',
+      'overflow-x-auto whitespace-pre rounded-lg font-medium leading-relaxed text-foreground',
       framed && 'border border-border bg-card p-6 shadow-sm',
       className
     );

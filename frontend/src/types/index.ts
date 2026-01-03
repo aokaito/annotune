@@ -32,6 +32,7 @@ export interface Annotation {
 export interface LyricDocument {
   docId: string;
   ownerId: string;
+  ownerName?: string;
   title: string;
   artist: string;
   text: string;

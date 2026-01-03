@@ -16,7 +16,8 @@ const overlaps = (aStart: number, aEnd: number, bStart: number, bEnd: number) =>
 
 const normalizeLyricRecord = (record: Partial<LyricDocument>): LyricDocument => ({
   ...(record as LyricDocument),
-  artist: record.artist ?? ''
+  artist: record.artist ?? '',
+  ownerName: record.ownerName ?? ''
 });
 
 const normalizeAnnotationRecord = (record: Partial<AnnotationRecord>): AnnotationRecord => ({
@@ -36,13 +37,14 @@ export class LyricsRepository {
   // 歌詞ドキュメントを新規作成し、初回のバージョンスナップショットも保存する
   async createLyric(
     ownerId: string,
-    payload: { title: string; artist: string; text: string }
+    payload: { title: string; artist: string; text: string; ownerName?: string }
   ): Promise<LyricDocument> {
     const docId = nanoid();
     const timestamp = now();
     const item: LyricDocument = {
       docId,
       ownerId,
+      ownerName: payload.ownerName,
       title: payload.title,
       artist: payload.artist,
       text: payload.text,
@@ -155,7 +157,11 @@ export class LyricsRepository {
     return { ...lyric, annotations };
   }
 
-  async listPublicLyrics(filters?: { title?: string; artist?: string }): Promise<LyricDocument[]> {
+  async listPublicLyrics(filters?: {
+    title?: string;
+    artist?: string;
+    author?: string;
+  }): Promise<LyricDocument[]> {
     const scanResult = await this.client.send(
       new ScanCommand({
         TableName: this.config.lyricsTable,
@@ -167,7 +173,7 @@ export class LyricsRepository {
     );
 
     const items = (scanResult.Items ?? []).map((item) => normalizeLyricRecord(item as LyricDocument));
-    if (!filters || (!filters.title && !filters.artist)) {
+    if (!filters || (!filters.title && !filters.artist && !filters.author)) {
       return items;
     }
 
@@ -177,7 +183,10 @@ export class LyricsRepository {
         : value.toLowerCase().includes(filter.toLowerCase());
 
     return items.filter(
-      (item) => matches(item.title, filters.title) && matches(item.artist, filters.artist)
+      (item) =>
+        matches(item.title, filters.title) &&
+        matches(item.artist, filters.artist) &&
+        matches(item.ownerName ?? '', filters.author)
     );
   }
 

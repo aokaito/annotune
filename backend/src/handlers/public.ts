@@ -27,9 +27,11 @@ export const listPublicLyricsHandler = async (
   try {
     const title = event.queryStringParameters?.title?.trim();
     const artist = event.queryStringParameters?.artist?.trim();
+    const author = event.queryStringParameters?.author?.trim();
     const items = await repository.listPublicLyrics({
       title: title?.length ? title : undefined,
-      artist: artist?.length ? artist : undefined
+      artist: artist?.length ? artist : undefined,
+      author: author?.length ? author : undefined
     });
     return jsonResponse(200, items);
   } catch (error) {

@@ -74,12 +74,6 @@ export const Header = () => {
           </Link>
         </div>
         <nav className="hidden items-center gap-2 md:flex">
-          <Link
-            to="/discover"
-            className="inline-flex min-h-11 items-center justify-center rounded-md border border-border px-4 text-sm font-semibold text-foreground transition hover:bg-muted"
-          >
-            公開ライブラリ
-          </Link>
           {mode === 'mock' && (
             <span className="inline-flex min-h-11 items-center rounded-md border border-border px-4 text-sm font-semibold text-muted-foreground">
               デモモード
@@ -163,7 +157,7 @@ export const Header = () => {
         <div className="absolute inset-x-0 top-full flex justify-end px-4 sm:px-6">
           <div
             ref={menuRef}
-            className="mt-2 w-full max-w-xs space-y-2 rounded-2xl border border-border bg-card p-4 shadow-lg md:max-w-sm"
+            className="mt-2 w-fit max-w-[90vw] space-y-2 rounded-2xl border border-border bg-card p-4 shadow-lg"
           >
             <p className="text-sm font-semibold text-foreground">{effectiveDisplayName}</p>
             <button
