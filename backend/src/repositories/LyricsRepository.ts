@@ -1,8 +1,5 @@
-// このリポジトリは DynamoDB を操作し、歌詞・アノテーションの CRUD を提供する。
-import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
-import { GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-import { nanoid } from '../utils/nanoid';
+import { NotFoundError } from '../utils/errors';
+import { nanoid } from '@annotune/common';
 import { HttpError } from '../utils/http';
 import type { AnnotationRecord, DocVersionRecord, LyricDocument } from '../types';
 import type { TableConfig } from '../config/env';
@@ -122,7 +119,7 @@ export class LyricsRepository {
     );
 
     if (!record.Item) {
-      throw new HttpError(404, 'Document not found');
+      throw new NotFoundError('Document not found');
     }
 
     const lyric = normalizeLyricRecord(record.Item as LyricDocument);
@@ -143,10 +140,8 @@ export class LyricsRepository {
         TableName: this.config.lyricsTable,
         Key: { docId }
       })
-    );
-
     if (!record.Item) {
-      throw new HttpError(404, 'Document not found');
+      throw new NotFoundError('Document not found');
     }
     const lyric = normalizeLyricRecord(record.Item as LyricDocument);
     if (!lyric.isPublicView) {
@@ -393,7 +388,7 @@ export class LyricsRepository {
 
     if (!result.Attributes) {
       // 条件付き更新が成功しても Attributes が無い場合は存在しなかったとみなす
-      throw new HttpError(404, 'Annotation not found');
+      throw new NotFoundError('Annotation not found');
     }
 
     return normalizeAnnotationRecord(result.Attributes as AnnotationRecord);
@@ -444,7 +439,7 @@ export class LyricsRepository {
     );
 
     if (!result.Item) {
-      throw new HttpError(404, 'Version not found');
+      throw new NotFoundError('Version not found');
     }
 
     const record = result.Item as DocVersionRecord;
@@ -488,7 +483,7 @@ export class LyricsRepository {
       })
     );
     if (!record.Item) {
-      throw new HttpError(404, 'Document not found');
+      throw new NotFoundError('Document not found');
     }
     if (record.Item.ownerId !== ownerId) {
       // 所有者と異なる場合は編集権限なし
@@ -513,6 +508,9 @@ export class LyricsRepository {
 
   private handleConditionalError(error: unknown, message: string, statusCode = 409): never {
     if (error instanceof ConditionalCheckFailedException || (error as { name?: string })?.name === 'ConditionalCheckFailedException') {
+      if (statusCode === 404) {
+        throw new NotFoundError(message);
+      }
       throw new HttpError(statusCode, message);
     }
     throw error;

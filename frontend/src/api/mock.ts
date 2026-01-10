@@ -1,5 +1,5 @@
 // フロントエンド開発時に利用するインメモリのモック API 実装。
-import { nanoid } from '../utils/nanoid';
+import { nanoid } from '@annotune/common';
 import type { Annotation, LyricDocument, LyricVersionSnapshot } from '../types';
 import type { AnnotuneApi, AnnotationPayload, CreateLyricPayload, UpdateLyricPayload } from './types';
 

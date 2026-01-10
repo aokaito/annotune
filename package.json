@@ -5,7 +5,8 @@
   "workspaces": [
     "frontend",
     "backend",
-    "infra"
+    "infra",
+    "packages/common"
   ],
   "scripts": {
     "lint": "npm-run-all --parallel lint:*",

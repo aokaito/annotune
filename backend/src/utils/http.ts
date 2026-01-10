@@ -1,5 +1,5 @@
-// このモジュールは API Gateway で使うレスポンス整形とエラーハンドリングを提供する。
 import type { APIGatewayProxyResultV2 } from 'aws-lambda';
+import { logger } from './logger';
 
 export const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyResultV2 => ({
   statusCode,
@@ -22,6 +22,19 @@ export const handleError = (error: unknown): APIGatewayProxyResultV2 => {
     // 事前に想定したエラーはそのままクライアントへ返す
     return jsonResponse(error.statusCode, { message: error.message });
   }
-  console.error('Unexpected error', error);
+  if (error instanceof ZodError) {
+    // Zod のバリデーションエラー
+    return jsonResponse(400, {
+      code: 'VALIDATION_ERROR',
+      message: 'リクエスト内容が不正です',
+      issues: error.errors
+    });
+  }
+  if (error instanceof NotFoundError) {
+    // リソースが見つからなかった場合
+    return jsonResponse(404, { code: 'NOT_FOUND', message: error.message });
+  }
+
+  logger.error({ err: error }, 'Unexpected error');
   return jsonResponse(500, { message: 'Internal Server Error' });
 };
