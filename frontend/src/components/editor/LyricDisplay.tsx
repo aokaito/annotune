@@ -66,17 +66,18 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
       <div className={containerClass} ref={ref}>
         {segments.map((segment, index) => {
           const displayText = segment.text;
-          if (!segment.annotation) {
+          const annotation = segment.annotation;
+          if (!annotation) {
             return <span key={`plain-${index}`}>{displayText}</span>;
           }
-          const style = getTagHighlightStyle(segment.annotation.tag);
-          const tagSymbol = getTagSymbol(segment.annotation.tag);
-          const tagLabel = getTagLabel(segment.annotation.tag);
+          const style = getTagHighlightStyle(annotation.tag);
+          const tagSymbol = getTagSymbol(annotation.tag);
+          const tagLabel = getTagLabel(annotation.tag);
           return (
             <span
-              key={segment.annotation.annotationId}
+              key={annotation.annotationId}
               className="inline"
-              title={segment.annotation.comment?.trim() || tagLabel}
+              title={annotation.comment?.trim() || tagLabel}
             >
               <span className={clsx('rounded-sm px-1 border-b-4', style)}>{displayText}</span>
               {showTagIndicators && tagSymbol && (
@@ -89,7 +90,7 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
                   type="button"
                   className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] text-muted-foreground transition hover:bg-muted hover:text-foreground select-none"
                   aria-label={`${tagLabel}アノテーションを削除`}
-                  onClick={() => onDeleteAnnotation(segment.annotation.annotationId)}
+                  onClick={() => onDeleteAnnotation(annotation.annotationId)}
                 >
                   ×
                 </button>
