@@ -11,7 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@annotune/common": "workspace:*",
+    "@annotune/common": "file:../packages/common",
     "@aws-sdk/client-dynamodb": "^3.619.0",
     "@aws-sdk/lib-dynamodb": "^3.619.0",
     "pino": "^9.2.0",
