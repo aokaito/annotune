@@ -14,7 +14,9 @@ interface Props {
     comment?: string;
     props?: AnnotationProps;
   }) => Promise<void>;
+  onDelete?: (annotationId: string) => Promise<void>;
   isSaving: boolean;
+  isDeleting?: boolean;
 }
 
 type FormValues = {
@@ -26,7 +28,7 @@ type FormValues = {
   length?: 'short' | 'medium' | 'long';
 };
 
-export const AnnotationEditDialog = ({ annotation, onClose, onSave, isSaving }: Props) => {
+export const AnnotationEditDialog = ({ annotation, onClose, onSave, onDelete, isSaving, isDeleting }: Props) => {
   const form = useForm<FormValues>({
     defaultValues: {
       start: annotation.start,
@@ -126,6 +128,20 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, isSaving }: 
             <button type="button" className="rounded border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground" onClick={onClose}>
               キャンセル
             </button>
+            {onDelete && (
+              <button
+                type="button"
+                className="rounded border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                onClick={async () => {
+                  if (!window.confirm('このアノテーションを削除しますか？')) return;
+                  await onDelete(annotation.annotationId);
+                  onClose();
+                }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? '削除中…' : '削除'}
+              </button>
+            )}
             <button
               type="submit"
               className="rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"

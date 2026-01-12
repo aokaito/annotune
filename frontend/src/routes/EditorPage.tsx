@@ -222,11 +222,9 @@ export const EditorPage = () => {
                 annotations={lyric.annotations}
                 framed={false}
                 showTagIndicators
+                showComments
                 className="p-0 shadow-none"
-                onDeleteAnnotation={(annotationId) => {
-                  if (!window.confirm('このアノテーションを削除しますか？')) return;
-                  annotations.remove.mutate(annotationId);
-                }}
+                onSelectAnnotation={(annotation) => setEditing(annotation)}
               />
             </div>
           </div>
@@ -274,7 +272,11 @@ export const EditorPage = () => {
           annotation={editing}
           onClose={() => setEditing(null)}
           onSave={handleUpdateAnnotation}
+          onDelete={async (annotationId) => {
+            await annotations.remove.mutateAsync(annotationId);
+          }}
           isSaving={annotations.update.isPending}
+          isDeleting={annotations.remove.isPending}
         />
       )}
       <AnnotationMobileAction

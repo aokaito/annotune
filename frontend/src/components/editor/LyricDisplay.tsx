@@ -11,7 +11,8 @@ interface LyricDisplayProps {
   className?: string;
   framed?: boolean;
   showTagIndicators?: boolean;
-  onDeleteAnnotation?: (annotationId: string) => void;
+  showComments?: boolean;
+  onSelectAnnotation?: (annotation: Annotation) => void;
 }
 
 interface Segment {
@@ -54,7 +55,18 @@ const buildSegments = (text: string, annotations: Annotation[]): Segment[] => {
 };
 
 export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
-  ({ text, annotations, className, framed = true, showTagIndicators = false, onDeleteAnnotation }, ref) => {
+  (
+    {
+      text,
+      annotations,
+      className,
+      framed = true,
+      showTagIndicators = false,
+      showComments = false,
+      onSelectAnnotation
+    },
+    ref
+  ) => {
     const segments = buildSegments(text, annotations);
     const containerClass = clsx(
       'overflow-x-auto whitespace-pre-wrap rounded-lg font-medium leading-relaxed text-foreground',
@@ -73,11 +85,22 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
           const style = getTagHighlightStyle(annotation.tag);
           const tagSymbol = getTagSymbol(annotation.tag);
           const tagLabel = getTagLabel(annotation.tag);
+          const comment = annotation.comment?.trim();
           return (
             <span
               key={annotation.annotationId}
-              className="inline"
-              title={annotation.comment?.trim() || tagLabel}
+              className={clsx(
+                'relative inline',
+                onSelectAnnotation && 'cursor-pointer',
+                showComments && 'group'
+              )}
+              title={comment || tagLabel}
+              onClick={() => {
+                if (!onSelectAnnotation) return;
+                const selection = window.getSelection();
+                if (selection && !selection.isCollapsed) return;
+                onSelectAnnotation(annotation);
+              }}
             >
               <span className={clsx('rounded-sm px-1 border-b-4', style)}>{displayText}</span>
               {showTagIndicators && tagSymbol && (
@@ -85,15 +108,10 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
                   {tagSymbol}
                 </span>
               )}
-              {onDeleteAnnotation && (
-                <button
-                  type="button"
-                  className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] text-muted-foreground transition hover:bg-muted hover:text-foreground select-none"
-                  aria-label={`${tagLabel}アノテーションを削除`}
-                  onClick={() => onDeleteAnnotation(annotation.annotationId)}
-                >
-                  ×
-                </button>
+              {showComments && comment && (
+                <span className="absolute left-0 top-full z-10 mt-2 hidden max-w-xs select-none rounded-md border border-border bg-card/95 px-2 py-1 text-xs text-foreground shadow-md group-hover:block">
+                  {comment}
+                </span>
               )}
             </span>
           );
