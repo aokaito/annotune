@@ -37,7 +37,6 @@ import {
 import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
-import { CfnWebACL } from 'aws-cdk-lib/aws-wafv2';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const infraDir = currentDir.includes(`${path.sep}dist${path.sep}`)
@@ -81,7 +80,7 @@ export class AnnotuneStack extends Stack {
       partitionKey: { name: 'docId', type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
-      pointInTimeRecovery: true // 誤削除に備えてポイントインタイム復旧を有効化
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true } // 誤削除に備えてポイントインタイム復旧を有効化
     });
 
     lyricsTable.addGlobalSecondaryIndex({
@@ -267,94 +266,6 @@ export class AnnotuneStack extends Stack {
     }
     const frontendOrigin = S3BucketOrigin.withOriginAccessControl(frontendBucket);
 
-    const wafWebAclArn = process.env.ANNOTUNE_WAF_WEB_ACL_ARN;
-    let webAclArn = wafWebAclArn;
-    if (!webAclArn) {
-      if (Stack.of(this).region === 'us-east-1') {
-        const webAcl = new CfnWebACL(this, 'AnnotuneWebAcl', {
-          scope: 'CLOUDFRONT',
-          defaultAction: { allow: {} },
-          visibilityConfig: {
-            cloudWatchMetricsEnabled: true,
-            metricName: 'annotune-web-acl',
-            sampledRequestsEnabled: true
-          },
-          rules: [
-            {
-              name: 'AWSManagedRulesCommonRuleSet',
-              priority: 0,
-              overrideAction: { none: {} },
-              statement: {
-                managedRuleGroupStatement: {
-                  name: 'AWSManagedRulesCommonRuleSet',
-                  vendorName: 'AWS'
-                }
-              },
-              visibilityConfig: {
-                cloudWatchMetricsEnabled: true,
-                metricName: 'common-rule-set',
-                sampledRequestsEnabled: true
-              }
-            },
-            {
-              name: 'AWSManagedRulesKnownBadInputsRuleSet',
-              priority: 1,
-              overrideAction: { none: {} },
-              statement: {
-                managedRuleGroupStatement: {
-                  name: 'AWSManagedRulesKnownBadInputsRuleSet',
-                  vendorName: 'AWS'
-                }
-              },
-              visibilityConfig: {
-                cloudWatchMetricsEnabled: true,
-                metricName: 'known-bad-inputs',
-                sampledRequestsEnabled: true
-              }
-            },
-            {
-              name: 'AWSManagedRulesSQLiRuleSet',
-              priority: 2,
-              overrideAction: { none: {} },
-              statement: {
-                managedRuleGroupStatement: {
-                  name: 'AWSManagedRulesSQLiRuleSet',
-                  vendorName: 'AWS'
-                }
-              },
-              visibilityConfig: {
-                cloudWatchMetricsEnabled: true,
-                metricName: 'sqli-rule-set',
-                sampledRequestsEnabled: true
-              }
-            },
-            {
-              name: 'AWSManagedRulesAmazonIpReputationList',
-              priority: 3,
-              overrideAction: { none: {} },
-              statement: {
-                managedRuleGroupStatement: {
-                  name: 'AWSManagedRulesAmazonIpReputationList',
-                  vendorName: 'AWS'
-                }
-              },
-              visibilityConfig: {
-                cloudWatchMetricsEnabled: true,
-                metricName: 'ip-reputation',
-                sampledRequestsEnabled: true
-              }
-            }
-          ]
-        });
-        webAclArn = webAcl.attrArn;
-      } else {
-        Annotations.of(this).addWarning(
-          'CloudFront WAF (CLOUDFRONT) must be created in us-east-1. ' +
-            'Set ANNOTUNE_WAF_WEB_ACL_ARN or deploy this stack in us-east-1.'
-        );
-      }
-    }
-
     const distribution = new Distribution(this, 'AnnotuneDistribution', {
       defaultBehavior: {
         origin: frontendOrigin,
@@ -366,8 +277,6 @@ export class AnnotuneStack extends Stack {
 
       domainNames: webCertificate ? effectiveDomainNames : undefined,
       certificate: webCertificate,
-      webAclId: webAclArn,
-
       errorResponses: [
         {
           httpStatus: 403,
