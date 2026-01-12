@@ -223,6 +223,10 @@ export const EditorPage = () => {
                 framed={false}
                 showTagIndicators
                 className="p-0 shadow-none"
+                onDeleteAnnotation={(annotationId) => {
+                  if (!window.confirm('このアノテーションを削除しますか？')) return;
+                  annotations.remove.mutate(annotationId);
+                }}
               />
             </div>
           </div>

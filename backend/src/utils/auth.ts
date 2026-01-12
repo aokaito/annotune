@@ -5,7 +5,7 @@ import type { AnnotuneUser } from '../types';
 
 export const getAuthenticatedUser = (event: APIGatewayProxyEventV2): AnnotuneUser => {
   const claims = event.requestContext.authorizer?.jwt?.claims as
-    | { sub?: string; name?: string }
+    | { sub?: string; name?: string; email?: string; preferred_username?: string; 'cognito:username'?: string }
     | undefined;
 
   if (!claims?.sub) {
@@ -15,6 +15,10 @@ export const getAuthenticatedUser = (event: APIGatewayProxyEventV2): AnnotuneUse
 
   return {
     userId: claims.sub,
-    displayName: claims.name
+    displayName:
+      claims.name ??
+      claims.preferred_username ??
+      claims.email ??
+      claims['cognito:username']
   };
 };

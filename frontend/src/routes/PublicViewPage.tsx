@@ -3,6 +3,7 @@
 import { useParams } from 'react-router-dom';
 import { usePublicLyric } from '../hooks/useLyrics';
 import { LyricDisplay } from '../components/editor/LyricDisplay';
+import { getTagLabel } from '../components/editor/tagColors';
 import type { Annotation } from '../types';
 
 export const PublicViewPage = () => {
@@ -26,6 +27,9 @@ export const PublicViewPage = () => {
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{lyric.title}</h1>
         <p className="text-sm text-muted-foreground">{lyric.artist || 'アーティスト未設定'}</p>
         <p className="text-sm text-muted-foreground">
+          作成者: {lyric.ownerName?.trim() || lyric.ownerId || '不明'}
+        </p>
+        <p className="text-sm text-muted-foreground">
           バージョン {lyric.version} ・ 最終更新 {new Date(lyric.updatedAt).toLocaleString()}
         </p>
       </header>
@@ -36,7 +40,7 @@ export const PublicViewPage = () => {
           {lyric.annotations.map((annotation: Annotation) => (
             <li key={annotation.annotationId} className="wrap-anywhere">
               {/* シンプルなテキスト形式でタグ・コメント・範囲を表示 */}
-              [{annotation.tag}] {annotation.comment ?? 'コメントなし'} ({annotation.start} – {annotation.end})
+              [{getTagLabel(annotation.tag)}] {annotation.comment ?? 'コメントなし'} ({annotation.start} – {annotation.end})
             </li>
           ))}
           {lyric.annotations.length === 0 && <li>アノテーションはありません。</li>}

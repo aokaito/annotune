@@ -1,7 +1,7 @@
 // このコンポーネントは Cognito Hosted UI からのリダイレクトを処理し、ユーザー情報を Zustand に保存する。
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/auth';
+import { getStoredDisplayName, useAuthStore } from '../store/auth';
 import type { AuthState } from '../store/auth';
 
 type IdTokenPayload = {
@@ -41,8 +41,9 @@ export const AuthCallbackPage = () => {
       const expiresIn = params.get('expires_in');
       const userId =
         payload?.sub ?? payload?.['cognito:username'] ?? payload?.email ?? 'current-user';
+      const storedDisplayName = getStoredDisplayName(userId);
       const displayName =
-        params.get('name') ?? payload?.name ?? payload?.email ?? 'Vocalist';
+        storedDisplayName ?? params.get('name') ?? payload?.name ?? payload?.email ?? 'Vocalist';
       const expiresAt = expiresIn ? Date.now() + Number(expiresIn) * 1000 : null;
 
       setAuthenticated({

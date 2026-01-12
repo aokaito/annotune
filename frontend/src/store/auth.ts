@@ -20,6 +20,26 @@ interface AuthState {
   signOut(): void;
 }
 
+const displayNameStorageKey = (userId: string) => `annotune-display-name:${userId}`;
+
+export const getStoredDisplayName = (userId: string): string | null => {
+  if (typeof window === 'undefined' || !userId) return null;
+  try {
+    return window.localStorage.getItem(displayNameStorageKey(userId));
+  } catch {
+    return null;
+  }
+};
+
+export const setStoredDisplayName = (userId: string, displayName: string) => {
+  if (typeof window === 'undefined' || !userId) return;
+  try {
+    window.localStorage.setItem(displayNameStorageKey(userId), displayName);
+  } catch {
+    // noop
+  }
+};
+
 const INITIAL_STATE: Omit<AuthState, 'setAuthenticated' | 'setDisplayName' | 'signOut'> = {
   userId: '',
   displayName: '',
@@ -45,19 +65,27 @@ const createAuthStore: StateCreator<AuthState> = (set, get) => ({
     accessToken?: string | null;
     expiresAt?: number | null;
   }) =>
-    set(() => ({
-      userId,
-      displayName: get().displayName || displayName,
-      idToken,
-      accessToken: accessToken ?? null,
-      expiresAt: expiresAt ?? null,
-      isAuthenticated: true
-    })),
+    set(() => {
+      const storedDisplayName = getStoredDisplayName(userId);
+      return {
+        userId,
+        displayName: storedDisplayName || get().displayName || displayName,
+        idToken,
+        accessToken: accessToken ?? null,
+        expiresAt: expiresAt ?? null,
+        isAuthenticated: true
+      };
+    }),
   setDisplayName: (displayName: string) =>
-    set((state) => ({
-      ...state,
-      displayName
-    })),
+    set((state) => {
+      if (state.userId) {
+        setStoredDisplayName(state.userId, displayName);
+      }
+      return {
+        ...state,
+        displayName
+      };
+    }),
   // サインアウト時に状態をクリア
   signOut: () => set({ ...INITIAL_STATE })
 });

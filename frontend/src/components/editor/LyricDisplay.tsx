@@ -3,7 +3,7 @@
 import clsx from 'clsx';
 import { forwardRef } from 'react';
 import { Annotation } from '../../types';
-import { getTagStyle } from './tagColors';
+import { getTagHighlightStyle, getTagLabel } from './tagColors';
 
 interface LyricDisplayProps {
   text: string;
@@ -11,6 +11,7 @@ interface LyricDisplayProps {
   className?: string;
   framed?: boolean;
   showTagIndicators?: boolean;
+  onDeleteAnnotation?: (annotationId: string) => void;
 }
 
 interface Segment {
@@ -24,12 +25,11 @@ const tagSymbolMap: Record<string, string> = {
   fall: '↘',
   slide: '⇄',
   hold: '―',
-  breath: '●'
+  breath: '●',
+  comment: ''
 };
 
 const getTagSymbol = (tag: string) => tagSymbolMap[tag] ?? '★';
-const expandLineBreaks = (value: string) => value.replace(/\n/g, '\n\n');
-
 const buildSegments = (text: string, annotations: Annotation[]): Segment[] => {
   if (annotations.length === 0) {
     return [{ text }];
@@ -54,10 +54,10 @@ const buildSegments = (text: string, annotations: Annotation[]): Segment[] => {
 };
 
 export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
-  ({ text, annotations, className, framed = true, showTagIndicators = false }, ref) => {
+  ({ text, annotations, className, framed = true, showTagIndicators = false, onDeleteAnnotation }, ref) => {
     const segments = buildSegments(text, annotations);
     const containerClass = clsx(
-      'overflow-x-auto whitespace-pre rounded-lg font-medium leading-relaxed text-foreground',
+      'overflow-x-auto whitespace-pre-wrap rounded-lg font-medium leading-relaxed text-foreground',
       framed && 'border border-border bg-card p-6 shadow-sm',
       className
     );
@@ -65,28 +65,34 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
     return (
       <div className={containerClass} ref={ref}>
         {segments.map((segment, index) => {
-          const displayText = expandLineBreaks(segment.text);
+          const displayText = segment.text;
           if (!segment.annotation) {
             return <span key={`plain-${index}`}>{displayText}</span>;
           }
-          const style = getTagStyle(segment.annotation.tag);
-          const comment = segment.annotation.comment?.trim();
+          const style = getTagHighlightStyle(segment.annotation.tag);
+          const tagSymbol = getTagSymbol(segment.annotation.tag);
+          const tagLabel = getTagLabel(segment.annotation.tag);
           return (
             <span
               key={segment.annotation.annotationId}
-              className="inline-flex flex-col items-start gap-1"
-              title={comment || segment.annotation.tag}
+              className="inline"
+              title={segment.annotation.comment?.trim() || tagLabel}
             >
-              <span className={`rounded px-1 underline decoration-2 ${style}`}>{displayText}</span>
-              {comment && (
-                <p className="text-sm text-muted-foreground whitespace-pre-line wrap-anywhere">
-                  {comment}
-                </p>
-              )}
-              {showTagIndicators && (
-                <span className="text-[10px] font-semibold text-muted-foreground">
-                  {getTagSymbol(segment.annotation.tag)}
+              <span className={clsx('rounded-sm px-1 border-b-4', style)}>{displayText}</span>
+              {showTagIndicators && tagSymbol && (
+                <span className="ml-1 select-none text-[10px] font-semibold text-muted-foreground" aria-hidden>
+                  {tagSymbol}
                 </span>
+              )}
+              {onDeleteAnnotation && (
+                <button
+                  type="button"
+                  className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] text-muted-foreground transition hover:bg-muted hover:text-foreground select-none"
+                  aria-label={`${tagLabel}アノテーションを削除`}
+                  onClick={() => onDeleteAnnotation(segment.annotation.annotationId)}
+                >
+                  ×
+                </button>
               )}
             </span>
           );

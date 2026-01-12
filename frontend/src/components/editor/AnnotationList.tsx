@@ -1,7 +1,7 @@
 // 注釈の一覧をカード表示し、編集・削除操作を提供する。
 // NOTE: モバイルでの折返しとタップ領域確保のためレイアウトを調整。代替案: テーブル表示に切り替えることも可能
 import { Annotation } from '../../types';
-import { getTagStyle } from './tagColors';
+import { getTagLabel, getTagStyle } from './tagColors';
 
 interface AnnotationListProps {
   annotations: Annotation[];
@@ -24,8 +24,8 @@ export const AnnotationList = ({ annotations, onEdit, onDelete }: AnnotationList
         <li key={annotation.annotationId} className="space-y-3 rounded-lg border border-border bg-card p-4 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             {/* タグ名と位置情報をまとめて表示 */}
-            <span className={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${getTagStyle(annotation.tag)} wrap-anywhere`}>
-              {annotation.tag}
+            <span className={`inline-flex w-fit items-center gap-2 rounded-full border-2 px-3 py-1 text-xs font-semibold shadow-sm ${getTagStyle(annotation.tag)} wrap-anywhere`}>
+              {getTagLabel(annotation.tag)}
               <span className="font-mono text-[11px] text-muted-foreground">
                 {annotation.start} – {annotation.end}
               </span>

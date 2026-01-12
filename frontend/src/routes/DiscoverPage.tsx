@@ -117,7 +117,7 @@ export const DiscoverPage = () => {
                   <h2 className="truncate text-lg font-semibold">{lyric.title}</h2>
                   <p className="text-xs text-muted-foreground">{lyric.artist || 'アーティスト未設定'}</p>
                   <p className="text-xs text-muted-foreground">
-                    作成者: {lyric.ownerName?.trim() || '不明'}
+                    作成者: {lyric.ownerName?.trim() || lyric.ownerId || '不明'}
                   </p>
                 </div>
                 <span className="inline-flex min-h-8 items-center whitespace-nowrap rounded-full bg-secondary px-3 text-xs font-medium text-secondary-foreground">
