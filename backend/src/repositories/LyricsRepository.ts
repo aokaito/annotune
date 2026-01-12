@@ -1,3 +1,5 @@
+import { DynamoDBDocumentClient, DeleteCommand, GetCommand, PutCommand, QueryCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
 import { NotFoundError } from '../utils/errors';
 import { nanoid } from '@annotune/common';
 import { HttpError } from '../utils/http';
@@ -140,6 +142,7 @@ export class LyricsRepository {
         TableName: this.config.lyricsTable,
         Key: { docId }
       })
+    );
     if (!record.Item) {
       throw new NotFoundError('Document not found');
     }

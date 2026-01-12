@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DynamoDBDocumentClient, PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
+import type { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { LyricsRepository } from '../LyricsRepository';
 import { HttpError } from '../../utils/http';
 import { NotFoundError } from '../../utils/errors';
@@ -18,7 +19,7 @@ vi.mock('@aws-sdk/lib-dynamodb', async (importOriginal) => {
   };
 });
 
-const mockDocClient = DynamoDBDocumentClient.from(null as any);
+const mockDocClient = DynamoDBDocumentClient.from({} as DynamoDBClient);
 const sendMock = mockDocClient.send as vi.Mock;
 
 describe('LyricsRepository', () => {

@@ -20,7 +20,7 @@
     "synth": "npm --prefix infra run synth"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "5.5.4"
   },
   "engines": {
     "node": ">=18.0.0",
