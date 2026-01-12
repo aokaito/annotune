@@ -81,8 +81,6 @@ jobs:
       - name: CDK Deploy
         if: github.ref == 'refs/heads/main'
         run: npm --workspace infra run deploy
-        env:
-          ANNOTUNE_COGNITO_DOMAIN_PREFIX: annotune
 
       - name: Upload cdk.out (debug)
         if: always()
