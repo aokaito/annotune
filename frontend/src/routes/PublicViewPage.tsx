@@ -27,7 +27,7 @@ export const PublicViewPage = () => {
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{lyric.title}</h1>
         <p className="text-sm text-muted-foreground">{lyric.artist || 'アーティスト未設定'}</p>
         <p className="text-sm text-muted-foreground">
-          作成者: {lyric.ownerName?.trim() || lyric.ownerId || '不明'}
+          作成者: {lyric.ownerName?.trim() || '不明'}
         </p>
         <p className="text-sm text-muted-foreground">
           バージョン {lyric.version} ・ 最終更新 {new Date(lyric.updatedAt).toLocaleString()}
