@@ -1,5 +1,7 @@
 import type { APIGatewayProxyResultV2 } from 'aws-lambda';
+import { ZodError } from 'zod';
 import { logger } from './logger';
+import { NotFoundError } from './errors';
 
 export const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyResultV2 => ({
   statusCode,
