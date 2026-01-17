@@ -16,29 +16,52 @@ export const ViewerPage = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [activeAnnotationId, setActiveAnnotationId] = useState<string | undefined>(undefined);
-  const [containerHeight, setContainerHeight] = useState(0);
+  const [lineRects, setLineRects] = useState<
+    { index: number; top: number; left: number; width: number; height: number }[]
+  >([]);
   const progressRef = useRef(0);
   const startTimeRef = useRef<number | null>(null);
   const animationRef = useRef<number | null>(null);
   const durationRef = useRef(0);
-  const annotationPositionsRef = useRef<{ id: string; top: number; bottom: number }[]>([]);
-  const containerTopRef = useRef(0);
-  const lastScrollRef = useRef(0);
+  const lineElementsRef = useRef<HTMLElement[]>([]);
+  const currentLineRef = useRef(0);
   const activeAnnotationRef = useRef<string | undefined>(undefined);
 
   const lyricText = lyric?.text ?? '';
   const lyricId = lyric?.docId ?? '';
   const annotationCount = lyric?.annotations.length ?? 0;
 
-  const totalBeats = useMemo(
-    () => Math.max(1, lyricText.split('\n').length),
-    [lyricText]
-  );
+  const lineMeta = useMemo(() => {
+    const lines = lyricText.split('\n');
+    let cursor = 0;
+    return lines.map((line, index) => {
+      const start = cursor;
+      const end = start + line.length;
+      if (index < lines.length - 1) {
+        cursor = end + 1;
+      }
+      return { start, end, length: line.length };
+    });
+  }, [lyricText]);
+  const totalBeats = Math.max(1, lineMeta.length);
   const duration = useMemo(() => (60 / bpm) * totalBeats, [bpm, totalBeats]);
 
   const setProgressValue = (value: number) => {
     progressRef.current = value;
     setProgress(value);
+  };
+
+  const getLinePosition = (progressValue: number) => {
+    const totalLines = Math.max(1, lineMeta.length);
+    const absolute = progressValue * totalLines;
+    if (absolute >= totalLines) {
+      return { lineIndex: totalLines - 1, lineProgress: 1 };
+    }
+    if (absolute <= 0) {
+      return { lineIndex: 0, lineProgress: 0 };
+    }
+    const lineIndex = Math.floor(absolute);
+    return { lineIndex, lineProgress: absolute - lineIndex };
   };
 
   useEffect(() => {
@@ -52,6 +75,7 @@ export const ViewerPage = () => {
     setProgressValue(0);
     setActiveAnnotationId(undefined);
     activeAnnotationRef.current = undefined;
+    currentLineRef.current = 0;
     startTimeRef.current = null;
   }, [lyricId]);
 
@@ -61,23 +85,22 @@ export const ViewerPage = () => {
       const container = lyricDisplayRef.current;
       if (!container) return;
       const containerRect = container.getBoundingClientRect();
-      containerTopRef.current = containerRect.top + window.scrollY;
-      setContainerHeight(container.scrollHeight);
       const nodes = Array.from(
-        container.querySelectorAll<HTMLElement>('[data-annotation-id]')
+        container.querySelectorAll<HTMLElement>('[data-line-index]')
       );
-      annotationPositionsRef.current = nodes
-        .map((node) => {
-          const id = node.dataset.annotationId;
-          if (!id) return null;
+      lineElementsRef.current = nodes;
+      setLineRects(
+        nodes.map((node, index) => {
           const rect = node.getBoundingClientRect();
           return {
-            id,
+            index,
             top: rect.top - containerRect.top,
-            bottom: rect.bottom - containerRect.top
+            left: rect.left - containerRect.left,
+            width: rect.width,
+            height: rect.height
           };
         })
-        .filter((item): item is { id: string; top: number; bottom: number } => !!item);
+      );
     };
 
     updateLayout();
@@ -105,20 +128,26 @@ export const ViewerPage = () => {
       const nextProgress = Math.min(1, elapsedSeconds / durationSeconds);
       setProgressValue(nextProgress);
 
-      const height = containerHeight || 0;
-      const currentY = nextProgress * height;
-      const active = annotationPositionsRef.current.find(
-        (item) => currentY >= item.top && currentY <= item.bottom
-      );
-      if (active?.id !== activeAnnotationRef.current) {
-        activeAnnotationRef.current = active?.id;
-        setActiveAnnotationId(active?.id);
+      const { lineIndex, lineProgress } = getLinePosition(nextProgress);
+      if (lineIndex !== currentLineRef.current) {
+        currentLineRef.current = lineIndex;
+        const lineElement = lineElementsRef.current[lineIndex];
+        if (lineElement) {
+          lineElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
       }
 
-      if (now - lastScrollRef.current > 120 && height > 0) {
-        const targetTop = Math.max(0, containerTopRef.current + currentY - window.innerHeight * 0.35);
-        window.scrollTo({ top: targetTop, behavior: 'auto' });
-        lastScrollRef.current = now;
+      const lineInfo = lineMeta[lineIndex];
+      const lineOffset =
+        lineInfo.length === 0
+          ? lineInfo.start
+          : lineInfo.start + Math.min(lineInfo.length - 1, Math.floor(lineProgress * lineInfo.length));
+      const active = lyric.annotations.find(
+        (annotation) => annotation.start <= lineOffset && annotation.end > lineOffset
+      );
+      if (active?.annotationId !== activeAnnotationRef.current) {
+        activeAnnotationRef.current = active?.annotationId;
+        setActiveAnnotationId(active?.annotationId);
       }
 
       if (nextProgress >= 1) {
@@ -135,7 +164,7 @@ export const ViewerPage = () => {
       }
       animationRef.current = null;
     };
-  }, [isPlaying, containerHeight]);
+  }, [isPlaying, lineMeta, lyric.annotations]);
 
   const handleToggle = () => {
     if (isPlaying) {
@@ -156,10 +185,15 @@ export const ViewerPage = () => {
     setProgressValue(0);
     setActiveAnnotationId(undefined);
     activeAnnotationRef.current = undefined;
+    currentLineRef.current = 0;
     startTimeRef.current = null;
   };
 
-  const barOffset = containerHeight * progress;
+  const { lineIndex, lineProgress } = getLinePosition(progress);
+  const currentRect = lineRects[lineIndex];
+  const barX = currentRect ? currentRect.left + currentRect.width * lineProgress : 0;
+  const barY = currentRect ? currentRect.top : 0;
+  const barHeight = currentRect ? currentRect.height : 0;
 
   if (requiresSignIn) {
     return <p className="text-muted-foreground">閲覧にはサインインが必要です。</p>;
@@ -227,7 +261,14 @@ export const ViewerPage = () => {
           </span>
         </div>
       </section>
-      <div className="relative">
+      <div
+        className="relative"
+        onClick={() => {
+          if (isPlaying) {
+            setIsPlaying(false);
+          }
+        }}
+      >
         <LyricDisplay
           ref={lyricDisplayRef}
           text={lyric.text}
@@ -236,14 +277,18 @@ export const ViewerPage = () => {
           showTagIndicators
           showComments
           activeAnnotationId={activeAnnotationId}
+          renderLines
           className="rounded-lg border border-border bg-card/80 p-6 shadow-inner"
         />
         <div
           className="pointer-events-none absolute left-0 right-0 top-0"
-          style={{ transform: `translateY(${barOffset}px)` }}
+          style={{ transform: `translate3d(${barX}px, ${barY}px, 0)` }}
           aria-hidden
         >
-          <div className="h-0.5 w-full bg-primary/70 shadow-[0_0_12px_rgba(59,130,246,0.6)]" />
+          <div
+            className="w-0.5 bg-primary/70 shadow-[0_0_12px_rgba(59,130,246,0.6)]"
+            style={{ height: barHeight }}
+          />
         </div>
       </div>
       <section className="space-y-3">
