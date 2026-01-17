@@ -12,6 +12,7 @@ interface LyricDisplayProps {
   framed?: boolean;
   showTagIndicators?: boolean;
   showComments?: boolean;
+  activeAnnotationId?: string;
   onSelectAnnotation?: (annotation: Annotation) => void;
 }
 
@@ -63,6 +64,7 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
       framed = true,
       showTagIndicators = false,
       showComments = false,
+      activeAnnotationId,
       onSelectAnnotation
     },
     ref
@@ -86,6 +88,8 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
           const tagSymbol = getTagSymbol(annotation.tag);
           const tagLabel = getTagLabel(annotation.tag);
           const comment = annotation.comment?.trim();
+          const tooltipText = comment || tagLabel;
+          const isActive = activeAnnotationId === annotation.annotationId;
           return (
             <span
               key={annotation.annotationId}
@@ -94,7 +98,8 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
                 onSelectAnnotation && 'cursor-pointer',
                 showComments && 'group'
               )}
-              title={comment || tagLabel}
+              data-annotation-id={annotation.annotationId}
+              title={tooltipText}
               onClick={() => {
                 if (!onSelectAnnotation) return;
                 const selection = window.getSelection();
@@ -108,9 +113,15 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
                   {tagSymbol}
                 </span>
               )}
-              {showComments && comment && (
-                <span className="absolute left-0 top-full z-10 mt-2 hidden max-w-xs select-none rounded-md border border-border bg-card/95 px-2 py-1 text-xs text-foreground shadow-md group-hover:block">
-                  {comment}
+              {(showComments || isActive) && tooltipText && (
+                <span
+                  className={clsx(
+                    'absolute left-0 top-full z-10 mt-2 max-w-xs select-none rounded-md border border-border bg-card/95 px-2 py-1 text-xs text-foreground shadow-md',
+                    showComments && !isActive && 'hidden group-hover:block',
+                    isActive && 'block'
+                  )}
+                >
+                  {tooltipText}
                 </span>
               )}
             </span>
