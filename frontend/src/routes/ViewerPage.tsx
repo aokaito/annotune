@@ -29,7 +29,7 @@ export const ViewerPage = () => {
 
   const lyricText = lyric?.text ?? '';
   const lyricId = lyric?.docId ?? '';
-  const annotationCount = lyric?.annotations.length ?? 0;
+  const annotations = lyric?.annotations ?? [];
 
   const lineMeta = useMemo(() => {
     const lines = lyricText.split('\n');
@@ -108,7 +108,7 @@ export const ViewerPage = () => {
     return () => {
       window.removeEventListener('resize', updateLayout);
     };
-  }, [lyric, lyricText, annotationCount]);
+  }, [lyric, lyricText, annotations.length]);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -142,7 +142,7 @@ export const ViewerPage = () => {
         lineInfo.length === 0
           ? lineInfo.start
           : lineInfo.start + Math.min(lineInfo.length - 1, Math.floor(lineProgress * lineInfo.length));
-      const active = lyric.annotations.find(
+      const active = annotations.find(
         (annotation) => annotation.start <= lineOffset && annotation.end > lineOffset
       );
       if (active?.annotationId !== activeAnnotationRef.current) {
@@ -164,7 +164,7 @@ export const ViewerPage = () => {
       }
       animationRef.current = null;
     };
-  }, [isPlaying, lineMeta, lyric.annotations]);
+  }, [isPlaying, lineMeta, annotations]);
 
   const handleToggle = () => {
     if (isPlaying) {
