@@ -151,8 +151,10 @@ export class LyricsRepository {
       // 公開フラグが false の場合は閲覧を禁止
       throw new HttpError(403, 'Document is not public');
     }
+    // ownerNameがownerIdと同じ場合（アカウントIDがそのまま保存されている場合）はundefinedにする
+    const normalizedOwnerName = lyric.ownerName && lyric.ownerName !== lyric.ownerId ? lyric.ownerName : undefined;
     const annotations = await this.loadAnnotations(docId, lyric.ownerId);
-    return { ...lyric, annotations };
+    return { ...lyric, ownerName: normalizedOwnerName, annotations };
   }
 
   async listPublicLyrics(filters?: {
@@ -170,7 +172,12 @@ export class LyricsRepository {
       })
     );
 
-    const items = (scanResult.Items ?? []).map((item) => normalizeLyricRecord(item as LyricDocument));
+    const items = (scanResult.Items ?? []).map((item) => {
+      const lyric = normalizeLyricRecord(item as LyricDocument);
+      // ownerNameがownerIdと同じ場合（アカウントIDがそのまま保存されている場合）はundefinedにする
+      const normalizedOwnerName = lyric.ownerName && lyric.ownerName !== lyric.ownerId ? lyric.ownerName : undefined;
+      return { ...lyric, ownerName: normalizedOwnerName };
+    });
     if (!filters || (!filters.title && !filters.artist && !filters.author)) {
       return items;
     }
@@ -264,20 +271,28 @@ export class LyricsRepository {
   }
 
   // 公開／非公開フラグを切り替える
-  async shareLyric(docId: string, ownerId: string, isPublicView: boolean): Promise<LyricDocument> {
+  async shareLyric(docId: string, ownerId: string, isPublicView: boolean, ownerName?: string): Promise<LyricDocument> {
     let result;
     try {
+      const updateExpression = ownerName
+        ? 'SET isPublicView = :isPublic, ownerName = :ownerName, updatedAt = :updatedAt'
+        : 'SET isPublicView = :isPublic, updatedAt = :updatedAt';
+      const expressionAttributeValues: Record<string, unknown> = {
+        ':ownerId': ownerId,
+        ':isPublic': isPublicView,
+        ':updatedAt': now()
+      };
+      if (ownerName) {
+        expressionAttributeValues[':ownerName'] = ownerName;
+      }
+
       result = await this.client.send(
         new UpdateCommand({
           TableName: this.config.lyricsTable,
           Key: { docId },
-          UpdateExpression: 'SET isPublicView = :isPublic, updatedAt = :updatedAt',
+          UpdateExpression: updateExpression,
           ConditionExpression: 'ownerId = :ownerId',
-          ExpressionAttributeValues: {
-            ':ownerId': ownerId,
-            ':isPublic': isPublicView,
-            ':updatedAt': now()
-          },
+          ExpressionAttributeValues: expressionAttributeValues,
           ReturnValues: 'ALL_NEW'
         })
       );
