@@ -10,6 +10,7 @@ import {
 export interface HttpApiConfig {
   baseUrl: string;
   getIdToken: () => string | null;
+  getExpiresAt?: () => number | null;
   fetchImpl?: typeof fetch;
 }
 
@@ -119,6 +120,14 @@ export const createHttpApi = (config: HttpApiConfig): AnnotuneApi => {
     }
 
     if (auth) {
+      // トークンの有効期限をチェック
+      if (config.getExpiresAt) {
+        const expiresAt = config.getExpiresAt();
+        if (expiresAt !== null && Date.now() >= expiresAt) {
+          throw new ApiError(401, '認証トークンの有効期限が切れています');
+        }
+      }
+      
       const token = config.getIdToken();
       if (!token) {
         throw new ApiError(401, '認証情報が不足しています');
