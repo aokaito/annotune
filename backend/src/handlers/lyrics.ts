@@ -32,9 +32,12 @@ export const createLyricHandler = async (
     const user = getAuthenticatedUser(event);
     // 入力値を zod で検証
     const payload = createLyricSchema.parse(parseBody(event));
+    const ownerName = payload.ownerName?.trim() || user.displayName;
     const lyric = await repository.createLyric(user.userId, {
-      ...payload,
-      ownerName: user.displayName
+      title: payload.title,
+      artist: payload.artist,
+      text: payload.text,
+      ownerName
     });
     return jsonResponse(201, lyric);
   } catch (error) {

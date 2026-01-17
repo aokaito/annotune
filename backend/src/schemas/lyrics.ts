@@ -14,7 +14,8 @@ export const annotationPropsSchema = z
 export const createLyricSchema = z.object({
   title: z.string().min(1).max(200),
   artist: z.string().min(1).max(200),
-  text: z.string().min(1).max(20000)
+  text: z.string().min(1).max(20000),
+  ownerName: z.string().min(1).max(100).optional()
 });
 
 // 既存歌詞更新時の入力要件（バージョン必須）

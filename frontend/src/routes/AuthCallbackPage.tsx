@@ -8,6 +8,7 @@ type IdTokenPayload = {
   sub?: string;
   name?: string;
   email?: string;
+  preferred_username?: string;
   'cognito:username'?: string;
 };
 
@@ -43,7 +44,13 @@ export const AuthCallbackPage = () => {
         payload?.sub ?? payload?.['cognito:username'] ?? payload?.email ?? 'current-user';
       const storedDisplayName = getStoredDisplayName(userId);
       const displayName =
-        storedDisplayName ?? params.get('name') ?? payload?.name ?? payload?.email ?? 'Vocalist';
+        storedDisplayName ??
+        params.get('name') ??
+        payload?.name ??
+        payload?.preferred_username ??
+        payload?.['cognito:username'] ??
+        payload?.email ??
+        'Vocalist';
       const expiresAt = expiresIn ? Date.now() + Number(expiresIn) * 1000 : null;
 
       setAuthenticated({

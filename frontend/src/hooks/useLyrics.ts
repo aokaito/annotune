@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import type { LyricDocument, LyricVersionSnapshot, Annotation } from '../types';
 import { useAnnotuneApi } from './useAnnotuneApi';
+import { useAuthStore } from '../store/auth';
+import type { AuthState } from '../store/auth';
 
 const keys = {
   // ユーザーごとの歌詞一覧をキャッシュするキー
@@ -77,10 +79,14 @@ export const useLyricVersions = (docId: string) => {
 
 export const useCreateLyric = () => {
   const { api, userId, mode, isAuthenticated } = useAnnotuneApi();
+  const displayName = useAuthStore((state: AuthState) => state.displayName);
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: { title: string; artist?: string; text: string }) =>
-      api.createLyric(userId, payload),
+      api.createLyric(userId, {
+        ...payload,
+        ownerName: displayName?.trim() || undefined
+      }),
     onSuccess: () => {
       // 作成後に一覧を再取得し、成功トーストを表示
       queryClient.invalidateQueries({ queryKey: keys.list(userId) });

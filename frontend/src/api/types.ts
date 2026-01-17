@@ -4,6 +4,7 @@ export interface CreateLyricPayload {
   title: string;
   artist?: string;
   text: string;
+  ownerName?: string;
 }
 
 export interface UpdateLyricPayload {
