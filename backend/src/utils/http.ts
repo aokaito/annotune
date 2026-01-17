@@ -3,15 +3,24 @@ import { ZodError } from 'zod';
 import { logger } from './logger';
 import { NotFoundError } from './errors';
 
-export const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyResultV2 => ({
-  statusCode,
-  headers: {
+export const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyResultV2 => {
+  const allowedOrigin = process.env.ALLOWED_ORIGIN ?? '*';
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN ?? '*', // クロスオリジン制御のための設定。必要に応じてフロントのドメインに限定する
-    'Access-Control-Allow-Credentials': 'true'
-  },
-  body: JSON.stringify(body)
-});
+    'Access-Control-Allow-Origin': allowedOrigin
+  };
+  
+  // Access-Control-Allow-Credentials は、Origin が '*' でない場合のみ設定可能
+  if (allowedOrigin !== '*') {
+    headers['Access-Control-Allow-Credentials'] = 'true';
+  }
+  
+  return {
+    statusCode,
+    headers,
+    body: JSON.stringify(body)
+  };
+};
 
 export class HttpError extends Error {
   constructor(public statusCode: number, message: string) {
@@ -37,6 +46,6 @@ export const handleError = (error: unknown): APIGatewayProxyResultV2 => {
     return jsonResponse(404, { code: 'NOT_FOUND', message: error.message });
   }
 
-  logger.error({ err: error }, 'Unexpected error');
+  logger.error({ err: error instanceof Error ? error : new Error(String(error)) }, 'Unexpected error');
   return jsonResponse(500, { message: 'Internal Server Error' });
 };

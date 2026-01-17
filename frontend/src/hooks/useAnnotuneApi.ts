@@ -51,7 +51,8 @@ export const useAnnotuneApi = () => {
       : normalizedBase;
     return createHttpApi({
       baseUrl: normalized,
-      getIdToken: () => accessToken ?? useAuthStore.getState().idToken
+      getIdToken: () => accessToken ?? useAuthStore.getState().idToken,
+      getExpiresAt: () => useAuthStore.getState().expiresAt
     });
   }, [accessToken, normalizedBase]);
 
