@@ -1,0 +1,181 @@
+time="2026-01-18T10:50:14+09:00" level=info msg="Using docker host 'unix:///var/run/docker.sock', and daemon socket 'unix:///var/run/docker.sock'"
+time="2026-01-18T10:50:14+09:00" level=info msg="Start server on http://192.168.43.196:34567"
+time="2026-01-18T10:50:14+09:00" level=info msg="deleted cache: &{ID:1 Key:node-cache-linux-x64-npm-88ff909e14115f189dee175b2023e52125f811f91b07bfeaee86c4f9d8ea4568 Version:b3f0cb83629d634645a5146420c017462ebb5229bd60271a7a86e489a6066469 Size:122074218 Complete:true UsedAt:1768700714 CreatedAt:1768697769}" module=artifactcache
+[Backend CI/build] ⭐ Run Set up job
+[Backend CI/build] 🚀  Start image=ghcr.io/catthehacker/ubuntu:act-latest
+[Backend CI/build]   🐳  docker pull image=ghcr.io/catthehacker/ubuntu:act-latest platform=linux/amd64 username= forcePull=true
+[Backend CI/build]   🐳  docker create image=ghcr.io/catthehacker/ubuntu:act-latest platform=linux/amd64 entrypoint=["tail" "-f" "/dev/null"] cmd=[] network="host"
+[Backend CI/build]   🐳  docker run image=ghcr.io/catthehacker/ubuntu:act-latest platform=linux/amd64 entrypoint=["tail" "-f" "/dev/null"] cmd=[] network="host"
+[Backend CI/build]   🐳  docker exec cmd=[node --no-warnings -e console.log(process.execPath)] user= workdir=
+[Backend CI/build]   ✅  Success - Set up job
+[Backend CI/build]   ☁  git clone 'https://github.com/actions/setup-node' # ref=v4
+[Backend CI/build]   ☁  git clone 'https://github.com/aws-actions/configure-aws-credentials' # ref=v4
+[Backend CI/build]   ☁  git clone 'https://github.com/actions/upload-artifact' # ref=v4
+[Backend CI/build] ⭐ Run Main actions/checkout@v4
+[Backend CI/build]   🐳  docker cp src=/Users/sanhinkaido/annotune/. dst=/Users/sanhinkaido/annotune
+[Backend CI/build]   ✅  Success - Main actions/checkout@v4 [53.937959ms]
+[Backend CI/build] ⭐ Run Main actions/setup-node@v4
+[Backend CI/build]   🐳  docker cp src=/Users/sanhinkaido/.cache/act/actions-setup-node@v4/ dst=/var/run/act/actions/actions-setup-node@v4/
+[Backend CI/build]   🐳  docker exec cmd=[node /var/run/act/actions/actions-setup-node@v4/dist/setup/index.js] user= workdir=
+[Backend CI/build]   | Found in cache @ /opt/hostedtoolcache/node/20.20.0/x64
+[Backend CI/build]   ❓  ::group::Environment details
+[Backend CI/build]   | node: v20.20.0
+[Backend CI/build]   | npm: 10.8.2
+[Backend CI/build]   | yarn: 
+[Backend CI/build]   ❓  ::endgroup::
+[Backend CI/build]   | [command]/opt/hostedtoolcache/node/20.20.0/x64/bin/npm config get cache
+[Backend CI/build]   | /root/.npm
+[Backend CI/build]   ⚙  ***
+[Backend CI/build]   | Cache Size: ~116 MB (122083387 B)
+[Backend CI/build]   | [command]/usr/bin/tar -xf /tmp/ce172f47-a38c-436f-abb2-ef09e59bda7c/cache.tzst -P -C /Users/sanhinkaido/annotune --use-compress-program unzstd
+[Backend CI/build]   | Cache restored successfully
+[Backend CI/build]   | Cache restored from key: node-cache-linux-x64-npm-88ff909e14115f189dee175b2023e52125f811f91b07bfeaee86c4f9d8ea4568
+[Backend CI/build]   ❓ add-matcher /run/act/actions/actions-setup-node@v4/.github/tsc.json
+[Backend CI/build]   ❓ add-matcher /run/act/actions/actions-setup-node@v4/.github/eslint-stylish.json
+[Backend CI/build]   ❓ add-matcher /run/act/actions/actions-setup-node@v4/.github/eslint-compact.json
+[Backend CI/build]   ✅  Success - Main actions/setup-node@v4 [3.562286542s]
+[Backend CI/build]   ⚙  ::set-output:: node-version=v20.20.0
+[Backend CI/build]   ⚙  ::set-output:: cache-hit=true
+[Backend CI/build]   ⚙  ::add-path:: /opt/hostedtoolcache/node/20.20.0/x64/bin
+[Backend CI/build] ⭐ Run Main Install workspace deps
+[Backend CI/build]   🐳  docker exec cmd=[bash -e /var/run/act/workflow/2] user= workdir=
+[Backend CI/build]   | npm warn deprecated @types/pino@7.0.5: This is a stub types definition. pino provides its own type definitions, so you do not need this installed.
+[Backend CI/build]   | npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+[Backend CI/build]   | npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+[Backend CI/build]   | npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+[Backend CI/build]   | npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+[Backend CI/build]   | npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+[Backend CI/build]   | npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+[Backend CI/build]   | 
+[Backend CI/build]   | added 605 packages, and audited 646 packages in 12s
+[Backend CI/build]   | 
+[Backend CI/build]   | 164 packages are looking for funding
+[Backend CI/build]   |   run `npm fund` for details
+[Backend CI/build]   | 
+[Backend CI/build]   | 12 vulnerabilities (2 low, 6 moderate, 4 high)
+[Backend CI/build]   | 
+[Backend CI/build]   | To address issues that do not require attention, run:
+[Backend CI/build]   |   npm audit fix
+[Backend CI/build]   | 
+[Backend CI/build]   | To address all issues (including breaking changes), run:
+[Backend CI/build]   |   npm audit fix --force
+[Backend CI/build]   | 
+[Backend CI/build]   | Run `npm audit` for details.
+[Backend CI/build]   ✅  Success - Main Install workspace deps [12.214044792s]
+[Backend CI/build] ⭐ Run Main Lint backend
+[Backend CI/build]   🐳  docker exec cmd=[bash -e /var/run/act/workflow/3] user= workdir=
+[Backend CI/build]   | 
+[Backend CI/build]   | > annotune-backend@0.1.0 lint
+[Backend CI/build]   | > eslint "src/**/*.ts"
+[Backend CI/build]   | 
+[Backend CI/build]   ✅  Success - Main Lint backend [1.865604375s]
+[Backend CI/build] ⭐ Run Main Test backend
+[Backend CI/build]   🐳  docker exec cmd=[bash -e /var/run/act/workflow/4] user= workdir=
+[Backend CI/build]   | 
+[Backend CI/build]   | > annotune-backend@0.1.0 test
+[Backend CI/build]   | > vitest run
+[Backend CI/build]   | 
+[Backend CI/build]   | 
+[Backend CI/build]   | [1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90m/Users/sanhinkaido/annotune/backend[39m
+[Backend CI/build]   | 
+[Backend CI/build]   |  [32m✓[39m src/__tests__/schemas.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+[Backend CI/build]   |  [32m✓[39m src/repositories/__tests__/LyricsRepository.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+[Backend CI/build]   | 
+[Backend CI/build]   | [2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[Backend CI/build]   | [2m      Tests [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[Backend CI/build]   | [2m   Start at [22m 01:50:38
+[Backend CI/build]   | [2m   Duration [22m 1.26s[2m (transform 469ms, setup 0ms, collect 643ms, tests 23ms, environment 0ms, prepare 178ms)[22m
+[Backend CI/build]   | 
+[Backend CI/build]   ✅  Success - Main Test backend [2.409082375s]
+[Backend CI/build] ⭐ Run Main CDK Synth
+[Backend CI/build]   🐳  docker exec cmd=[bash -e /var/run/act/workflow/5] user= workdir=
+[Backend CI/build]   | 
+[Backend CI/build]   | > annotune-infra@0.1.0 build
+[Backend CI/build]   | > tsc -p tsconfig.json
+[Backend CI/build]   | 
+[Backend CI/build]   | 
+[Backend CI/build]   | > annotune-infra@0.1.0 synth
+[Backend CI/build]   | > cdk synth
+[Backend CI/build]   | 
+[Backend CI/build]   | Bundling asset AnnotuneStack/AnnotuneApiHandler/Code/Stage...
+[Backend CI/build]   | 
+[Backend CI/build]   |   ...3aa7efa0cb110afd2a5c6135d1af26a2462cdb7bdd4b37-building/index.js  165.3kb
+[Backend CI/build]   | 
+[Backend CI/build]   | ⚡ Done in 109ms
+[Backend CI/build]   | 
+[Backend CI/build]   | added 86 packages, and audited 91 packages in 2s
+[Backend CI/build]   | 
+[Backend CI/build]   | 3 packages are looking for funding
+[Backend CI/build]   |   run `npm fund` for details
+[Backend CI/build]   | 
+[Backend CI/build]   | found 0 vulnerabilities
+[Backend CI/build]   | 
+[Backend CI/build]   | /Users/sanhinkaido/annotune/node_modules/aws-cdk-lib/cx-api/lib/environment.js:1
+[Backend CI/build]   | "use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.EnvironmentUtils=exports.UNKNOWN_REGION=exports.UNKNOWN_ACCOUNT=void 0;const JSII_RTTI_SYMBOL_1=Symbol.for("jsii.rtti");var error_1=()=>{var tmp=require("./private/error");return error_1=()=>tmp,tmp};const AWS_ENV_REGEX=/aws\:\/\/([a-z0-9A-Z\-\@\.\_]+)\/([a-z\-0-9]+)/;exports.UNKNOWN_ACCOUNT="unknown-account",exports.UNKNOWN_REGION="unknown-region";class EnvironmentUtils{static[JSII_RTTI_SYMBOL_1]={fqn:"aws-cdk-lib.cx_api.EnvironmentUtils",version:"2.221.1"};static parse(environment){const env=AWS_ENV_REGEX.exec(environment);if(!env)throw new(error_1()).CloudAssemblyError(`Unable to parse environment specification "${environment}". Expected format: aws://account/region`);const[,account,region]=env;if(!account||!region)throw new(error_1()).CloudAssemblyError(`Invalid environment specification: ${environment}`);return{account,region,name:environment}}static make(account,region){return{account,region,name:this.format(account,region)}}static format(account,region){return`aws://${account}/${region}`}}exports.EnvironmentUtils=EnvironmentUtils;
+[Backend CI/build]   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ^
+[Backend CI/build]   | CloudAssemblyError: Unable to parse environment specification "aws:///us-east-1". Expected format: aws://account/region
+[Backend CI/build]   |     at Function.parse (/Users/sanhinkaido/annotune/node_modules/aws-cdk-lib/cx-api/lib/environment.js:1:622)
+[Backend CI/build]   |     at new CloudFormationStackArtifact (/Users/sanhinkaido/annotune/node_modules/aws-cdk-lib/cx-api/lib/artifacts/cloudformation-artifact.js:1:2268)
+[Backend CI/build]   |     at Function.cloud_artifact_1.CloudArtifact.fromManifest (/Users/sanhinkaido/annotune/node_modules/aws-cdk-lib/cx-api/lib/cloud-artifact-aug.js:1:955)
+[Backend CI/build]   |     at CloudAssembly.renderArtifacts (/Users/sanhinkaido/annotune/node_modules/aws-cdk-lib/cx-api/lib/cloud-assembly.js:1:5198)
+[Backend CI/build]   |     at new CloudAssembly (/Users/sanhinkaido/annotune/node_modules/aws-cdk-lib/cx-api/lib/cloud-assembly.js:1:2001)
+[Backend CI/build]   |     at CloudAssemblyBuilder.buildAssembly (/Users/sanhinkaido/annotune/node_modules/aws-cdk-lib/cx-api/lib/cloud-assembly.js:1:7316)
+[Backend CI/build]   |     at synthesize (/Users/sanhinkaido/annotune/node_modules/aws-cdk-lib/core/lib/private/synthesis.js:1:2176)
+[Backend CI/build]   |     at App.synth (/Users/sanhinkaido/annotune/node_modules/aws-cdk-lib/core/lib/stage.js:1:2912)
+[Backend CI/build]   |     at process.<anonymous> (/Users/sanhinkaido/annotune/node_modules/aws-cdk-lib/core/lib/app.js:1:2041)
+[Backend CI/build]   |     at Object.onceWrapper (node:events:639:26)
+[Backend CI/build]   | 
+[Backend CI/build]   | NOTICES         (What's this? https://github.com/aws/aws-cdk/wiki/CLI-Notices)
+[Backend CI/build]   | 
+[Backend CI/build]   | 34892	CDK CLI will collect telemetry data on command usage starting at version 2.1100.0 (unless opted out)
+[Backend CI/build]   | 
+[Backend CI/build]   | 	Overview: We do not collect customer content and we anonymize the
+[Backend CI/build]   | 	          telemetry we do collect. See the attached issue for more
+[Backend CI/build]   | 	          information on what data is collected, why, and how to
+[Backend CI/build]   | 	          opt-out. Telemetry will NOT be collected for any CDK CLI
+[Backend CI/build]   | 	          version prior to version 2.1100.0 - regardless of
+[Backend CI/build]   | 	          opt-in/out. You can also preview the telemetry we will start
+[Backend CI/build]   | 	          collecting by logging it to a local file, by adding
+[Backend CI/build]   | 	          `--unstable=telemetry --telemetry-file=my/local/file` to any
+[Backend CI/build]   | 	          `cdk` command.
+[Backend CI/build]   | 
+[Backend CI/build]   | 	Affected versions: cli: >=2.0.0 <2.1100.0
+[Backend CI/build]   | 
+[Backend CI/build]   | 	More information at: https://github.com/aws/aws-cdk/issues/34892
+[Backend CI/build]   | 
+[Backend CI/build]   | 
+[Backend CI/build]   | If you don’t want to see a notice anymore, use "cdk acknowledge <id>". For example, "cdk acknowledge 34892".
+[Backend CI/build]   | node --enable-source-maps dist/bin/annotune.js: Subprocess exited with error 1
+[Backend CI/build]   | npm error Lifecycle script `synth` failed with error:
+[Backend CI/build]   | npm error code 1
+[Backend CI/build]   | npm error path /Users/sanhinkaido/annotune/infra
+[Backend CI/build]   | npm error workspace annotune-infra@0.1.0
+[Backend CI/build]   | npm error location /Users/sanhinkaido/annotune/infra
+[Backend CI/build]   | npm error command failed
+[Backend CI/build]   | npm error command sh -c cdk synth
+[Backend CI/build]   ❌  Failure - Main CDK Synth [17.969362458s]
+[Backend CI/build] exitcode '1': failure
+[Backend CI/build] ⭐ Run Main Upload cdk.out (debug)
+[Backend CI/build]   🐳  docker cp src=/Users/sanhinkaido/.cache/act/actions-upload-artifact@v4/ dst=/var/run/act/actions/actions-upload-artifact@v4/
+[Backend CI/build]   🐳  docker exec cmd=[node /var/run/act/actions/actions-upload-artifact@v4/dist/upload/index.js] user= workdir=
+[Backend CI/build]   | With the provided path, there will be 4012 files uploaded
+[Backend CI/build]   | Artifact name is valid!
+[Backend CI/build]   | Root directory input is valid!
+[Backend CI/build]   | Beginning upload of artifact content to blob storage
+[Backend CI/build]   | Uploaded bytes 8388608
+[Backend CI/build]   | Uploaded bytes 16777216
+[Backend CI/build]   | Uploaded bytes 23726891
+[Backend CI/build]   | Finished uploading artifact content to blob storage!
+[Backend CI/build]   | SHA256 digest of uploaded artifact zip is 86ba147201b59677ea93a975ca6034d5e2d2e0fb3ac45c80cf87cb040bdba0c8
+[Backend CI/build]   | Finalizing artifact upload
+[Backend CI/build]   | Artifact cdk.out.zip successfully finalized. Artifact ID 208021105
+[Backend CI/build]   | Artifact cdk.out has been successfully uploaded! Final size is 23726891 bytes. Artifact ID is 208021105
+[Backend CI/build]   | Artifact download URL: https://github.com/aokaito/annotune/actions/runs/1/artifacts/208021105
+[Backend CI/build]   ✅  Success - Main Upload cdk.out (debug) [6.097194958s]
+[Backend CI/build]   ⚙  ::set-output:: artifact-id=208021105
+[Backend CI/build]   ⚙  ::set-output:: artifact-digest=86ba147201b59677ea93a975ca6034d5e2d2e0fb3ac45c80cf87cb040bdba0c8
+[Backend CI/build]   ⚙  ::set-output:: artifact-url=https://github.com/aokaito/annotune/actions/runs/1/artifacts/208021105
+[Backend CI/build] ⭐ Run Complete job
+[Backend CI/build]   ✅  Success - Complete job
+[Backend CI/build] 🏁  Job failed
+Error: Job 'build' failed

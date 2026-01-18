@@ -1,0 +1,9 @@
+{
+  "pull_request": {
+    "head": {
+      "repo": {
+        "fork": true
+      }
+    }
+  }
+}
