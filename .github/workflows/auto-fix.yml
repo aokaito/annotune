@@ -1,0 +1,90 @@
+# GitHub Actions: Automatic test fixing with Codex
+name: Auto Fix with Codex
+
+on:
+  workflow_run:
+    workflows: ["Backend CI", "Frontend CI"]
+    types:
+      - completed
+
+jobs:
+  auto-fix:
+    # Run this job only when the triggering workflow has failed
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository at the failing commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up Node.js v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      # --- Backend Auto-Fix ---
+      - name: '[Backend] Run Codex to fix tests'
+        if: ${{ github.event.workflow_run.name == 'Backend CI' }}
+        run: |
+          # This is a placeholder command based on your request.
+          # You may need to install a Codex CLI or use a specific action.
+          # The prompt is crafted to be specific for better results.
+          echo "Attempting to fix backend tests with Codex..."
+          npx codex exec --non-interactive "The 'vitest run' command failed in the 'backend' workspace. Analyze the test output and apply the minimal code changes required to make the tests pass."
+
+      - name: '[Backend] Verify the fix by running tests again'
+        id: backend_test_run
+        if: ${{ github.event.workflow_run.name == 'Backend CI' }}
+        continue-on-error: true
+        run: npm test -w backend
+
+      - name: '[Backend] Check for changes'
+        id: backend_git_status
+        if: ${{ github.event.workflow_run.name == 'Backend CI' }}
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: '[Backend] Create Pull Request'
+        if: ${{ steps.backend_test_run.outcome == 'success' && steps.backend_git_status.outputs.changes == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_TITLE: "🤖 Codex Auto-Fix: Backend Tests"
+          PR_BODY: |
+            Codex automatically generated this PR to fix failing backend tests.
+            
+            - **Commit:** ${{ github.event.workflow_run.head_sha }}
+            - **Triggering Workflow:** [${{ github.event.workflow_run.name }}](${{ github.event.workflow_run.html_url }})
+            
+            Please review and merge.
+        run: |
+          BRANCH_NAME="codex-fix/backend-${{ github.event.workflow_run.id }}"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b $BRANCH_NAME
+          git add .
+          git commit -m "fix(backend): automatic test fix by codex"
+          git push origin $BRANCH_NAME
+          gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base "${{ github.event.workflow_run.head_branch }}"
+          
+      # --- Frontend Handling ---
+      - name: '[Frontend] Log no-test warning'
+        if: ${{ github.event.workflow_run.name == 'Frontend CI' }}
+        run: |
+          echo "NOTE: The 'Frontend CI' workflow failed, but no 'test' script is defined in frontend/package.json."
+          echo "Automatic fixing with Codex is skipped because there are no tests to verify the changes."
+
