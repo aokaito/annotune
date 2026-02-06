@@ -1,5 +1,5 @@
 // このファイルは API Gateway のルートキーに応じて個別ハンドラへディスパッチするエントリーポイント。
-import type { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2, APIGatewayProxyResultV2 } from 'aws-lambda';
+import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import {
   createAnnotationHandler,
   createLyricHandler,
@@ -16,7 +16,9 @@ import {
 import { getPublicLyricHandler, listPublicLyricsHandler } from './public';
 import { jsonResponse } from '../utils/http';
 
-const routeHandlers: Record<string, APIGatewayProxyHandlerV2> = {
+type AsyncHandler = (event: APIGatewayProxyEventV2) => Promise<APIGatewayProxyResultV2>;
+
+const routeHandlers: Record<string, AsyncHandler> = {
   'POST /v1/lyrics': createLyricHandler,
   'GET /v1/lyrics': listLyricsHandler,
   'GET /v1/lyrics/{docId}': getLyricHandler,
@@ -32,7 +34,7 @@ const routeHandlers: Record<string, APIGatewayProxyHandlerV2> = {
   'GET /v1/public/lyrics/{docId}': getPublicLyricHandler
 };
 
-export const handler: APIGatewayProxyHandlerV2 = async (
+export const handler = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2> => {
   const routeKey = event.requestContext.routeKey;

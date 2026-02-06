@@ -3,17 +3,26 @@ import type { APIGatewayProxyEventV2 } from 'aws-lambda';
 import { HttpError } from './http';
 import type { AnnotuneUser } from '../types';
 
+// APIGatewayProxyEventV2 は authorizer プロパティを持たないが、
+// JWT Authorizer 使用時にはランタイムで JWT クレームが含まれる
+interface JWTClaims {
+  sub?: string;
+  name?: string;
+  email?: string;
+  preferred_username?: string;
+  username?: string;
+  'cognito:username'?: string;
+}
+
+interface JWTAuthorizerContext {
+  jwt?: {
+    claims?: JWTClaims;
+  };
+}
+
 export const getAuthenticatedUser = (event: APIGatewayProxyEventV2): AnnotuneUser => {
-  const claims = event.requestContext.authorizer?.jwt?.claims as
-    | {
-        sub?: string;
-        name?: string;
-        email?: string;
-        preferred_username?: string;
-        username?: string;
-        'cognito:username'?: string;
-      }
-    | undefined;
+  const authorizer = (event.requestContext as { authorizer?: JWTAuthorizerContext }).authorizer;
+  const claims = authorizer?.jwt?.claims;
 
   if (!claims?.sub) {
     // サブジェクトが無い場合は未認証扱い

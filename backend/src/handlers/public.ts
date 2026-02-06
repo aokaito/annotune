@@ -2,6 +2,7 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { getLyricsRepository } from '../services/lyricsService';
 import { handleError, HttpError, jsonResponse } from '../utils/http';
+import { listPublicLyricsQuerySchema } from '../schemas/lyrics';
 
 const repository = getLyricsRepository();
 
@@ -25,13 +26,16 @@ export const listPublicLyricsHandler = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2> => {
   try {
-    const title = event.queryStringParameters?.title?.trim();
-    const artist = event.queryStringParameters?.artist?.trim();
-    const author = event.queryStringParameters?.author?.trim();
+    const rawQuery = {
+      title: event.queryStringParameters?.title?.trim() || undefined,
+      artist: event.queryStringParameters?.artist?.trim() || undefined,
+      author: event.queryStringParameters?.author?.trim() || undefined
+    };
+    const query = listPublicLyricsQuerySchema.parse(rawQuery);
     const items = await repository.listPublicLyrics({
-      title: title?.length ? title : undefined,
-      artist: artist?.length ? artist : undefined,
-      author: author?.length ? author : undefined
+      title: query.title?.length ? query.title : undefined,
+      artist: query.artist?.length ? query.artist : undefined,
+      author: query.author?.length ? query.author : undefined
     });
     return jsonResponse(200, items);
   } catch (error) {

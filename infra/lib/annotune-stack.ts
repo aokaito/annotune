@@ -89,6 +89,12 @@ export class AnnotuneStack extends Stack {
       projectionType: ProjectionType.ALL
     });
 
+    lyricsTable.addGlobalSecondaryIndex({
+      indexName: 'publicStatus-index',
+      partitionKey: { name: 'publicStatus', type: AttributeType.STRING },
+      projectionType: ProjectionType.ALL
+    });
+
     const annotationsTable = new Table(this, 'AnnotationsTable', {
       tableName: 'AnnotuneAnnotations',
       partitionKey: { name: 'docId', type: AttributeType.STRING },
@@ -157,9 +163,10 @@ export class AnnotuneStack extends Stack {
       environment: {
         LYRICS_TABLE_NAME: lyricsTable.tableName,
         LYRICS_OWNER_INDEX_NAME: 'ownerId-index',
+        LYRICS_PUBLIC_STATUS_INDEX_NAME: 'publicStatus-index',
         ANNOTATIONS_TABLE_NAME: annotationsTable.tableName,
         VERSIONS_TABLE_NAME: versionsTable.tableName,
-        ALLOWED_ORIGIN: '*'
+        ALLOWED_ORIGIN: `https://${effectiveDomainNames[0]}`
       }
     });
 

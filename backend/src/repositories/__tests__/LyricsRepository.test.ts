@@ -1,26 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
-import type { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { LyricsRepository } from '../LyricsRepository';
 import { HttpError } from '../../utils/http';
 import { NotFoundError } from '../../utils/errors';
 
-// DynamoDBDocumentClient全体をモック化
-vi.mock('@aws-sdk/lib-dynamodb', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    DynamoDBDocumentClient: {
-      from: () => ({
-        send: vi.fn(),
-      }),
-    },
-  };
-});
-
-const mockDocClient = DynamoDBDocumentClient.from({} as DynamoDBClient);
-const sendMock = mockDocClient.send as vi.Mock;
+// Create a mock client with send function
+const sendMock = vi.fn();
+const mockDocClient = {
+  send: sendMock
+} as unknown as DynamoDBDocumentClient;
 
 describe('LyricsRepository', () => {
   let repository: LyricsRepository;

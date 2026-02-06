@@ -1,56 +1,18 @@
 // バックエンドで再利用するドメイン型定義。
-export type AnnotationTag =
-  | 'vibrato'
-  | 'scoop'
-  | 'fall'
-  | 'slide'
-  | 'hold'
-  | 'breath'
-  | string;
+import type { AnnotationTag, AnnotationProps, BaseLyricDocument, BaseAnnotation, BaseLyricVersionSnapshot } from '@annotune/common';
 
-export interface AnnotationProps {
-  intensity?: 'low' | 'medium' | 'high';
-  length?: 'short' | 'medium' | 'long';
-  [key: string]: unknown;
-}
+export type { AnnotationTag, AnnotationProps };
 
-export interface LyricDocument {
+export interface LyricDocument extends BaseLyricDocument {}
+
+export interface AnnotationRecord extends BaseAnnotation {
   docId: string;
   ownerId: string;
-  ownerName?: string;
-  title: string;
-  artist: string;
-  text: string;
-  version: number;
-  createdAt: string;
-  updatedAt: string;
-  isPublicView: boolean;
-}
-
-export interface AnnotationRecord {
-  docId: string;
-  annotationId: string;
-  ownerId: string;
-  start: number;
-  end: number;
-  tag: AnnotationTag;
-  comment?: string;
-  props?: AnnotationProps;
-  authorId: string;
-  createdAt: string;
-  updatedAt: string;
   version: number;
 }
 
-export interface DocVersionRecord {
-  docId: string;
-  version: number;
+export interface DocVersionRecord extends BaseLyricVersionSnapshot {
   ownerId: string;
-  title: string;
-  artist: string;
-  text: string;
-  createdAt: string;
-  authorId: string;
 }
 
 export interface AnnotuneUser {

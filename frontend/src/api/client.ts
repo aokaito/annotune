@@ -124,13 +124,13 @@ export const createHttpApi = (config: HttpApiConfig): AnnotuneApi => {
       if (config.getExpiresAt) {
         const expiresAt = config.getExpiresAt();
         if (expiresAt !== null && Date.now() >= expiresAt) {
-          throw new ApiError(401, '認証トークンの有効期限が切れています');
+          throw new ApiError(401, 'Authentication token has expired');
         }
       }
-      
+
       const token = config.getIdToken();
       if (!token) {
-        throw new ApiError(401, '認証情報が不足しています');
+        throw new ApiError(401, 'Authentication credentials missing');
       }
       finalHeaders.Authorization = `Bearer ${token}`;
     }
@@ -151,7 +151,7 @@ export const createHttpApi = (config: HttpApiConfig): AnnotuneApi => {
         try {
           parsed = JSON.parse(rawText);
         } catch (error) {
-          throw new ApiError(response.status, 'サーバー応答の解析に失敗しました', {
+          throw new ApiError(response.status, 'Failed to parse server response', {
             rawText,
             error: String(error)
           });
@@ -184,8 +184,7 @@ export const createHttpApi = (config: HttpApiConfig): AnnotuneApi => {
   };
 
   return {
-    async listLyrics(ownerId) {
-      void ownerId;
+    async listLyrics(_ownerId) {
       const payload =
         (await request<LyricResponse[]>('/v1/lyrics', {
           method: 'GET',
@@ -193,8 +192,7 @@ export const createHttpApi = (config: HttpApiConfig): AnnotuneApi => {
         })) ?? [];
       return payload.map((item) => toLyricDocument({ ...item, annotations: item.annotations ?? [] }));
     },
-    async createLyric(ownerId: string, payload: CreateLyricPayload) {
-      void ownerId;
+    async createLyric(_ownerId: string, payload: CreateLyricPayload) {
       const data = await request<LyricResponse>('/v1/lyrics', {
         method: 'POST',
         body: payload
@@ -249,8 +247,7 @@ export const createHttpApi = (config: HttpApiConfig): AnnotuneApi => {
       });
       return toLyricDocument({ ...data, annotations: data.annotations ?? [] });
     },
-    async createAnnotation(docId: string, authorId: string, payload: AnnotationPayload) {
-      void authorId;
+    async createAnnotation(docId: string, _authorId: string, payload: AnnotationPayload) {
       const data = await request<AnnotationResponse>(`/v1/lyrics/${docId}/annotations`, {
         method: 'POST',
         body: payload
