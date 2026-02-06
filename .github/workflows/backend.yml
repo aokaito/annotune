@@ -50,22 +50,20 @@ jobs:
       - name: CDK Synth
         run: npm --workspace infra run build && npm --workspace infra run synth
 
-      # PR のときは差分プレビューだけ（任意）
-      - name: CDK Diff (PR only)
-        if: github.event_name == 'pull_request'
-        run: npm --workspace infra exec cdk diff
-
-      # ===== ここから main のときだけデプロイ =====
+      # ===== AWS認証（PRとmain両方で必要） =====
       - name: Configure AWS (OIDC)
-        if: github.ref == 'refs/heads/main'
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}  # ← バックエンド用ロール推奨
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}
           aws-region: ap-northeast-1
 
       - name: Who am I
-        if: github.ref == 'refs/heads/main'
         run: aws sts get-caller-identity
+
+      # PR のときは差分プレビューだけ
+      - name: CDK Diff (PR only)
+        if: github.event_name == 'pull_request'
+        run: npm --workspace infra exec cdk diff
 
       # 初回は必要。複数回実行しても安全（冪等）
       - name: CDK Bootstrap (safe if repeated)
