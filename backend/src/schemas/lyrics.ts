@@ -7,7 +7,7 @@ export const annotationPropsSchema = z
     intensity: z.enum(['low', 'medium', 'high']).optional(),
     length: z.enum(['short', 'medium', 'long']).optional()
   })
-  .catchall(z.unknown())
+  .passthrough()
   .optional();
 
 // 新規歌詞ドキュメント作成時の入力要件
@@ -43,4 +43,11 @@ export const annotationSchema = z
 // 公開設定切り替え用スキーマ
 export const shareSchema = z.object({
   isPublicView: z.boolean()
+});
+
+// 公開歌詞一覧取得のクエリパラメータ
+export const listPublicLyricsQuerySchema = z.object({
+  title: z.string().max(200).optional(),
+  artist: z.string().max(200).optional(),
+  author: z.string().max(100).optional()
 });

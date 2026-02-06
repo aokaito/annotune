@@ -5,7 +5,7 @@
  * リソースが見つからなかったことを示すエラー
  */
 export class NotFoundError extends Error {
-  constructor(message = 'リソースが見つかりません') {
+  constructor(message = 'Resource not found') {
     super(message);
     this.name = 'NotFoundError';
   }

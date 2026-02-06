@@ -5,13 +5,11 @@ import { nanoid } from '@annotune/common';
 import { HttpError } from '../utils/http';
 import type { AnnotationRecord, DocVersionRecord, LyricDocument } from '../types';
 import type { TableConfig } from '../config/env';
+import { AnnotationsRepository } from './AnnotationsRepository';
+import { VersionsRepository } from './VersionsRepository';
 
 // 現在時刻を ISO 形式の文字列で返すヘルパ
 const now = () => new Date().toISOString();
-
-// 二つの範囲が重なるかを判定するユーティリティ
-const overlaps = (aStart: number, aEnd: number, bStart: number, bEnd: number) =>
-  !(aEnd <= bStart || aStart >= bEnd);
 
 const normalizeLyricRecord = (record: Partial<LyricDocument>): LyricDocument => ({
   ...(record as LyricDocument),
@@ -19,19 +17,14 @@ const normalizeLyricRecord = (record: Partial<LyricDocument>): LyricDocument => 
   ownerName: record.ownerName ?? ''
 });
 
-const normalizeAnnotationRecord = (record: Partial<AnnotationRecord>): AnnotationRecord => ({
-  ...(record as AnnotationRecord),
-  ownerId: record.ownerId ?? ''
-});
-
-const normalizeVersionRecord = (record: Partial<DocVersionRecord>): DocVersionRecord => ({
-  ...(record as DocVersionRecord),
-  artist: record.artist ?? '',
-  ownerId: record.ownerId ?? ''
-});
-
 export class LyricsRepository {
-  constructor(private readonly client: DynamoDBDocumentClient, private readonly config: TableConfig) {}
+  private readonly annotationsRepo: AnnotationsRepository;
+  private readonly versionsRepo: VersionsRepository;
+
+  constructor(private readonly client: DynamoDBDocumentClient, private readonly config: TableConfig) {
+    this.annotationsRepo = new AnnotationsRepository(client, config);
+    this.versionsRepo = new VersionsRepository(client, config);
+  }
 
   // 歌詞ドキュメントを新規作成し、初回のバージョンスナップショットも保存する
   async createLyric(
@@ -40,7 +33,7 @@ export class LyricsRepository {
   ): Promise<LyricDocument> {
     const docId = nanoid();
     const timestamp = now();
-    const item: LyricDocument = {
+    const item: LyricDocument & { publicStatus: string } = {
       docId,
       ownerId,
       ownerName: payload.ownerName,
@@ -50,7 +43,8 @@ export class LyricsRepository {
       version: 1,
       createdAt: timestamp,
       updatedAt: timestamp,
-      isPublicView: false
+      isPublicView: false,
+      publicStatus: 'private'
     };
 
     try {
@@ -66,7 +60,7 @@ export class LyricsRepository {
       this.handleConditionalError(error, 'Document already exists');
     }
 
-    await this.storeVersionSnapshot({
+    await this.versionsRepo.storeVersionSnapshot({
       docId,
       version: 1,
       title: item.title,
@@ -130,7 +124,7 @@ export class LyricsRepository {
       throw new HttpError(403, 'Forbidden');
     }
 
-    const annotations = await this.loadAnnotations(docId, lyric.ownerId);
+    const annotations = await this.annotationsRepo.loadAnnotations(docId, lyric.ownerId);
     // アノテーションを付加した複合オブジェクトを返す
     return { ...lyric, annotations };
   }
@@ -153,7 +147,7 @@ export class LyricsRepository {
     }
     // ownerNameがownerIdと同じ場合（アカウントIDがそのまま保存されている場合）はundefinedにする
     const normalizedOwnerName = lyric.ownerName && lyric.ownerName !== lyric.ownerId ? lyric.ownerName : undefined;
-    const annotations = await this.loadAnnotations(docId, lyric.ownerId);
+    const annotations = await this.annotationsRepo.loadAnnotations(docId, lyric.ownerId);
     return { ...lyric, ownerName: normalizedOwnerName, annotations };
   }
 
@@ -162,22 +156,43 @@ export class LyricsRepository {
     artist?: string;
     author?: string;
   }): Promise<LyricDocument[]> {
-    const scanResult = await this.client.send(
-      new ScanCommand({
-        TableName: this.config.lyricsTable,
-        FilterExpression: 'isPublicView = :public',
-        ExpressionAttributeValues: {
-          ':public': true
-        }
-      })
-    );
+    let items: LyricDocument[];
 
-    const items = (scanResult.Items ?? []).map((item) => {
-      const lyric = normalizeLyricRecord(item as LyricDocument);
-      // ownerNameがownerIdと同じ場合（アカウントIDがそのまま保存されている場合）はundefinedにする
-      const normalizedOwnerName = lyric.ownerName && lyric.ownerName !== lyric.ownerId ? lyric.ownerName : undefined;
-      return { ...lyric, ownerName: normalizedOwnerName };
-    });
+    if (this.config.lyricsPublicStatusIndex) {
+      // GSI(publicStatus-index)がある場合はQueryで高速に取得
+      const queryResult = await this.client.send(
+        new QueryCommand({
+          TableName: this.config.lyricsTable,
+          IndexName: this.config.lyricsPublicStatusIndex,
+          KeyConditionExpression: 'publicStatus = :publicStatus',
+          ExpressionAttributeValues: {
+            ':publicStatus': 'public'
+          }
+        })
+      );
+      items = (queryResult.Items ?? []).map((item) => {
+        const lyric = normalizeLyricRecord(item as LyricDocument);
+        const normalizedOwnerName = lyric.ownerName && lyric.ownerName !== lyric.ownerId ? lyric.ownerName : undefined;
+        return { ...lyric, ownerName: normalizedOwnerName };
+      });
+    } else {
+      // GSIがない場合はScanでフォールバック（後方互換性のため）
+      const scanResult = await this.client.send(
+        new ScanCommand({
+          TableName: this.config.lyricsTable,
+          FilterExpression: 'isPublicView = :public',
+          ExpressionAttributeValues: {
+            ':public': true
+          }
+        })
+      );
+      items = (scanResult.Items ?? []).map((item) => {
+        const lyric = normalizeLyricRecord(item as LyricDocument);
+        const normalizedOwnerName = lyric.ownerName && lyric.ownerName !== lyric.ownerId ? lyric.ownerName : undefined;
+        return { ...lyric, ownerName: normalizedOwnerName };
+      });
+    }
+
     if (!filters || (!filters.title && !filters.artist && !filters.author)) {
       return items;
     }
@@ -238,7 +253,7 @@ export class LyricsRepository {
     const updated = result.Attributes as LyricDocument;
 
     // バージョンスナップショットを保存して履歴を残す
-    await this.storeVersionSnapshot({
+    await this.versionsRepo.storeVersionSnapshot({
       docId,
       version: updated.version,
       title: updated.title,
@@ -274,12 +289,14 @@ export class LyricsRepository {
   async shareLyric(docId: string, ownerId: string, isPublicView: boolean, ownerName?: string): Promise<LyricDocument> {
     let result;
     try {
+      const publicStatus = isPublicView ? 'public' : 'private';
       const updateExpression = ownerName
-        ? 'SET isPublicView = :isPublic, ownerName = :ownerName, updatedAt = :updatedAt'
-        : 'SET isPublicView = :isPublic, updatedAt = :updatedAt';
+        ? 'SET isPublicView = :isPublic, publicStatus = :publicStatus, ownerName = :ownerName, updatedAt = :updatedAt'
+        : 'SET isPublicView = :isPublic, publicStatus = :publicStatus, updatedAt = :updatedAt';
       const expressionAttributeValues: Record<string, unknown> = {
         ':ownerId': ownerId,
         ':isPublic': isPublicView,
+        ':publicStatus': publicStatus,
         ':updatedAt': now()
       };
       if (ownerName) {
@@ -315,43 +332,14 @@ export class LyricsRepository {
     payload: { start: number; end: number; tag: string; comment?: string; props?: Record<string, unknown> }
   ): Promise<AnnotationRecord> {
     const lyric = await this.getLyric(docId, ownerId);
-    // 歌詞長と重複を確認し、MVP では重なりを禁止
-    this.validateRange(payload.start, payload.end, lyric.text.length);
-
-    if (lyric.annotations.some((ann) => overlaps(payload.start, payload.end, ann.start, ann.end))) {
-      throw new HttpError(400, 'Annotation overlaps');
-    }
-
-    const timestamp = now();
-    const annotation: AnnotationRecord = {
+    return this.annotationsRepo.createAnnotation(
       docId,
-      annotationId: nanoid(),
       ownerId,
-      start: payload.start,
-      end: payload.end,
-      tag: payload.tag,
-      comment: payload.comment,
-      props: payload.props,
       authorId,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      version: 1
-    };
-
-    try {
-      await this.client.send(
-        new PutCommand({
-          TableName: this.config.annotationsTable,
-          Item: annotation,
-          ConditionExpression: 'attribute_not_exists(annotationId)'
-        })
-      );
-    } catch (error) {
-      // 同じ ID が存在するケースは理論上少ないが 409 を返す
-      this.handleConditionalError(error, 'Annotation already exists');
-    }
-
-    return annotation;
+      payload,
+      lyric.text.length,
+      lyric.annotations
+    );
   }
 
   // 既存アノテーションを編集する
@@ -362,134 +350,32 @@ export class LyricsRepository {
     payload: { start: number; end: number; tag: string; comment?: string; props?: Record<string, unknown> }
   ): Promise<AnnotationRecord> {
     const lyric = await this.getLyric(docId, ownerId);
-    // 更新時も範囲チェックと重複チェックを再実施
-    this.validateRange(payload.start, payload.end, lyric.text.length);
-
-    if (
-      lyric.annotations.some(
-        (ann) => ann.annotationId !== annotationId && overlaps(payload.start, payload.end, ann.start, ann.end)
-      )
-    ) {
-      throw new HttpError(400, 'Annotation overlaps');
-    }
-
-    const timestamp = now();
-    let result;
-    try {
-      result = await this.client.send(
-        new UpdateCommand({
-          TableName: this.config.annotationsTable,
-          Key: { docId, annotationId },
-          UpdateExpression:
-            'SET #start = :start, #end = :end, tag = :tag, comment = :comment, props = :props, updatedAt = :updatedAt, version = version + :inc, ownerId = if_not_exists(ownerId, :ownerId)',
-          ConditionExpression: 'attribute_exists(annotationId) AND (ownerId = :ownerId OR attribute_not_exists(ownerId))',
-          ExpressionAttributeNames: {
-            '#start': 'start',
-            '#end': 'end'
-          },
-          ExpressionAttributeValues: {
-            ':start': payload.start,
-            ':end': payload.end,
-            ':tag': payload.tag,
-            ':comment': payload.comment,
-            ':props': payload.props,
-            ':updatedAt': timestamp,
-            ':ownerId': ownerId,
-            ':inc': 1
-          },
-          ReturnValues: 'ALL_NEW'
-        })
-      );
-    } catch (error) {
-      this.handleConditionalError(error, 'Annotation not found', 404);
-    }
-
-    if (!result.Attributes) {
-      // 条件付き更新が成功しても Attributes が無い場合は存在しなかったとみなす
-      throw new NotFoundError('Annotation not found');
-    }
-
-    return normalizeAnnotationRecord(result.Attributes as AnnotationRecord);
+    return this.annotationsRepo.updateAnnotation(
+      docId,
+      ownerId,
+      annotationId,
+      payload,
+      lyric.text.length,
+      lyric.annotations
+    );
   }
 
   async deleteAnnotation(docId: string, ownerId: string, annotationId: string): Promise<void> {
     // 所有者チェックのみ実施し、その後削除
     await this.getLyric(docId, ownerId);
-    await this.client.send(
-      new DeleteCommand({
-        TableName: this.config.annotationsTable,
-        Key: { docId, annotationId },
-        ConditionExpression: 'ownerId = :ownerId OR attribute_not_exists(ownerId)',
-        ExpressionAttributeValues: {
-          ':ownerId': ownerId
-        }
-      })
-    );
+    await this.annotationsRepo.deleteAnnotation(docId, ownerId, annotationId);
   }
 
   // バージョン履歴を取得（新しい順）
   async listVersions(docId: string, ownerId: string): Promise<DocVersionRecord[]> {
     await this.ensureOwner(docId, ownerId);
-    const result = await this.client.send(
-      new QueryCommand({
-        TableName: this.config.versionsTable,
-        KeyConditionExpression: 'docId = :docId',
-        ExpressionAttributeValues: {
-          ':docId': docId,
-          ':ownerId': ownerId
-        },
-        FilterExpression: '(ownerId = :ownerId) OR attribute_not_exists(ownerId)',
-        ScanIndexForward: false // 降順（新しい順）で取得
-      })
-    );
-
-      return (result.Items ?? []).map((item) => normalizeVersionRecord(item as DocVersionRecord));
+    return this.versionsRepo.listVersions(docId, ownerId);
   }
 
   // 指定バージョンのスナップショットを取得する
   async getVersion(docId: string, version: number, ownerId: string): Promise<DocVersionRecord> {
     await this.ensureOwner(docId, ownerId);
-    const result = await this.client.send(
-      new GetCommand({
-        TableName: this.config.versionsTable,
-        Key: { docId, version }
-      })
-    );
-
-    if (!result.Item) {
-      throw new NotFoundError('Version not found');
-    }
-
-    const record = result.Item as DocVersionRecord;
-    if (record.ownerId && record.ownerId !== ownerId) {
-      throw new HttpError(403, 'Forbidden');
-    }
-
-    return normalizeVersionRecord(record);
-  }
-
-  private async loadAnnotations(docId: string, ownerId?: string): Promise<AnnotationRecord[]> {
-    const queryInput: {
-      TableName: string;
-      KeyConditionExpression: string;
-      ExpressionAttributeValues: Record<string, unknown>;
-      FilterExpression?: string;
-    } = {
-      TableName: this.config.annotationsTable,
-      KeyConditionExpression: 'docId = :docId',
-      ExpressionAttributeValues: {
-        ':docId': docId
-      }
-    };
-
-    if (ownerId) {
-      queryInput.FilterExpression = '(ownerId = :ownerId) OR attribute_not_exists(ownerId)';
-      queryInput.ExpressionAttributeValues[':ownerId'] = ownerId;
-    }
-
-    const result = await this.client.send(new QueryCommand(queryInput));
-
-    return (result.Items ?? []).map((item) => normalizeAnnotationRecord(item as AnnotationRecord));
+    return this.versionsRepo.getVersion(docId, version, ownerId);
   }
 
   private async ensureOwner(docId: string, ownerId: string): Promise<void> {
@@ -506,21 +392,6 @@ export class LyricsRepository {
     if (record.Item.ownerId !== ownerId) {
       // 所有者と異なる場合は編集権限なし
       throw new HttpError(403, 'Forbidden');
-    }
-  }
-
-  private async storeVersionSnapshot(snapshot: DocVersionRecord): Promise<void> {
-    await this.client.send(
-      new PutCommand({
-        TableName: this.config.versionsTable,
-        Item: snapshot
-      })
-    );
-  }
-
-  private validateRange(start: number, end: number, textLength: number) {
-    if (start < 0 || end > textLength || start >= end) {
-      throw new HttpError(400, 'Invalid annotation range');
     }
   }
 

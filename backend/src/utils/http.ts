@@ -4,7 +4,10 @@ import { logger } from './logger';
 import { NotFoundError } from './errors';
 
 export const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyResultV2 => {
-  const allowedOrigin = process.env.ALLOWED_ORIGIN ?? '*';
+  const allowedOrigin = process.env.ALLOWED_ORIGIN;
+  if (!allowedOrigin) {
+    throw new Error('ALLOWED_ORIGIN environment variable is required');
+  }
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': allowedOrigin
@@ -37,7 +40,7 @@ export const handleError = (error: unknown): APIGatewayProxyResultV2 => {
     // Zod のバリデーションエラー
     return jsonResponse(400, {
       code: 'VALIDATION_ERROR',
-      message: 'リクエスト内容が不正です',
+      message: 'Invalid request',
       issues: error.errors
     });
   }
