@@ -16,9 +16,6 @@ export const ViewerPage = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [activeAnnotationId, setActiveAnnotationId] = useState<string | undefined>(undefined);
-  const [lineRects, setLineRects] = useState<
-    { index: number; top: number; left: number; width: number; height: number }[]
-  >([]);
   const progressRef = useRef(0);
   const startTimeRef = useRef<number | null>(null);
   const animationRef = useRef<number | null>(null);
@@ -81,33 +78,12 @@ export const ViewerPage = () => {
 
   useEffect(() => {
     if (!lyric) return;
-    const updateLayout = () => {
-      const container = lyricDisplayRef.current;
-      if (!container) return;
-      const containerRect = container.getBoundingClientRect();
-      const nodes = Array.from(
-        container.querySelectorAll<HTMLElement>('[data-line-index]')
-      );
-      lineElementsRef.current = nodes;
-      setLineRects(
-        nodes.map((node, index) => {
-          const rect = node.getBoundingClientRect();
-          return {
-            index,
-            top: rect.top - containerRect.top,
-            left: rect.left - containerRect.left,
-            width: rect.width,
-            height: rect.height
-          };
-        })
-      );
-    };
-
-    updateLayout();
-    window.addEventListener('resize', updateLayout);
-    return () => {
-      window.removeEventListener('resize', updateLayout);
-    };
+    const container = lyricDisplayRef.current;
+    if (!container) return;
+    const nodes = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-line-index]')
+    );
+    lineElementsRef.current = nodes;
   }, [lyric, lyricText, annotations.length]);
 
   useEffect(() => {
@@ -189,12 +165,6 @@ export const ViewerPage = () => {
     startTimeRef.current = null;
   };
 
-  const { lineIndex, lineProgress } = getLinePosition(progress);
-  const currentRect = lineRects[lineIndex];
-  const barX = currentRect ? currentRect.left + currentRect.width * lineProgress : 0;
-  const barY = currentRect ? currentRect.top : 0;
-  const barHeight = currentRect ? currentRect.height : 0;
-
   if (requiresSignIn) {
     return <p className="text-muted-foreground">閲覧にはサインインが必要です。</p>;
   }
@@ -262,7 +232,6 @@ export const ViewerPage = () => {
         </div>
       </section>
       <div
-        className="relative"
         onClick={() => {
           if (isPlaying) {
             setIsPlaying(false);
@@ -280,16 +249,6 @@ export const ViewerPage = () => {
           renderLines
           className="rounded-lg border border-border bg-card/80 p-6 shadow-inner"
         />
-        <div
-          className="pointer-events-none absolute left-0 right-0 top-0"
-          style={{ transform: `translate3d(${barX}px, ${barY}px, 0)` }}
-          aria-hidden
-        >
-          <div
-            className="w-0.5 bg-primary/70 shadow-[0_0_12px_rgba(59,130,246,0.6)]"
-            style={{ height: barHeight }}
-          />
-        </div>
       </div>
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground sm:text-xl">アノテーション</h2>
