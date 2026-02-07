@@ -287,34 +287,34 @@ export const EditorPage = () => {
         onOpenChange={setIsAnnotationSheetOpen}
       />
       {isLyricsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-3xl rounded-2xl border border-border bg-card p-6 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">歌詞を編集</h3>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-2 pb-2 sm:items-center sm:px-4 sm:pb-0">
+          <div className="flex max-h-[90dvh] w-full max-w-3xl flex-col rounded-xl border border-border bg-card p-4 shadow-2xl sm:rounded-2xl sm:p-6">
+            <div className="mb-3 flex items-center justify-between sm:mb-4">
+              <h3 className="text-base font-semibold text-foreground sm:text-lg">歌詞を編集</h3>
               <button
                 type="button"
-                className="text-muted-foreground transition hover:text-foreground"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
                 onClick={() => setIsLyricsModalOpen(false)}
               >
                 ×
               </button>
             </div>
             <textarea
-              rows={14}
-              className="w-full rounded-md border border-border bg-card px-3 py-3 font-mono leading-relaxed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              rows={10}
+              className="min-h-0 flex-1 w-full rounded-lg border border-border bg-card px-3 py-3 font-mono text-sm leading-relaxed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:text-base"
               {...textFieldRegister}
             />
-            <div className="mt-4 flex justify-end gap-3">
+            <div className="mt-3 flex flex-col gap-2 sm:mt-4 sm:flex-row sm:justify-end">
               <button
                 type="button"
-                className="rounded-md border border-border px-4 py-2 text-sm text-muted-foreground transition hover:text-foreground"
+                className="order-2 min-h-11 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition hover:text-foreground sm:order-1"
                 onClick={() => setIsLyricsModalOpen(false)}
               >
                 キャンセル
               </button>
               <button
                 type="button"
-                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+                className="order-1 min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50 sm:order-2"
                 onClick={() => handleSave()}
                 disabled={updateLyric.isPending}
               >

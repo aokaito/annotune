@@ -78,16 +78,16 @@ export const AnnotationPalette = ({ selection, onSubmit, isSubmitting, className
         )}
       </div>
       <form
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-3 sm:gap-4"
         onSubmit={(event) => {
           event.stopPropagation();
           submitAnnotation(event);
         }}
       >
-        <label className="flex flex-col gap-2 text-sm">
+        <label className="flex flex-col gap-1.5 text-sm sm:gap-2">
           <span className="font-medium text-foreground">エフェクト</span>
           <select
-            className="rounded border border-border bg-card px-3 py-2"
+            className="min-h-11 rounded-lg border border-border bg-card px-3 py-2"
             {...form.register('effect')}
           >
             {presetEffects.map((item) => (
@@ -97,10 +97,10 @@ export const AnnotationPalette = ({ selection, onSubmit, isSubmitting, className
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-2 text-sm">
+        <label className="flex flex-col gap-1.5 text-sm sm:gap-2">
           <span className="font-medium text-foreground">声質</span>
           <select
-            className="rounded border border-border bg-card px-3 py-2"
+            className="min-h-11 rounded-lg border border-border bg-card px-3 py-2"
             {...form.register('voiceQuality')}
           >
             {presetVoiceQualities.map((item) => (
@@ -110,17 +110,17 @@ export const AnnotationPalette = ({ selection, onSubmit, isSubmitting, className
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-2 text-sm">
+        <label className="flex flex-col gap-1.5 text-sm sm:gap-2">
           <span className="font-medium text-foreground">コメント</span>
           <textarea
             rows={3}
-            className="rounded border border-border bg-card px-3 py-2"
+            className="rounded-lg border border-border bg-card px-3 py-2"
             placeholder="任意のメモを入力できます"
             {...form.register('comment')}
           />
         </label>
         <button
-          className="rounded-md bg-secondary px-3 py-2 text-sm font-medium text-secondary-foreground disabled:opacity-50"
+          className="min-h-11 rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground transition hover:bg-secondary/90 disabled:opacity-50"
           type="submit"
           disabled={!selection || isSubmitting}
         >

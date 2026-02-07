@@ -189,16 +189,40 @@ export const ViewerPage = () => {
           バージョン {lyric.version} ・ 最終更新 {new Date(lyric.updatedAt).toLocaleString()}
         </p>
       </header>
-      <section className="flex flex-col gap-3 rounded-lg border border-border bg-card/70 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-3">
+      <section className="space-y-3 rounded-lg border border-border bg-card/70 p-3 text-sm sm:p-4">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex min-h-11 min-w-20 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+              onClick={handleToggle}
+            >
+              {isPlaying ? '停止' : '再生'}
+            </button>
+            <button
+              type="button"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-foreground"
+              onClick={handleReset}
+              title="リセット"
+            >
+              ↺
+            </button>
+          </div>
+          <div className="text-right">
+            <div className="text-lg font-semibold tabular-nums">{Math.round(progress * 100)}%</div>
+            <div className="text-[10px] text-muted-foreground sm:text-xs">進行状況</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-xs sm:text-sm">
           <label className="flex items-center gap-2">
             <span className="text-muted-foreground">BPM</span>
             <input
               type="number"
+              inputMode="numeric"
               min={40}
               max={240}
               step={1}
-              className="w-24 rounded-md border border-border bg-card px-2 py-1 text-sm"
+              className="w-16 min-h-9 rounded-lg border border-border bg-card px-2 py-1 text-center text-sm sm:w-20"
               value={bpm}
               onChange={(event) => {
                 const next = Number(event.target.value);
@@ -207,28 +231,7 @@ export const ViewerPage = () => {
               }}
             />
           </label>
-          <span className="text-xs text-muted-foreground">
-            1行=1拍として進行
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="inline-flex min-h-10 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
-            onClick={handleToggle}
-          >
-            {isPlaying ? '一時停止' : '再生'}
-          </button>
-          <button
-            type="button"
-            className="inline-flex min-h-10 items-center rounded-md border border-border px-4 text-sm font-semibold text-muted-foreground transition hover:text-foreground"
-            onClick={handleReset}
-          >
-            リセット
-          </button>
-          <span className="text-xs text-muted-foreground">
-            進行 {Math.round(progress * 100)}%
-          </span>
+          <span className="text-muted-foreground">（1行=1拍）</span>
         </div>
       </section>
       <div

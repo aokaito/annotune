@@ -38,9 +38,15 @@ export const PublicViewPage = () => {
         <h2 className="text-lg font-semibold text-foreground sm:text-xl">アノテーション一覧</h2>
         <ul className="space-y-2 text-sm text-muted-foreground">
           {lyric.annotations.map((annotation: Annotation) => (
-            <li key={annotation.annotationId} className="wrap-anywhere">
+            <li
+              key={annotation.annotationId}
+              className="rounded-lg border border-border bg-card/80 p-3 leading-relaxed"
+            >
               {/* シンプルなテキスト形式でタグ・コメント・範囲を表示 */}
-              [{getTagLabel(annotation.tag)}] {annotation.comment ?? 'コメントなし'} ({annotation.start} – {annotation.end})
+              <p className="text-foreground">
+                <span className="font-semibold">{getTagLabel(annotation.tag)}</span> ({annotation.start} – {annotation.end})
+              </p>
+              <p className="wrap-anywhere">{annotation.comment ?? 'コメントなし'}</p>
             </li>
           ))}
           {lyric.annotations.length === 0 && <li>アノテーションはありません。</li>}

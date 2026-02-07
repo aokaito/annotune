@@ -17,7 +17,8 @@ module.exports = {
     'prettier'
   ],
   rules: {
-    'react/prop-types': 'off'
+    'react/prop-types': 'off',
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
   },
   settings: {
     react: {

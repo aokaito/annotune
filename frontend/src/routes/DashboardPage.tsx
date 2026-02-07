@@ -31,48 +31,48 @@ const CreateLyricForm = ({ onClose }: { onClose(): void }) => {
   });
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-      <label className="flex flex-col gap-2 text-sm">
-        <span className="font-medium text-foreground">Title</span>
+    <form className="flex flex-col gap-3 sm:gap-4" onSubmit={onSubmit}>
+      <label className="flex flex-col gap-1.5 text-sm sm:gap-2">
+        <span className="font-medium text-foreground">タイトル</span>
         {/* 曲名を入力するテキストボックス */}
         <input
           type="text"
-          className="rounded border border-border bg-card px-3 py-2"
+          className="min-h-11 rounded-lg border border-border bg-card px-3 py-2"
           {...form.register('title', { required: true })}
         />
       </label>
-      <label className="flex flex-col gap-2 text-sm">
-        <span className="font-medium text-foreground">Artist</span>
+      <label className="flex flex-col gap-1.5 text-sm sm:gap-2">
+        <span className="font-medium text-foreground">アーティスト</span>
         <input
           type="text"
-          className="rounded border border-border bg-card px-3 py-2"
+          className="min-h-11 rounded-lg border border-border bg-card px-3 py-2"
           {...form.register('artist', { required: true })}
         />
       </label>
-      <label className="flex flex-col gap-2 text-sm">
-        <span className="font-medium text-foreground">Lyrics</span>
+      <label className="flex flex-col gap-1.5 text-sm sm:gap-2">
+        <span className="font-medium text-foreground">歌詞</span>
         {/* 歌詞本文を入力するテキストエリア。プレーンテキストで保存 */}
         <textarea
           rows={5}
-          className="rounded border border-border bg-card px-3 py-2"
+          className="rounded-lg border border-border bg-card px-3 py-2"
           {...form.register('text', { required: true })}
         />
       </label>
-      <div className="flex justify-end gap-2">
+      <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:justify-end">
         <button
           type="button"
-          className="rounded-md border border-border px-3 py-2 text-sm text-muted-foreground"
+          className="order-2 min-h-11 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition hover:text-foreground sm:order-1"
           onClick={onClose}
         >
           キャンセル
         </button>
         <button
           type="submit"
-          className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+          className="order-1 min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50 sm:order-2"
           disabled={mutation.isPending}
         >
-          {/* 送信中は「Saving…」を表示して二重送信を防ぐ */}
-          {mutation.isPending ? 'Saving…' : 'Create'}
+          {/* 送信中は「保存中…」を表示して二重送信を防ぐ */}
+          {mutation.isPending ? '保存中…' : '作成する'}
         </button>
       </div>
     </form>
@@ -191,20 +191,22 @@ export const DashboardPage = () => {
         </ul>
       )}
       {open && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-xl bg-card p-6 shadow-xl">
-            <div className="flex items-center justify-between pb-4">
-              <h2 className="text-lg font-semibold">新しい歌詞ドキュメント</h2>
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 px-2 pb-2 sm:items-center sm:px-4 sm:pb-0">
+          <div className="flex max-h-[85dvh] w-full max-w-lg flex-col rounded-xl border border-border bg-card p-4 shadow-2xl sm:max-h-[90dvh] sm:rounded-2xl sm:p-6">
+            <div className="mb-3 flex items-center justify-between sm:mb-4">
+              <h2 className="text-base font-semibold text-foreground sm:text-lg">新しい歌詞ドキュメント</h2>
               <button
                 onClick={() => setOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted"
                 aria-label="モーダルを閉じる"
               >
                 {/* モーダルを閉じるボタン */}
-                ✕
+                ×
               </button>
             </div>
-            <CreateLyricForm onClose={() => setOpen(false)} />
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <CreateLyricForm onClose={() => setOpen(false)} />
+            </div>
           </div>
         </div>
       )}

@@ -75,37 +75,42 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, onDelete, is
   });
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-lg rounded-lg bg-card p-6 shadow-xl">
-        <div className="flex items-center justify-between pb-4">
-          <h2 className="text-lg font-semibold text-foreground">アノテーションの編集</h2>
-          <button onClick={onClose} className="text-muted-foreground">
+    <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 px-2 pb-2 sm:items-center sm:px-4 sm:pb-0">
+      <div className="max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-xl bg-card p-4 shadow-xl sm:max-h-[90dvh] sm:rounded-lg sm:p-6">
+        <div className="flex items-center justify-between pb-3 sm:pb-4">
+          <h2 className="text-base font-semibold text-foreground sm:text-lg">アノテーションの編集</h2>
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+          >
             ✕
           </button>
         </div>
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <label className="flex flex-col gap-2">
+        <form className="flex flex-col gap-3 sm:gap-4" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-2 gap-3 text-sm sm:gap-4">
+            <label className="flex flex-col gap-1.5 sm:gap-2">
               <span className="font-medium text-foreground">開始位置</span>
               <input
                 type="number"
-                className="rounded border border-border bg-card px-3 py-2"
+                inputMode="numeric"
+                className="min-h-11 rounded-lg border border-border bg-card px-3 py-2"
                 {...form.register('start', { valueAsNumber: true, required: true })}
               />
             </label>
-            <label className="flex flex-col gap-2">
+            <label className="flex flex-col gap-1.5 sm:gap-2">
               <span className="font-medium text-foreground">終了位置</span>
               <input
                 type="number"
-                className="rounded border border-border bg-card px-3 py-2"
+                inputMode="numeric"
+                className="min-h-11 rounded-lg border border-border bg-card px-3 py-2"
                 {...form.register('end', { valueAsNumber: true, required: true })}
               />
             </label>
           </div>
-          <label className="flex flex-col gap-2 text-sm">
+          <label className="flex flex-col gap-1.5 text-sm sm:gap-2">
             <span className="font-medium text-foreground">エフェクト</span>
             <select
-              className="rounded border border-border bg-card px-3 py-2"
+              className="min-h-11 rounded-lg border border-border bg-card px-3 py-2"
               {...form.register('effect')}
             >
               {presetEffects.map((item) => (
@@ -115,10 +120,10 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, onDelete, is
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-2 text-sm">
+          <label className="flex flex-col gap-1.5 text-sm sm:gap-2">
             <span className="font-medium text-foreground">声質</span>
             <select
-              className="rounded border border-border bg-card px-3 py-2"
+              className="min-h-11 rounded-lg border border-border bg-card px-3 py-2"
               {...form.register('voiceQuality')}
             >
               {presetVoiceQualities.map((item) => (
@@ -128,23 +133,20 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, onDelete, is
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-2 text-sm">
+          <label className="flex flex-col gap-1.5 text-sm sm:gap-2">
             <span className="font-medium text-foreground">コメント</span>
             <textarea
-              rows={3}
-              className="rounded border border-border bg-card px-3 py-2"
+              rows={2}
+              className="rounded-lg border border-border bg-card px-3 py-2"
               placeholder="任意のメモを入力できます"
               {...form.register('comment')}
             />
           </label>
-          <div className="flex justify-end gap-2">
-            <button type="button" className="rounded border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground" onClick={onClose}>
-              キャンセル
-            </button>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:justify-end">
             {onDelete && (
               <button
                 type="button"
-                className="rounded border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                className="order-3 min-h-11 rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50 sm:order-1"
                 onClick={async () => {
                   if (!window.confirm('このアノテーションを削除しますか？')) return;
                   await onDelete(annotation.annotationId);
@@ -156,8 +158,15 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, onDelete, is
               </button>
             )}
             <button
+              type="button"
+              className="order-2 min-h-11 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
+              onClick={onClose}
+            >
+              キャンセル
+            </button>
+            <button
               type="submit"
-              className="rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              className="order-1 min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground sm:order-3"
               disabled={isSaving}
             >
               {isSaving ? '保存中…' : '更新する'}
