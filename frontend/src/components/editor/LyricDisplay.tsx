@@ -231,9 +231,11 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
     };
 
     return (
-      <div className={containerClass} ref={ref}>
+      <div className={containerClass}>
         {/* 声質が使われている場合のみ凡例を表示 */}
         {showTagIndicators && hasVoiceQuality && <VoiceQualityLegend />}
+        {/* refは歌詞本体のみに設定（選択位置計算のため凡例を除外） */}
+        <div ref={ref}>
         {renderLines && lineData
           ? lineData.segmentsByLine.map((lineSegments, lineIndex) => (
               <div
@@ -250,6 +252,7 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
               </div>
             ))
           : segments.map((segment, index) => renderAnnotatedSegment(segment, `plain-${index}`))}
+        </div>
       </div>
     );
   }

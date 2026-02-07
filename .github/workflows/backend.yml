@@ -1,5 +1,5 @@
-# Backend CI: バックエンドとインフラの検証・デプロイを自動化
-name: Backend CI
+# CI/CD: バックエンド・フロントエンド・インフラの検証・デプロイを自動化
+name: CI/CD
 
 permissions:
   id-token: write
@@ -11,12 +11,16 @@ on:
     branches: [ main ]  # ← main に限定（混乱防止）
     paths:
       - 'backend/**'
+      - 'frontend/**'
+      - 'packages/**'
       - 'infra/**'
       - '.github/workflows/backend.yml'
   # PR 作成/更新時にも検証が走る（デプロイはしない）
   pull_request:
     paths:
       - 'backend/**'
+      - 'frontend/**'
+      - 'packages/**'
       - 'infra/**'
 
 concurrency:
@@ -40,11 +44,17 @@ jobs:
       - name: Install workspace deps
         run: npm install
 
-      # backend: 依存/Lint/Test
+      # backend: Lint/Test
       - name: Lint backend
         run: npm --workspace backend run lint
       - name: Test backend
         run: npm --workspace backend run test --if-present
+
+      # frontend: Lint/Test
+      - name: Lint frontend
+        run: npm --workspace frontend run lint
+      - name: Test frontend
+        run: npm --workspace frontend run test --if-present
 
       # infra: 依存/Synth（テンプレ生成）
       - name: CDK Synth
