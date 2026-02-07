@@ -4,8 +4,7 @@ import { z } from 'zod';
 // アノテーションに付随する任意プロパティ
 export const annotationPropsSchema = z
   .object({
-    intensity: z.enum(['low', 'medium', 'high']).optional(),
-    length: z.enum(['short', 'medium', 'long']).optional()
+    voiceQuality: z.enum(['whisper', 'edge', 'falsetto']).optional()
   })
   .passthrough()
   .optional();

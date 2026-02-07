@@ -22,28 +22,40 @@ interface Segment {
   annotation?: Annotation;
 }
 
-const tagSymbolMap: Record<string, string> = {
+// エフェクト用シンボル
+const effectSymbolMap: Record<string, string> = {
   vibrato: '〰',
   scoop: '↗',
   fall: '↘',
-  slide: '⇄',
-  hold: '―',
-  breath: '●',
-  comment: ''
+  breath: '●'
 };
 
-const tagSymbolColorMap: Record<string, string> = {
+// 声質用シンボル
+const voiceQualitySymbolMap: Record<string, string> = {
+  whisper: '💨',
+  edge: '⚡',
+  falsetto: '🎵'
+};
+
+// エフェクト用の色
+const effectSymbolColorMap: Record<string, string> = {
   vibrato: 'text-amber-600 bg-amber-100',
   scoop: 'text-orange-600 bg-orange-100',
   fall: 'text-yellow-600 bg-yellow-100',
-  slide: 'text-stone-700 bg-stone-200',
-  hold: 'text-amber-700 bg-amber-200',
-  breath: 'text-sky-600 bg-sky-100',
-  comment: 'text-slate-600 bg-slate-100'
+  breath: 'text-sky-600 bg-sky-100'
 };
 
-const getTagSymbol = (tag: string) => tagSymbolMap[tag] ?? '★';
-const getTagSymbolColor = (tag: string) => tagSymbolColorMap[tag] ?? 'text-primary bg-primary/20';
+// 声質用の色
+const voiceQualitySymbolColorMap: Record<string, string> = {
+  whisper: 'text-purple-600 bg-purple-100',
+  edge: 'text-rose-600 bg-rose-100',
+  falsetto: 'text-indigo-600 bg-indigo-100'
+};
+
+const getEffectSymbol = (tag: string) => effectSymbolMap[tag] ?? '';
+const getVoiceQualitySymbol = (voiceQuality?: string) => voiceQuality ? voiceQualitySymbolMap[voiceQuality] ?? '' : '';
+const getEffectSymbolColor = (tag: string) => effectSymbolColorMap[tag] ?? 'text-slate-600 bg-slate-100';
+const getVoiceQualitySymbolColor = (voiceQuality: string) => voiceQualitySymbolColorMap[voiceQuality] ?? 'text-slate-600 bg-slate-100';
 const buildSegments = (text: string, annotations: Annotation[]): Segment[] => {
   if (annotations.length === 0) {
     return [{ text }];
@@ -139,8 +151,9 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
         return <span key={key}>{displayText}</span>;
       }
       const style = getTagHighlightStyle(annotation.tag);
-      const tagSymbol = getTagSymbol(annotation.tag);
-      const tagSymbolColor = getTagSymbolColor(annotation.tag);
+      const effectSymbol = getEffectSymbol(annotation.tag);
+      const voiceQuality = annotation.props?.voiceQuality;
+      const voiceQualitySymbol = getVoiceQualitySymbol(voiceQuality);
       const tagLabel = getTagLabel(annotation.tag);
       const comment = annotation.comment?.trim();
       const tooltipText = comment || tagLabel;
@@ -163,15 +176,26 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
           }}
         >
           <span className={clsx('rounded-sm px-1 border-b-4', style)}>{displayText}</span>
-          {showTagIndicators && tagSymbol && (
+          {showTagIndicators && effectSymbol && (
             <span
               className={clsx(
                 'ml-0.5 inline-flex select-none items-center justify-center rounded px-1 text-sm font-bold',
-                tagSymbolColor
+                getEffectSymbolColor(annotation.tag)
               )}
               aria-hidden
             >
-              {tagSymbol}
+              {effectSymbol}
+            </span>
+          )}
+          {showTagIndicators && voiceQualitySymbol && (
+            <span
+              className={clsx(
+                'ml-0.5 inline-flex select-none items-center justify-center rounded px-1 text-sm font-bold',
+                getVoiceQualitySymbolColor(voiceQuality!)
+              )}
+              aria-hidden
+            >
+              {voiceQualitySymbol}
             </span>
           )}
           {(showComments || isActive) && tooltipText && (

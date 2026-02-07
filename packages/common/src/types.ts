@@ -1,16 +1,20 @@
 // 共通型定義 - backend/frontendで再利用
+
+// エフェクト種別
+export type EffectTag = 'vibrato' | 'scoop' | 'fall' | 'breath';
+
+// 声質種別
+export type VoiceQualityTag = 'whisper' | 'edge' | 'falsetto';
+
+// アノテーションタグ（エフェクト、声質、またはコメントのみ）
 export type AnnotationTag =
-  | 'vibrato'
-  | 'scoop'
-  | 'fall'
-  | 'slide'
-  | 'hold'
-  | 'breath'
+  | EffectTag
+  | VoiceQualityTag
+  | 'comment'
   | string;
 
 export interface AnnotationProps {
-  intensity?: 'low' | 'medium' | 'high';
-  length?: 'short' | 'medium' | 'long';
+  voiceQuality?: VoiceQualityTag;
   [key: string]: unknown;
 }
 

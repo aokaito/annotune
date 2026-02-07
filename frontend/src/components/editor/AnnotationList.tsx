@@ -1,7 +1,7 @@
 // 注釈の一覧をカード表示し、編集・削除操作を提供する。
 // NOTE: モバイルでの折返しとタップ領域確保のためレイアウトを調整。代替案: テーブル表示に切り替えることも可能
 import { Annotation } from '../../types';
-import { getTagLabel, getTagStyle } from './tagColors';
+import { getTagLabel, getTagStyle, getVoiceQualityLabel } from './tagColors';
 
 interface AnnotationListProps {
   annotations: Annotation[];
@@ -50,22 +50,12 @@ export const AnnotationList = ({ annotations, onEdit, onDelete }: AnnotationList
           {annotation.comment && (
             <p className="text-sm text-muted-foreground whitespace-pre-line wrap-anywhere">{annotation.comment}</p>
           )}
-          {annotation.props && (
-            <dl className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-              {annotation.props.intensity && (
-                <div>
-                  {/* 強弱情報 */}
-                  <dt className="font-semibold">強さ</dt>
-                  <dd>{annotation.props.intensity}</dd>
-                </div>
-              )}
-              {annotation.props.length && (
-                <div>
-                  {/* 長さ情報 */}
-                  <dt className="font-semibold">長さ</dt>
-                  <dd>{annotation.props.length}</dd>
-                </div>
-              )}
+          {annotation.props?.voiceQuality && (
+            <dl className="mt-2 flex gap-4 text-xs text-muted-foreground">
+              <div>
+                <dt className="font-semibold">声質</dt>
+                <dd>{getVoiceQualityLabel(annotation.props.voiceQuality)}</dd>
+              </div>
             </dl>
           )}
         </li>

@@ -1,7 +1,7 @@
 // 既存アノテーションを編集するモーダルダイアログ。
 import { useForm } from 'react-hook-form';
-import { Annotation, AnnotationProps } from '../../types';
-import { presetTags } from './tagColors';
+import { Annotation, AnnotationProps, EffectTag, VoiceQualityTag } from '../../types';
+import { presetEffects, presetVoiceQualities } from './tagColors';
 
 interface Props {
   annotation: Annotation;
@@ -22,10 +22,24 @@ interface Props {
 type FormValues = {
   start: number;
   end: number;
-  tag: string;
+  effect: EffectTag | 'none';
+  voiceQuality: VoiceQualityTag | 'none';
   comment?: string;
-  intensity?: 'low' | 'medium' | 'high';
-  length?: 'short' | 'medium' | 'long';
+};
+
+// タグからエフェクトを判定
+const getEffectFromTag = (tag: string): EffectTag | 'none' => {
+  const effects: EffectTag[] = ['vibrato', 'scoop', 'fall', 'breath'];
+  return effects.includes(tag as EffectTag) ? (tag as EffectTag) : 'none';
+};
+
+// タグから声質を判定（propsにvoiceQualityがある場合はそちらを優先）
+const getVoiceQualityFromAnnotation = (annotation: Annotation): VoiceQualityTag | 'none' => {
+  if (annotation.props?.voiceQuality) {
+    return annotation.props.voiceQuality;
+  }
+  const voiceQualities: VoiceQualityTag[] = ['whisper', 'edge', 'falsetto'];
+  return voiceQualities.includes(annotation.tag as VoiceQualityTag) ? (annotation.tag as VoiceQualityTag) : 'none';
 };
 
 export const AnnotationEditDialog = ({ annotation, onClose, onSave, onDelete, isSaving, isDeleting }: Props) => {
@@ -33,24 +47,28 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, onDelete, is
     defaultValues: {
       start: annotation.start,
       end: annotation.end,
-      tag: annotation.tag,
-      comment: annotation.comment,
-      intensity: annotation.props?.intensity,
-      length: annotation.props?.length
+      effect: getEffectFromTag(annotation.tag),
+      voiceQuality: getVoiceQualityFromAnnotation(annotation),
+      comment: annotation.comment
     }
   });
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    // 入力内容を数値に変換して API へ送り、完了後はモーダルを閉じる
+    // エフェクトと声質の両方が「付与しない」の場合はコメントのみ
+    const effect = values.effect !== 'none' ? values.effect : undefined;
+    const voiceQuality = values.voiceQuality !== 'none' ? values.voiceQuality : undefined;
+
+    // tagはエフェクト優先、なければ声質、両方なければcomment
+    const tag = effect ?? voiceQuality ?? 'comment';
+
     await onSave({
       annotationId: annotation.annotationId,
       start: Number(values.start),
       end: Number(values.end),
-      tag: values.tag,
+      tag,
       comment: values.comment,
       props: {
-        intensity: values.intensity,
-        length: values.length
+        voiceQuality
       }
     });
     onClose();
@@ -61,7 +79,6 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, onDelete, is
       <div className="w-full max-w-lg rounded-lg bg-card p-6 shadow-xl">
         <div className="flex items-center justify-between pb-4">
           <h2 className="text-lg font-semibold text-foreground">アノテーションの編集</h2>
-          {/* × ボタンでモーダルを閉じる */}
           <button onClick={onClose} className="text-muted-foreground">
             ✕
           </button>
@@ -86,14 +103,27 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, onDelete, is
             </label>
           </div>
           <label className="flex flex-col gap-2 text-sm">
-            <span className="font-medium text-foreground">タグ</span>
+            <span className="font-medium text-foreground">エフェクト</span>
             <select
               className="rounded border border-border bg-card px-3 py-2"
-              {...form.register('tag', { required: true })}
+              {...form.register('effect')}
             >
-              {presetTags.map((tag) => (
-                <option key={tag.id} value={tag.id}>
-                  {tag.label}
+              {presetEffects.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-2 text-sm">
+            <span className="font-medium text-foreground">声質</span>
+            <select
+              className="rounded border border-border bg-card px-3 py-2"
+              {...form.register('voiceQuality')}
+            >
+              {presetVoiceQualities.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
                 </option>
               ))}
             </select>
@@ -103,27 +133,10 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, onDelete, is
             <textarea
               rows={3}
               className="rounded border border-border bg-card px-3 py-2"
+              placeholder="任意のメモを入力できます"
               {...form.register('comment')}
             />
           </label>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <label className="flex flex-col gap-2">
-              <span className="font-medium text-foreground">強さ</span>
-              <select className="rounded border border-border bg-card px-3 py-2" {...form.register('intensity')}>
-                <option value="low">弱</option>
-                <option value="medium">中</option>
-                <option value="high">強</option>
-              </select>
-            </label>
-            <label className="flex flex-col gap-2">
-              <span className="font-medium text-foreground">長さ</span>
-              <select className="rounded border border-border bg-card px-3 py-2" {...form.register('length')}>
-                <option value="short">短</option>
-                <option value="medium">中</option>
-                <option value="long">長</option>
-              </select>
-            </label>
-          </div>
           <div className="flex justify-end gap-2">
             <button type="button" className="rounded border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground" onClick={onClose}>
               キャンセル

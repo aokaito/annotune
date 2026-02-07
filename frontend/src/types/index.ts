@@ -1,7 +1,7 @@
 // フロントエンドで利用する共通型定義。
-import type { AnnotationTag, AnnotationProps, BaseLyricDocument, BaseAnnotation, BaseLyricVersionSnapshot } from '@annotune/common';
+import type { AnnotationTag, AnnotationProps, BaseLyricDocument, BaseAnnotation, BaseLyricVersionSnapshot, EffectTag, VoiceQualityTag } from '@annotune/common';
 
-export type { AnnotationTag, AnnotationProps };
+export type { AnnotationTag, AnnotationProps, EffectTag, VoiceQualityTag };
 
 // テキスト上に付与されたアノテーション 1 件を表す
 export interface Annotation extends BaseAnnotation {}
