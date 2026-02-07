@@ -2,8 +2,8 @@
 // NOTE: 横スクロール防止とタイポグラフィ改善のため wrap-anywhere を適用。代替案: prose クラスを用いても良いが装飾制御を優先
 import clsx from 'clsx';
 import { forwardRef } from 'react';
-import { Annotation } from '../../types';
-import { getTagHighlightStyle, getTagLabel } from './tagColors';
+import { Annotation, VoiceQualityTag } from '../../types';
+import { getTagHighlightStyle, getTagLabel, getVoiceQualityLabel } from './tagColors';
 
 interface LyricDisplayProps {
   text: string;
@@ -30,14 +30,7 @@ const effectSymbolMap: Record<string, string> = {
   breath: '●'
 };
 
-// 声質用シンボル
-const voiceQualitySymbolMap: Record<string, string> = {
-  whisper: '💨',
-  edge: '⚡',
-  falsetto: '🎵'
-};
-
-// エフェクト用の色
+// エフェクト用のシンボル色
 const effectSymbolColorMap: Record<string, string> = {
   vibrato: 'text-amber-600 bg-amber-100',
   scoop: 'text-orange-600 bg-orange-100',
@@ -45,17 +38,32 @@ const effectSymbolColorMap: Record<string, string> = {
   breath: 'text-sky-600 bg-sky-100'
 };
 
-// 声質用の色
-const voiceQualitySymbolColorMap: Record<string, string> = {
-  whisper: 'text-purple-600 bg-purple-100',
-  edge: 'text-rose-600 bg-rose-100',
-  falsetto: 'text-indigo-600 bg-indigo-100'
+// 声質用のハイライト色（歌詞の背景色として使用）
+const voiceQualityHighlightMap: Record<VoiceQualityTag, string> = {
+  whisper: 'bg-purple-100 text-purple-950 border-purple-400',
+  edge: 'bg-rose-100 text-rose-950 border-rose-400',
+  falsetto: 'bg-indigo-100 text-indigo-950 border-indigo-400'
 };
 
+// 声質の凡例用の色
+const voiceQualityLegendColors: { id: VoiceQualityTag; label: string; colorClass: string }[] = [
+  { id: 'whisper', label: 'ウィスパー', colorClass: 'bg-purple-200 border-purple-400' },
+  { id: 'edge', label: 'エッジ', colorClass: 'bg-rose-200 border-rose-400' },
+  { id: 'falsetto', label: '裏声', colorClass: 'bg-indigo-200 border-indigo-400' }
+];
+
 const getEffectSymbol = (tag: string) => effectSymbolMap[tag] ?? '';
-const getVoiceQualitySymbol = (voiceQuality?: string) => voiceQuality ? voiceQualitySymbolMap[voiceQuality] ?? '' : '';
 const getEffectSymbolColor = (tag: string) => effectSymbolColorMap[tag] ?? 'text-slate-600 bg-slate-100';
-const getVoiceQualitySymbolColor = (voiceQuality: string) => voiceQualitySymbolColorMap[voiceQuality] ?? 'text-slate-600 bg-slate-100';
+
+// 声質がある場合は声質の色を優先、なければエフェクトの色を使用
+const getAnnotationStyle = (annotation: Annotation) => {
+  const voiceQuality = annotation.props?.voiceQuality;
+  if (voiceQuality && voiceQualityHighlightMap[voiceQuality]) {
+    return voiceQualityHighlightMap[voiceQuality];
+  }
+  return getTagHighlightStyle(annotation.tag);
+};
+
 const buildSegments = (text: string, annotations: Annotation[]): Segment[] => {
   if (annotations.length === 0) {
     return [{ text }];
@@ -121,6 +129,19 @@ const buildLineSegments = (text: string, annotations: Annotation[]) => {
   return { lines, segmentsByLine };
 };
 
+// 声質の凡例コンポーネント
+const VoiceQualityLegend = () => (
+  <div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+    <span className="font-medium">声質:</span>
+    {voiceQualityLegendColors.map((item) => (
+      <span key={item.id} className="flex items-center gap-1.5">
+        <span className={clsx('inline-block h-3 w-3 rounded border', item.colorClass)} />
+        <span>{item.label}</span>
+      </span>
+    ))}
+  </div>
+);
+
 export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
   (
     {
@@ -144,19 +165,25 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
       className
     );
 
+    // 声質が使われているかチェック
+    const hasVoiceQuality = annotations.some((a) => a.props?.voiceQuality);
+
     const renderAnnotatedSegment = (segment: Segment, key: string | number) => {
       const displayText = segment.text;
       const annotation = segment.annotation;
       if (!annotation) {
         return <span key={key}>{displayText}</span>;
       }
-      const style = getTagHighlightStyle(annotation.tag);
+      // 声質優先でスタイルを取得
+      const style = getAnnotationStyle(annotation);
       const effectSymbol = getEffectSymbol(annotation.tag);
-      const voiceQuality = annotation.props?.voiceQuality;
-      const voiceQualitySymbol = getVoiceQualitySymbol(voiceQuality);
       const tagLabel = getTagLabel(annotation.tag);
+      const voiceQuality = annotation.props?.voiceQuality;
+      const voiceQualityLabel = voiceQuality ? getVoiceQualityLabel(voiceQuality) : '';
       const comment = annotation.comment?.trim();
-      const tooltipText = comment || tagLabel;
+      // ツールチップにはエフェクトと声質の両方を表示
+      const tooltipParts = [tagLabel, voiceQualityLabel, comment].filter(Boolean);
+      const tooltipText = tooltipParts.join(' / ');
       const isActive = activeAnnotationId === annotation.annotationId;
       return (
         <span
@@ -176,6 +203,7 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
           }}
         >
           <span className={clsx('rounded-sm px-1 border-b-4', style)}>{displayText}</span>
+          {/* エフェクトの記号のみ表示（声質は色のみ） */}
           {showTagIndicators && effectSymbol && (
             <span
               className={clsx(
@@ -185,17 +213,6 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
               aria-hidden
             >
               {effectSymbol}
-            </span>
-          )}
-          {showTagIndicators && voiceQualitySymbol && (
-            <span
-              className={clsx(
-                'ml-0.5 inline-flex select-none items-center justify-center rounded px-1 text-sm font-bold',
-                getVoiceQualitySymbolColor(voiceQuality!)
-              )}
-              aria-hidden
-            >
-              {voiceQualitySymbol}
             </span>
           )}
           {(showComments || isActive) && tooltipText && (
@@ -215,6 +232,8 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
 
     return (
       <div className={containerClass} ref={ref}>
+        {/* 声質が使われている場合のみ凡例を表示 */}
+        {showTagIndicators && hasVoiceQuality && <VoiceQualityLegend />}
         {renderLines && lineData
           ? lineData.segmentsByLine.map((lineSegments, lineIndex) => (
               <div
