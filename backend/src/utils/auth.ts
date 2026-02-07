@@ -36,6 +36,7 @@ export const getAuthenticatedUser = (event: APIGatewayProxyEventV2): AnnotuneUse
       claims.preferred_username ??
       claims['cognito:username'] ??
       claims.username ??
-      claims.email
+      claims.email ??
+      'Anonymous'
   };
 };
