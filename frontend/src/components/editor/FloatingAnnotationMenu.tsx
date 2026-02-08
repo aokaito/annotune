@@ -7,7 +7,7 @@ import { presetEffects, presetVoiceQualities } from './tagColors';
 
 interface FloatingAnnotationMenuProps {
   selection: { start: number; end: number; text: string };
-  anchorRect: DOMRect | null;
+  clickPosition: { x: number; y: number } | null;
   onSubmit: (payload: {
     start: number;
     end: number;
@@ -21,7 +21,7 @@ interface FloatingAnnotationMenuProps {
 
 export const FloatingAnnotationMenu = ({
   selection,
-  anchorRect,
+  clickPosition,
   onSubmit,
   onCancel,
   isSubmitting
@@ -32,29 +32,29 @@ export const FloatingAnnotationMenu = ({
   const [comment, setComment] = useState('');
   const [showCommentInput, setShowCommentInput] = useState(false);
 
-  // メニュー位置を計算（選択範囲の右側）
+  // メニュー位置を計算（クリック位置の右側）
   const [position, setPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
   useEffect(() => {
-    if (!anchorRect || !menuRef.current) return;
+    if (!clickPosition || !menuRef.current) return;
 
     const menuRect = menuRef.current.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    // 選択範囲の右側に表示
-    let top = anchorRect.top;
-    let left = anchorRect.right + 12;
+    // クリック位置の右側に表示
+    let top = clickPosition.y - 20;
+    let left = clickPosition.x + 20;
 
     // 右端からはみ出す場合は左側に表示
     if (left + menuRect.width > viewportWidth - 16) {
-      left = anchorRect.left - menuRect.width - 12;
+      left = clickPosition.x - menuRect.width - 20;
     }
 
     // さらに左端からもはみ出す場合は下に表示
     if (left < 16) {
-      left = Math.max(16, anchorRect.left);
-      top = anchorRect.bottom + 8;
+      left = 16;
+      top = clickPosition.y + 20;
     }
 
     // 下端からはみ出す場合は上にずらす
@@ -68,10 +68,9 @@ export const FloatingAnnotationMenu = ({
     }
 
     setPosition({ top, left });
-  }, [anchorRect]);
+  }, [clickPosition]);
 
   const handleSubmit = async () => {
-    console.log('[DEBUG] FloatingAnnotationMenu handleSubmit', { selectedEffect, selectedVoiceQuality, comment, selection });
     // エフェクトか声質のどちらかが選択されている必要がある（コメントのみも可）
     const tag = selectedEffect ?? selectedVoiceQuality ?? 'comment';
 
@@ -82,7 +81,6 @@ export const FloatingAnnotationMenu = ({
       comment: comment.trim() || undefined,
       props: selectedVoiceQuality ? { voiceQuality: selectedVoiceQuality } : undefined
     };
-    console.log('[DEBUG] Submitting payload:', payload);
 
     await onSubmit(payload);
 

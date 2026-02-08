@@ -104,11 +104,10 @@ export const SelectableLyricDisplay = ({
     startIndex: null,
     endIndex: null
   });
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+  const [clickPosition, setClickPosition] = useState<{ x: number; y: number } | null>(null);
 
   // 選択範囲を計算（開始・終了の順序を正規化）
   const selectionRange = useMemo(() => {
-    console.log('[DEBUG] Calculating selectionRange', selectionState);
     if (selectionState.startIndex === null) return null;
     if (selectionState.mode === 'selecting') {
       return { start: selectionState.startIndex, end: selectionState.startIndex + 1 };
@@ -116,7 +115,6 @@ export const SelectableLyricDisplay = ({
     if (selectionState.endIndex === null) return null;
     const start = Math.min(selectionState.startIndex, selectionState.endIndex);
     const end = Math.max(selectionState.startIndex, selectionState.endIndex) + 1;
-    console.log('[DEBUG] selectionRange result:', { start, end });
     return { start, end };
   }, [selectionState.startIndex, selectionState.endIndex, selectionState.mode]);
 
@@ -126,52 +124,13 @@ export const SelectableLyricDisplay = ({
     return index >= selectionRange.start && index < selectionRange.end;
   };
 
-  // 選択完了時にアンカー位置を計算
-  const updateAnchorRect = () => {
-    console.log('[DEBUG] updateAnchorRect called', { selectionRange, containerRef: !!containerRef.current });
-    if (containerRef.current && selectionRange) {
-      // containerRef内のすべてのdata-char-index要素を確認
-      const allCharElements = containerRef.current.querySelectorAll('[data-char-index]');
-      console.log('[DEBUG] Total char elements in container:', allCharElements.length);
-      if (allCharElements.length > 0) {
-        const lastIndex = allCharElements[allCharElements.length - 1]?.getAttribute('data-char-index');
-        console.log('[DEBUG] Last char index in container:', lastIndex);
-      }
-
-      const selector = `[data-char-index="${selectionRange.end - 1}"]`;
-      console.log('[DEBUG] Looking for element:', selector);
-      const endCharElement = containerRef.current.querySelector(selector);
-      console.log('[DEBUG] Found element:', endCharElement);
-
-      // ドキュメント全体からも検索
-      const globalElement = document.querySelector(selector);
-      console.log('[DEBUG] Found in document:', globalElement);
-
-      if (endCharElement) {
-        const rect = endCharElement.getBoundingClientRect();
-        console.log('[DEBUG] Setting anchorRect:', rect);
-        setAnchorRect(rect);
-      }
-    }
-  };
-
-  // 選択が完了したらアンカー位置を更新
-  useEffect(() => {
-    console.log('[DEBUG] useEffect for anchorRect', { mode: selectionState.mode, selectionRange });
-    if (selectionState.mode === 'selected') {
-      // DOMが更新された後に位置を計算
-      requestAnimationFrame(() => {
-        updateAnchorRect();
-      });
-    }
-  }, [selectionState.mode, selectionState.startIndex, selectionState.endIndex]);
 
   // ESCキーで選択解除
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setSelectionState({ mode: 'idle', startIndex: null, endIndex: null });
-        setAnchorRect(null);
+        setClickPosition(null);
       }
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -179,9 +138,7 @@ export const SelectableLyricDisplay = ({
   }, []);
 
   // 文字クリック時の処理
-  const handleCharClick = (index: number, annotation: Annotation | null) => {
-    console.log('[DEBUG] handleCharClick', { index, annotation, mode: selectionState.mode });
-
+  const handleCharClick = (index: number, annotation: Annotation | null, event?: React.MouseEvent) => {
     // 既存アノテーションをクリックした場合は編集ダイアログを開く
     if (annotation && selectionState.mode === 'idle' && onSelectAnnotation) {
       onSelectAnnotation(annotation);
@@ -190,11 +147,12 @@ export const SelectableLyricDisplay = ({
 
     if (selectionState.mode === 'idle') {
       // 選択開始
-      console.log('[DEBUG] Starting selection at index:', index);
       setSelectionState({ mode: 'selecting', startIndex: index, endIndex: null });
     } else if (selectionState.mode === 'selecting') {
-      // 選択確定
-      console.log('[DEBUG] Completing selection at index:', index);
+      // 選択確定 - クリック位置を保存
+      if (event) {
+        setClickPosition({ x: event.clientX, y: event.clientY });
+      }
       setSelectionState((prev) => ({
         mode: 'selected',
         startIndex: prev.startIndex,
@@ -213,13 +171,13 @@ export const SelectableLyricDisplay = ({
   }) => {
     await onAddAnnotation(payload);
     setSelectionState({ mode: 'idle', startIndex: null, endIndex: null });
-    setAnchorRect(null);
+    setClickPosition(null);
   };
 
   // 選択キャンセル
   const handleCancel = () => {
     setSelectionState({ mode: 'idle', startIndex: null, endIndex: null });
-    setAnchorRect(null);
+    setClickPosition(null);
   };
 
   // 声質が使われているかチェック
@@ -227,7 +185,6 @@ export const SelectableLyricDisplay = ({
 
   // 文字ごとにレンダリング
   const renderCharacters = () => {
-    console.log('[DEBUG] renderCharacters called, text length:', text.length, 'text:', text.slice(0, 50));
     const chars = text.split('');
     const elements: React.ReactNode[] = [];
     let i = 0;
@@ -288,7 +245,7 @@ export const SelectableLyricDisplay = ({
                   onClick={(e) => {
                     if (selectionState.mode !== 'idle') {
                       e.stopPropagation();
-                      handleCharClick(charIndex, null);
+                      handleCharClick(charIndex, null, e);
                     }
                   }}
                   className={clsx(
@@ -326,7 +283,7 @@ export const SelectableLyricDisplay = ({
         <span
           key={`char-${i}`}
           data-char-index={i}
-          onClick={() => handleCharClick(i, null)}
+          onClick={(e) => handleCharClick(i, null, e)}
           className={clsx(
             'cursor-pointer transition-all duration-100',
             // 選択範囲内
@@ -393,7 +350,6 @@ export const SelectableLyricDisplay = ({
       </div>
 
       {/* フローティングメニュー */}
-      {console.log('[DEBUG] Render check', { mode: selectionState.mode, selectionRange, anchorRect })}
       {selectionState.mode === 'selected' && selectionRange && (
         <FloatingAnnotationMenu
           selection={{
@@ -401,7 +357,7 @@ export const SelectableLyricDisplay = ({
             end: selectionRange.end,
             text: text.slice(selectionRange.start, selectionRange.end)
           }}
-          anchorRect={anchorRect}
+          clickPosition={clickPosition}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isSubmitting={isSubmitting}
