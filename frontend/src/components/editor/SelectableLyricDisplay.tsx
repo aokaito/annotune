@@ -289,24 +289,35 @@ export const SelectableLyricDisplay = ({
       const isEndChar = selectionState.endIndex === i;
       const isInRange = isInSelectionRange(i);
 
+      // 選択された文字のデバッグ
+      if (isStartChar || isInRange) {
+        console.log(`Char ${i}: isStartChar=${isStartChar}, isInRange=${isInRange}, mode=${selectionState.mode}`);
+      }
+
+      const charClassName = clsx(
+        'cursor-pointer transition-all duration-100',
+        // 選択範囲内
+        isInRange && 'bg-blue-300 text-blue-900',
+        // 開始位置（選択中モードで開始点のみの場合）
+        isStartChar && selectionState.mode === 'selecting' && 'bg-blue-500 text-white rounded px-0.5',
+        // 開始位置（範囲選択済み）
+        isStartChar && selectionState.mode === 'selected' && 'rounded-l bg-blue-400',
+        // 終了位置
+        isEndChar && selectionState.mode === 'selected' && 'rounded-r bg-blue-400',
+        // ホバー
+        !isInRange && !isStartChar && 'hover:bg-blue-100'
+      );
+
+      if (isStartChar || isInRange) {
+        console.log(`Char ${i} className:`, charClassName);
+      }
+
       elements.push(
         <span
           key={`char-${i}`}
           data-char-index={i}
           onClick={(e) => handleCharClick(i, null, e)}
-          className={clsx(
-            'cursor-pointer transition-all duration-100',
-            // 選択範囲内
-            isInRange && 'bg-blue-300 text-blue-900',
-            // 開始位置（選択中モードで開始点のみの場合）
-            isStartChar && selectionState.mode === 'selecting' && 'bg-blue-500 text-white rounded px-0.5',
-            // 開始位置（範囲選択済み）
-            isStartChar && selectionState.mode === 'selected' && 'rounded-l bg-blue-400',
-            // 終了位置
-            isEndChar && selectionState.mode === 'selected' && 'rounded-r bg-blue-400',
-            // ホバー
-            !isInRange && !isStartChar && 'hover:bg-blue-100'
-          )}
+          className={charClassName}
         >
           {char}
         </span>
