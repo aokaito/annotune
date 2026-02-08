@@ -137,6 +137,14 @@ export const SelectableLyricDisplay = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // 状態変更を監視
+  useEffect(() => {
+    console.log('=== STATE CHANGED ===');
+    console.log('selectionState:', selectionState);
+    console.log('selectionRange:', selectionRange);
+    console.log('clickPosition:', clickPosition);
+  }, [selectionState, selectionRange, clickPosition]);
+
   // 文字クリック時の処理
   const handleCharClick = (index: number, annotation: Annotation | null, event?: React.MouseEvent) => {
     // 既存アノテーションをクリックした場合は編集ダイアログを開く
@@ -147,11 +155,11 @@ export const SelectableLyricDisplay = ({
 
     if (selectionState.mode === 'idle') {
       // 選択開始
-      alert(`開始位置: ${index}`);
+      console.log('Setting selecting mode, index:', index);
       setSelectionState({ mode: 'selecting', startIndex: index, endIndex: null });
     } else if (selectionState.mode === 'selecting') {
       // 選択確定 - クリック位置を保存
-      alert(`終了位置: ${index}`);
+      console.log('Setting selected mode, index:', index, 'event:', event);
       if (event) {
         setClickPosition({ x: event.clientX, y: event.clientY });
       }
