@@ -71,16 +71,20 @@ export const FloatingAnnotationMenu = ({
   }, [anchorRect]);
 
   const handleSubmit = async () => {
+    console.log('[DEBUG] FloatingAnnotationMenu handleSubmit', { selectedEffect, selectedVoiceQuality, comment, selection });
     // エフェクトか声質のどちらかが選択されている必要がある（コメントのみも可）
     const tag = selectedEffect ?? selectedVoiceQuality ?? 'comment';
 
-    await onSubmit({
+    const payload = {
       start: selection.start,
       end: selection.end,
       tag,
       comment: comment.trim() || undefined,
       props: selectedVoiceQuality ? { voiceQuality: selectedVoiceQuality } : undefined
-    });
+    };
+    console.log('[DEBUG] Submitting payload:', payload);
+
+    await onSubmit(payload);
 
     // リセット
     setSelectedEffect(null);

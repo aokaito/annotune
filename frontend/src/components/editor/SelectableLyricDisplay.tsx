@@ -108,6 +108,7 @@ export const SelectableLyricDisplay = ({
 
   // 選択範囲を計算（開始・終了の順序を正規化）
   const selectionRange = useMemo(() => {
+    console.log('[DEBUG] Calculating selectionRange', selectionState);
     if (selectionState.startIndex === null) return null;
     if (selectionState.mode === 'selecting') {
       return { start: selectionState.startIndex, end: selectionState.startIndex + 1 };
@@ -115,6 +116,7 @@ export const SelectableLyricDisplay = ({
     if (selectionState.endIndex === null) return null;
     const start = Math.min(selectionState.startIndex, selectionState.endIndex);
     const end = Math.max(selectionState.startIndex, selectionState.endIndex) + 1;
+    console.log('[DEBUG] selectionRange result:', { start, end });
     return { start, end };
   }, [selectionState.startIndex, selectionState.endIndex, selectionState.mode]);
 
@@ -126,18 +128,23 @@ export const SelectableLyricDisplay = ({
 
   // 選択完了時にアンカー位置を計算
   const updateAnchorRect = () => {
+    console.log('[DEBUG] updateAnchorRect called', { selectionRange, containerRef: !!containerRef.current });
     if (containerRef.current && selectionRange) {
-      const endCharElement = containerRef.current.querySelector(
-        `[data-char-index="${selectionRange.end - 1}"]`
-      );
+      const selector = `[data-char-index="${selectionRange.end - 1}"]`;
+      console.log('[DEBUG] Looking for element:', selector);
+      const endCharElement = containerRef.current.querySelector(selector);
+      console.log('[DEBUG] Found element:', endCharElement);
       if (endCharElement) {
-        setAnchorRect(endCharElement.getBoundingClientRect());
+        const rect = endCharElement.getBoundingClientRect();
+        console.log('[DEBUG] Setting anchorRect:', rect);
+        setAnchorRect(rect);
       }
     }
   };
 
   // 選択が完了したらアンカー位置を更新
   useEffect(() => {
+    console.log('[DEBUG] useEffect for anchorRect', { mode: selectionState.mode, selectionRange });
     if (selectionState.mode === 'selected') {
       // DOMが更新された後に位置を計算
       requestAnimationFrame(() => {
@@ -160,6 +167,8 @@ export const SelectableLyricDisplay = ({
 
   // 文字クリック時の処理
   const handleCharClick = (index: number, annotation: Annotation | null) => {
+    console.log('[DEBUG] handleCharClick', { index, annotation, mode: selectionState.mode });
+
     // 既存アノテーションをクリックした場合は編集ダイアログを開く
     if (annotation && selectionState.mode === 'idle' && onSelectAnnotation) {
       onSelectAnnotation(annotation);
@@ -168,9 +177,11 @@ export const SelectableLyricDisplay = ({
 
     if (selectionState.mode === 'idle') {
       // 選択開始
+      console.log('[DEBUG] Starting selection at index:', index);
       setSelectionState({ mode: 'selecting', startIndex: index, endIndex: null });
     } else if (selectionState.mode === 'selecting') {
       // 選択確定
+      console.log('[DEBUG] Completing selection at index:', index);
       setSelectionState((prev) => ({
         mode: 'selected',
         startIndex: prev.startIndex,
@@ -368,6 +379,7 @@ export const SelectableLyricDisplay = ({
       </div>
 
       {/* フローティングメニュー */}
+      {console.log('[DEBUG] Render check', { mode: selectionState.mode, selectionRange, anchorRect })}
       {selectionState.mode === 'selected' && selectionRange && (
         <FloatingAnnotationMenu
           selection={{
