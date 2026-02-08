@@ -195,6 +195,8 @@ export const SelectableLyricDisplay = ({
 
   // 文字ごとにレンダリング
   const renderCharacters = () => {
+    console.log('renderCharacters called, text.length:', text.length, 'annotations:', annotations.length);
+    console.log('Current selectionState in render:', selectionState);
     const chars = text.split('');
     const elements: React.ReactNode[] = [];
     let i = 0;
