@@ -147,9 +147,11 @@ export const SelectableLyricDisplay = ({
 
     if (selectionState.mode === 'idle') {
       // 選択開始
+      alert(`開始位置: ${index}`);
       setSelectionState({ mode: 'selecting', startIndex: index, endIndex: null });
     } else if (selectionState.mode === 'selecting') {
       // 選択確定 - クリック位置を保存
+      alert(`終了位置: ${index}`);
       if (event) {
         setClickPosition({ x: event.clientX, y: event.clientY });
       }
