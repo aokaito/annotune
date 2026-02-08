@@ -205,9 +205,6 @@ export const SelectableLyricDisplay = ({
     while (i < chars.length) {
       const char = chars[i];
       const annotation = getAnnotationForIndex(i, annotations);
-      const isSelected = isInSelectionRange(i);
-      const isStart = selectionState.startIndex === i;
-      const isEnd = selectionState.endIndex === i;
 
       if (char === '\n') {
         // 改行
