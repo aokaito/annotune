@@ -137,14 +137,6 @@ export const SelectableLyricDisplay = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // 状態変更を監視
-  useEffect(() => {
-    console.log('=== STATE CHANGED ===');
-    console.log('selectionState:', selectionState);
-    console.log('selectionRange:', selectionRange);
-    console.log('clickPosition:', clickPosition);
-  }, [selectionState, selectionRange, clickPosition]);
-
   // 文字クリック時の処理
   const handleCharClick = (index: number, annotation: Annotation | null, event?: React.MouseEvent) => {
     // 既存アノテーションをクリックした場合は編集ダイアログを開く
@@ -155,11 +147,9 @@ export const SelectableLyricDisplay = ({
 
     if (selectionState.mode === 'idle') {
       // 選択開始
-      console.log('Setting selecting mode, index:', index);
       setSelectionState({ mode: 'selecting', startIndex: index, endIndex: null });
     } else if (selectionState.mode === 'selecting') {
       // 選択確定 - クリック位置を保存
-      console.log('Setting selected mode, index:', index, 'event:', event);
       if (event) {
         setClickPosition({ x: event.clientX, y: event.clientY });
       }
@@ -195,8 +185,6 @@ export const SelectableLyricDisplay = ({
 
   // 文字ごとにレンダリング
   const renderCharacters = () => {
-    console.log('renderCharacters called, text.length:', text.length, 'annotations:', annotations.length);
-    console.log('Current selectionState in render:', selectionState);
     const chars = text.split('');
     const elements: React.ReactNode[] = [];
     let i = 0;
@@ -291,10 +279,8 @@ export const SelectableLyricDisplay = ({
       const isEndChar = selectionState.endIndex === i;
       const isInRange = isInSelectionRange(i);
 
-      // 選択された文字のデバッグ
-      if (isStartChar || isInRange) {
-        console.log(`Char ${i}: isStartChar=${isStartChar}, isInRange=${isInRange}, mode=${selectionState.mode}`);
-      }
+      // クロージャ問題を回避するためにインデックスをキャプチャ
+      const charIndex = i;
 
       const charClassName = clsx(
         'cursor-pointer transition-all duration-100',
@@ -310,15 +296,11 @@ export const SelectableLyricDisplay = ({
         !isInRange && !isStartChar && 'hover:bg-blue-100'
       );
 
-      if (isStartChar || isInRange) {
-        console.log(`Char ${i} className:`, charClassName);
-      }
-
       elements.push(
         <span
-          key={`char-${i}`}
-          data-char-index={i}
-          onClick={(e) => handleCharClick(i, null, e)}
+          key={`char-${charIndex}`}
+          data-char-index={charIndex}
+          onClick={(e) => handleCharClick(charIndex, null, e)}
           className={charClassName}
         >
           {char}
