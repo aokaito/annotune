@@ -130,10 +130,23 @@ export const SelectableLyricDisplay = ({
   const updateAnchorRect = () => {
     console.log('[DEBUG] updateAnchorRect called', { selectionRange, containerRef: !!containerRef.current });
     if (containerRef.current && selectionRange) {
+      // containerRef内のすべてのdata-char-index要素を確認
+      const allCharElements = containerRef.current.querySelectorAll('[data-char-index]');
+      console.log('[DEBUG] Total char elements in container:', allCharElements.length);
+      if (allCharElements.length > 0) {
+        const lastIndex = allCharElements[allCharElements.length - 1]?.getAttribute('data-char-index');
+        console.log('[DEBUG] Last char index in container:', lastIndex);
+      }
+
       const selector = `[data-char-index="${selectionRange.end - 1}"]`;
       console.log('[DEBUG] Looking for element:', selector);
       const endCharElement = containerRef.current.querySelector(selector);
       console.log('[DEBUG] Found element:', endCharElement);
+
+      // ドキュメント全体からも検索
+      const globalElement = document.querySelector(selector);
+      console.log('[DEBUG] Found in document:', globalElement);
+
       if (endCharElement) {
         const rect = endCharElement.getBoundingClientRect();
         console.log('[DEBUG] Setting anchorRect:', rect);
@@ -214,6 +227,7 @@ export const SelectableLyricDisplay = ({
 
   // 文字ごとにレンダリング
   const renderCharacters = () => {
+    console.log('[DEBUG] renderCharacters called, text length:', text.length, 'text:', text.slice(0, 50));
     const chars = text.split('');
     const elements: React.ReactNode[] = [];
     let i = 0;
