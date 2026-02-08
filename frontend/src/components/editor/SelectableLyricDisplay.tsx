@@ -1,5 +1,5 @@
 // タップ選択モード対応の歌詞表示コンポーネント
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import type { Annotation, AnnotationProps, VoiceQualityTag } from '../../types';
 import { getTagHighlightStyle, getTagLabel, getVoiceQualityLabel } from './tagColors';
@@ -107,7 +107,7 @@ export const SelectableLyricDisplay = ({
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
 
   // 選択範囲を計算（開始・終了の順序を正規化）
-  const getSelectionRange = useCallback(() => {
+  const selectionRange = useMemo(() => {
     if (selectionState.startIndex === null) return null;
     if (selectionState.mode === 'selecting') {
       return { start: selectionState.startIndex, end: selectionState.startIndex + 1 };
@@ -116,22 +116,17 @@ export const SelectableLyricDisplay = ({
     const start = Math.min(selectionState.startIndex, selectionState.endIndex);
     const end = Math.max(selectionState.startIndex, selectionState.endIndex) + 1;
     return { start, end };
-  }, [selectionState]);
-
-  const selectionRange = getSelectionRange();
+  }, [selectionState.startIndex, selectionState.endIndex, selectionState.mode]);
 
   // 文字がハイライトされるべきか
-  const isInSelectionRange = useCallback(
-    (index: number) => {
-      if (!selectionRange) return false;
-      return index >= selectionRange.start && index < selectionRange.end;
-    },
-    [selectionRange]
-  );
+  const isInSelectionRange = (index: number) => {
+    if (!selectionRange) return false;
+    return index >= selectionRange.start && index < selectionRange.end;
+  };
 
   // 選択完了時にアンカー位置を計算
-  useEffect(() => {
-    if (selectionState.mode === 'selected' && selectionRange && containerRef.current) {
+  const updateAnchorRect = () => {
+    if (containerRef.current && selectionRange) {
       const endCharElement = containerRef.current.querySelector(
         `[data-char-index="${selectionRange.end - 1}"]`
       );
@@ -139,7 +134,17 @@ export const SelectableLyricDisplay = ({
         setAnchorRect(endCharElement.getBoundingClientRect());
       }
     }
-  }, [selectionState.mode, selectionRange]);
+  };
+
+  // 選択が完了したらアンカー位置を更新
+  useEffect(() => {
+    if (selectionState.mode === 'selected') {
+      // DOMが更新された後に位置を計算
+      requestAnimationFrame(() => {
+        updateAnchorRect();
+      });
+    }
+  }, [selectionState.mode, selectionState.startIndex, selectionState.endIndex]);
 
   // ESCキーで選択解除
   useEffect(() => {

@@ -46,7 +46,6 @@ export const EditorPage = () => {
     }
   });
   const textFieldRegister = form.register('text', { required: true });
-  const watchedText = form.watch('text') ?? '';
 
   useEffect(() => {
     if (lyric) {
@@ -183,7 +182,7 @@ export const EditorPage = () => {
 
       {/* タップ選択可能な歌詞表示 */}
       <SelectableLyricDisplay
-        text={watchedText}
+        text={lyric.text}
         annotations={lyric.annotations}
         onAddAnnotation={handleAddAnnotation}
         onSelectAnnotation={(annotation) => setEditing(annotation)}
