@@ -250,24 +250,30 @@ export const SelectableLyricDisplay = ({
               }
             }}
           >
-            {annotationChars.map((c, idx) => (
-              <span
-                key={`${startI}-${idx}`}
-                data-char-index={startI + idx}
-                onClick={(e) => {
-                  if (selectionState.mode !== 'idle') {
-                    e.stopPropagation();
-                    handleCharClick(startI + idx, null);
-                  }
-                }}
-                className={clsx(
-                  selectionState.mode !== 'idle' && 'cursor-pointer',
-                  isInSelectionRange(startI + idx) && 'bg-blue-300/50'
-                )}
-              >
-                {c}
-              </span>
-            ))}
+            {annotationChars.map((c, idx) => {
+              const charIndex = startI + idx;
+              const isCharInRange = isInSelectionRange(charIndex);
+              const isCharStart = selectionState.startIndex === charIndex && selectionState.mode === 'selecting';
+              return (
+                <span
+                  key={`${startI}-${idx}`}
+                  data-char-index={charIndex}
+                  onClick={(e) => {
+                    if (selectionState.mode !== 'idle') {
+                      e.stopPropagation();
+                      handleCharClick(charIndex, null);
+                    }
+                  }}
+                  className={clsx(
+                    selectionState.mode !== 'idle' && 'cursor-pointer',
+                    isCharInRange && 'bg-blue-400/60 text-blue-900',
+                    isCharStart && 'bg-blue-500 text-white rounded'
+                  )}
+                >
+                  {c}
+                </span>
+              );
+            })}
             {effectSymbol && (
               <span
                 className={clsx(
@@ -285,17 +291,27 @@ export const SelectableLyricDisplay = ({
       }
 
       // 通常の文字
+      const isStartChar = selectionState.startIndex === i;
+      const isEndChar = selectionState.endIndex === i;
+      const isInRange = isInSelectionRange(i);
+
       elements.push(
         <span
           key={`char-${i}`}
           data-char-index={i}
           onClick={() => handleCharClick(i, null)}
           className={clsx(
-            'cursor-pointer transition-colors',
-            isSelected && 'bg-blue-200',
-            isStart && 'ring-2 ring-blue-500 ring-offset-1',
-            isEnd && 'ring-2 ring-green-500 ring-offset-1',
-            !isSelected && 'hover:bg-blue-100'
+            'cursor-pointer transition-all duration-100',
+            // 選択範囲内
+            isInRange && 'bg-blue-300 text-blue-900',
+            // 開始位置（選択中モードで開始点のみの場合）
+            isStartChar && selectionState.mode === 'selecting' && 'bg-blue-500 text-white rounded px-0.5',
+            // 開始位置（範囲選択済み）
+            isStartChar && selectionState.mode === 'selected' && 'rounded-l bg-blue-400',
+            // 終了位置
+            isEndChar && selectionState.mode === 'selected' && 'rounded-r bg-blue-400',
+            // ホバー
+            !isInRange && !isStartChar && 'hover:bg-blue-100'
           )}
         >
           {char}
@@ -318,17 +334,24 @@ export const SelectableLyricDisplay = ({
         )}
       >
         {/* 操作ガイド */}
-        <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span className="rounded bg-muted px-2 py-1">
-            {selectionState.mode === 'idle' && '文字をタップして選択開始'}
-            {selectionState.mode === 'selecting' && '終了位置をタップ'}
-            {selectionState.mode === 'selected' && 'アノテーションを選択'}
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
+          <span
+            className={clsx(
+              'rounded px-2 py-1 font-medium',
+              selectionState.mode === 'idle' && 'bg-muted text-muted-foreground',
+              selectionState.mode === 'selecting' && 'bg-blue-100 text-blue-700',
+              selectionState.mode === 'selected' && 'bg-green-100 text-green-700'
+            )}
+          >
+            {selectionState.mode === 'idle' && '歌詞をタップして選択開始'}
+            {selectionState.mode === 'selecting' && '終了位置をタップしてください'}
+            {selectionState.mode === 'selected' && '右のパレットからアノテーションを追加'}
           </span>
           {selectionState.mode !== 'idle' && (
             <button
               type="button"
               onClick={handleCancel}
-              className="rounded bg-muted px-2 py-1 text-muted-foreground transition hover:bg-muted/80 hover:text-foreground"
+              className="rounded bg-red-100 px-2 py-1 text-red-600 transition hover:bg-red-200"
             >
               キャンセル
             </button>
