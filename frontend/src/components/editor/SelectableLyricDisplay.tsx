@@ -1,0 +1,361 @@
+// タップ選択モード対応の歌詞表示コンポーネント
+import { useCallback, useEffect, useRef, useState } from 'react';
+import clsx from 'clsx';
+import type { Annotation, AnnotationProps, VoiceQualityTag } from '../../types';
+import { getTagHighlightStyle, getTagLabel, getVoiceQualityLabel } from './tagColors';
+import { FloatingAnnotationMenu } from './FloatingAnnotationMenu';
+
+interface SelectableLyricDisplayProps {
+  text: string;
+  annotations: Annotation[];
+  className?: string;
+  onAddAnnotation: (payload: {
+    start: number;
+    end: number;
+    tag: string;
+    comment?: string;
+    props?: AnnotationProps;
+  }) => Promise<void>;
+  onSelectAnnotation?: (annotation: Annotation) => void;
+  isSubmitting: boolean;
+}
+
+interface SelectionState {
+  mode: 'idle' | 'selecting' | 'selected';
+  startIndex: number | null;
+  endIndex: number | null;
+}
+
+// エフェクト用シンボル
+const effectSymbolMap: Record<string, string> = {
+  vibrato: '〰',
+  scoop: '↗',
+  fall: '↘',
+  breath: '●'
+};
+
+// エフェクト用のシンボル色
+const effectSymbolColorMap: Record<string, string> = {
+  vibrato: 'text-amber-600',
+  scoop: 'text-orange-600',
+  fall: 'text-yellow-600',
+  breath: 'text-sky-600'
+};
+
+// 声質用のハイライト色
+const voiceQualityHighlightMap: Record<VoiceQualityTag, string> = {
+  whisper: 'bg-purple-100 text-purple-950',
+  edge: 'bg-rose-100 text-rose-950',
+  falsetto: 'bg-indigo-100 text-indigo-950'
+};
+
+// 声質の凡例用の色
+const voiceQualityLegendColors: { id: VoiceQualityTag; label: string; colorClass: string }[] = [
+  { id: 'whisper', label: 'ウィスパー', colorClass: 'bg-purple-200 border-purple-400' },
+  { id: 'edge', label: 'エッジ', colorClass: 'bg-rose-200 border-rose-400' },
+  { id: 'falsetto', label: '裏声', colorClass: 'bg-indigo-200 border-indigo-400' }
+];
+
+const getEffectSymbol = (tag: string) => effectSymbolMap[tag] ?? '';
+const getEffectSymbolColor = (tag: string) => effectSymbolColorMap[tag] ?? 'text-slate-600';
+
+const getAnnotationStyle = (annotation: Annotation) => {
+  const voiceQuality = annotation.props?.voiceQuality;
+  if (voiceQuality && voiceQualityHighlightMap[voiceQuality]) {
+    return voiceQualityHighlightMap[voiceQuality];
+  }
+  return getTagHighlightStyle(annotation.tag);
+};
+
+// 文字がどのアノテーションに属するか判定
+const getAnnotationForIndex = (index: number, annotations: Annotation[]): Annotation | null => {
+  for (const annotation of annotations) {
+    if (index >= annotation.start && index < annotation.end) {
+      return annotation;
+    }
+  }
+  return null;
+};
+
+// 声質の凡例コンポーネント
+const VoiceQualityLegend = () => (
+  <div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+    <span className="font-medium">声質:</span>
+    {voiceQualityLegendColors.map((item) => (
+      <span key={item.id} className="flex items-center gap-1.5">
+        <span className={clsx('inline-block h-3 w-3 rounded border', item.colorClass)} />
+        <span>{item.label}</span>
+      </span>
+    ))}
+  </div>
+);
+
+export const SelectableLyricDisplay = ({
+  text,
+  annotations,
+  className,
+  onAddAnnotation,
+  onSelectAnnotation,
+  isSubmitting
+}: SelectableLyricDisplayProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [selectionState, setSelectionState] = useState<SelectionState>({
+    mode: 'idle',
+    startIndex: null,
+    endIndex: null
+  });
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+
+  // 選択範囲を計算（開始・終了の順序を正規化）
+  const getSelectionRange = useCallback(() => {
+    if (selectionState.startIndex === null) return null;
+    if (selectionState.mode === 'selecting') {
+      return { start: selectionState.startIndex, end: selectionState.startIndex + 1 };
+    }
+    if (selectionState.endIndex === null) return null;
+    const start = Math.min(selectionState.startIndex, selectionState.endIndex);
+    const end = Math.max(selectionState.startIndex, selectionState.endIndex) + 1;
+    return { start, end };
+  }, [selectionState]);
+
+  const selectionRange = getSelectionRange();
+
+  // 文字がハイライトされるべきか
+  const isInSelectionRange = useCallback(
+    (index: number) => {
+      if (!selectionRange) return false;
+      return index >= selectionRange.start && index < selectionRange.end;
+    },
+    [selectionRange]
+  );
+
+  // 選択完了時にアンカー位置を計算
+  useEffect(() => {
+    if (selectionState.mode === 'selected' && selectionRange && containerRef.current) {
+      const endCharElement = containerRef.current.querySelector(
+        `[data-char-index="${selectionRange.end - 1}"]`
+      );
+      if (endCharElement) {
+        setAnchorRect(endCharElement.getBoundingClientRect());
+      }
+    }
+  }, [selectionState.mode, selectionRange]);
+
+  // ESCキーで選択解除
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectionState({ mode: 'idle', startIndex: null, endIndex: null });
+        setAnchorRect(null);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // 文字クリック時の処理
+  const handleCharClick = (index: number, annotation: Annotation | null) => {
+    // 既存アノテーションをクリックした場合は編集ダイアログを開く
+    if (annotation && selectionState.mode === 'idle' && onSelectAnnotation) {
+      onSelectAnnotation(annotation);
+      return;
+    }
+
+    if (selectionState.mode === 'idle') {
+      // 選択開始
+      setSelectionState({ mode: 'selecting', startIndex: index, endIndex: null });
+    } else if (selectionState.mode === 'selecting') {
+      // 選択確定
+      setSelectionState((prev) => ({
+        mode: 'selected',
+        startIndex: prev.startIndex,
+        endIndex: index
+      }));
+    }
+  };
+
+  // アノテーション追加完了
+  const handleSubmit = async (payload: {
+    start: number;
+    end: number;
+    tag: string;
+    comment?: string;
+    props?: AnnotationProps;
+  }) => {
+    await onAddAnnotation(payload);
+    setSelectionState({ mode: 'idle', startIndex: null, endIndex: null });
+    setAnchorRect(null);
+  };
+
+  // 選択キャンセル
+  const handleCancel = () => {
+    setSelectionState({ mode: 'idle', startIndex: null, endIndex: null });
+    setAnchorRect(null);
+  };
+
+  // 声質が使われているかチェック
+  const hasVoiceQuality = annotations.some((a) => a.props?.voiceQuality);
+
+  // 文字ごとにレンダリング
+  const renderCharacters = () => {
+    const chars = text.split('');
+    const elements: React.ReactNode[] = [];
+    let i = 0;
+
+    while (i < chars.length) {
+      const char = chars[i];
+      const annotation = getAnnotationForIndex(i, annotations);
+      const isSelected = isInSelectionRange(i);
+      const isStart = selectionState.startIndex === i;
+      const isEnd = selectionState.endIndex === i;
+
+      if (char === '\n') {
+        // 改行
+        elements.push(<br key={`br-${i}`} />);
+        i++;
+        continue;
+      }
+
+      // アノテーション付きの範囲を一括でレンダリング
+      if (annotation) {
+        const annotationChars: string[] = [];
+        const startI = i;
+        while (i < annotation.end && i < chars.length) {
+          if (chars[i] === '\n') break;
+          annotationChars.push(chars[i]);
+          i++;
+        }
+
+        const style = getAnnotationStyle(annotation);
+        const effectSymbol = getEffectSymbol(annotation.tag);
+        const tagLabel = getTagLabel(annotation.tag);
+        const voiceQuality = annotation.props?.voiceQuality;
+        const voiceQualityLabel = voiceQuality ? getVoiceQualityLabel(voiceQuality) : '';
+        const comment = annotation.comment?.trim();
+        const tooltipParts = [tagLabel, voiceQualityLabel, comment].filter(Boolean);
+        const tooltipText = tooltipParts.join(' / ');
+
+        elements.push(
+          <span
+            key={`ann-${startI}`}
+            className={clsx(
+              'relative inline cursor-pointer rounded-sm border-b-4 px-0.5 transition-all',
+              style,
+              'hover:opacity-80'
+            )}
+            title={tooltipText}
+            onClick={() => {
+              if (selectionState.mode === 'idle' && onSelectAnnotation) {
+                onSelectAnnotation(annotation);
+              }
+            }}
+          >
+            {annotationChars.map((c, idx) => (
+              <span
+                key={`${startI}-${idx}`}
+                data-char-index={startI + idx}
+                onClick={(e) => {
+                  if (selectionState.mode !== 'idle') {
+                    e.stopPropagation();
+                    handleCharClick(startI + idx, null);
+                  }
+                }}
+                className={clsx(
+                  selectionState.mode !== 'idle' && 'cursor-pointer',
+                  isInSelectionRange(startI + idx) && 'bg-blue-300/50'
+                )}
+              >
+                {c}
+              </span>
+            ))}
+            {effectSymbol && (
+              <span
+                className={clsx(
+                  'ml-0.5 inline-flex select-none items-center text-sm font-bold',
+                  getEffectSymbolColor(annotation.tag)
+                )}
+                aria-hidden
+              >
+                {effectSymbol}
+              </span>
+            )}
+          </span>
+        );
+        continue;
+      }
+
+      // 通常の文字
+      elements.push(
+        <span
+          key={`char-${i}`}
+          data-char-index={i}
+          onClick={() => handleCharClick(i, null)}
+          className={clsx(
+            'cursor-pointer transition-colors',
+            isSelected && 'bg-blue-200',
+            isStart && 'ring-2 ring-blue-500 ring-offset-1',
+            isEnd && 'ring-2 ring-green-500 ring-offset-1',
+            !isSelected && 'hover:bg-blue-100'
+          )}
+        >
+          {char}
+        </span>
+      );
+      i++;
+    }
+
+    return elements;
+  };
+
+  return (
+    <>
+      <div
+        ref={containerRef}
+        className={clsx(
+          'overflow-x-auto whitespace-pre-wrap rounded-lg border border-border bg-card p-4 font-medium leading-loose text-foreground shadow-sm sm:p-6',
+          'select-none',
+          className
+        )}
+      >
+        {/* 操作ガイド */}
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span className="rounded bg-muted px-2 py-1">
+            {selectionState.mode === 'idle' && '文字をタップして選択開始'}
+            {selectionState.mode === 'selecting' && '終了位置をタップ'}
+            {selectionState.mode === 'selected' && 'アノテーションを選択'}
+          </span>
+          {selectionState.mode !== 'idle' && (
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="rounded bg-muted px-2 py-1 text-muted-foreground transition hover:bg-muted/80 hover:text-foreground"
+            >
+              キャンセル
+            </button>
+          )}
+        </div>
+
+        {/* 声質凡例 */}
+        {hasVoiceQuality && <VoiceQualityLegend />}
+
+        {/* 歌詞本体 */}
+        <div className="text-base leading-loose sm:text-lg">{renderCharacters()}</div>
+      </div>
+
+      {/* フローティングメニュー */}
+      {selectionState.mode === 'selected' && selectionRange && (
+        <FloatingAnnotationMenu
+          selection={{
+            start: selectionRange.start,
+            end: selectionRange.end,
+            text: text.slice(selectionRange.start, selectionRange.end)
+          }}
+          anchorRect={anchorRect}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          isSubmitting={isSubmitting}
+        />
+      )}
+    </>
+  );
+};

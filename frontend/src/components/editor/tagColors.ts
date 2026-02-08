@@ -74,11 +74,11 @@ export const getEffectLabel = (effect: EffectTag) => effectLabelMap[effect];
 export const getVoiceQualityLabel = (voiceQuality: VoiceQualityTag) => voiceQualityLabelMap[voiceQuality];
 
 // プリセットエフェクト
-export const presetEffects: { id: EffectTag | 'none'; label: string }[] = [
-  { id: 'vibrato', label: 'ビブラート' },
-  { id: 'scoop', label: 'しゃくり' },
-  { id: 'fall', label: 'フォール' },
-  { id: 'breath', label: 'ブレス' },
+export const presetEffects: { id: EffectTag | 'none'; label: string; symbol?: string }[] = [
+  { id: 'vibrato', label: 'ビブラート', symbol: '〰' },
+  { id: 'scoop', label: 'しゃくり', symbol: '↗' },
+  { id: 'fall', label: 'フォール', symbol: '↘' },
+  { id: 'breath', label: 'ブレス', symbol: '●' },
   { id: 'none', label: '付与しない' }
 ];
 

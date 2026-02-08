@@ -1,6 +1,6 @@
 // エディタ画面：歌詞本文の編集、注釈 CRUD、共有トグルをまとめた中核ページ。
-// NOTE: レイアウトを調整し、レンダリング例で直接範囲を選択してアノテーションを付与できるようにした。
-import { useEffect, useRef, useState } from 'react';
+// NOTE: タップ選択モードでアノテーションを付与できるように改善。
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
@@ -10,11 +10,9 @@ import {
   useShareLyric,
   useUpdateLyric
 } from '../hooks/useLyrics';
-import { AnnotationPalette } from '../components/editor/AnnotationPalette';
-import { LyricDisplay } from '../components/editor/LyricDisplay';
+import { SelectableLyricDisplay } from '../components/editor/SelectableLyricDisplay';
 import { AnnotationList } from '../components/editor/AnnotationList';
 import { AnnotationEditDialog } from '../components/editor/AnnotationEditDialog';
-import { AnnotationMobileAction } from '../components/editor/AnnotationMobileAction';
 import type { Annotation, AnnotationProps } from '../types';
 import { useAnnotuneApi } from '../hooks/useAnnotuneApi';
 
@@ -28,11 +26,8 @@ interface FormValues {
 export const EditorPage = () => {
   const { docId = '' } = useParams();
   const navigate = useNavigate();
-  const lyricDisplayRef = useRef<HTMLDivElement | null>(null);
-  const [selection, setSelection] = useState<{ start: number; end: number; text: string } | null>(null);
   const [editing, setEditing] = useState<Annotation | null>(null);
   const [isLyricsModalOpen, setIsLyricsModalOpen] = useState(false);
-  const [isAnnotationSheetOpen, setIsAnnotationSheetOpen] = useState(false);
 
   const { data: lyric, isLoading } = useLyric(docId);
   const updateLyric = useUpdateLyric(docId);
@@ -64,44 +59,6 @@ export const EditorPage = () => {
     }
   }, [lyric, form]);
 
-  useEffect(() => {
-    if (!selection) return;
-    if (typeof window === 'undefined') return;
-    if (window.matchMedia('(max-width: 767px)').matches) {
-      setIsAnnotationSheetOpen(true);
-    }
-  }, [selection]);
-
-  useEffect(() => {
-    const handleSelectionChange = () => {
-      const container = lyricDisplayRef.current;
-      if (!container) return;
-      const selected = window.getSelection();
-      if (!selected || selected.rangeCount === 0 || selected.isCollapsed) {
-        return;
-      }
-      const range = selected.getRangeAt(0);
-      const { startContainer, endContainer } = range;
-      if (!container.contains(startContainer) || !container.contains(endContainer)) {
-        setSelection(null);
-        return;
-      }
-      const preRange = range.cloneRange();
-      preRange.selectNodeContents(container);
-      preRange.setEnd(range.startContainer, range.startOffset);
-      const start = preRange.toString().length;
-      const selectedText = range.toString();
-      if (selectedText.length === 0) {
-        return;
-      }
-      setSelection({ start, end: start + selectedText.length, text: selectedText });
-    };
-    document.addEventListener('selectionchange', handleSelectionChange);
-    return () => {
-      document.removeEventListener('selectionchange', handleSelectionChange);
-    };
-  }, []);
-
   const handleSave = form.handleSubmit(async (values) => {
     await updateLyric.mutateAsync({
       title: values.title,
@@ -110,7 +67,6 @@ export const EditorPage = () => {
       version: values.version
     });
     setIsLyricsModalOpen(false);
-    setSelection(null);
   });
 
   const handleDelete = async () => {
@@ -132,8 +88,6 @@ export const EditorPage = () => {
     props?: AnnotationProps;
   }) => {
     await annotations.create.mutateAsync(payload);
-    setSelection(null);
-    setIsAnnotationSheetOpen(false);
   };
 
   const handleUpdateAnnotation = async (payload: {
@@ -185,78 +139,56 @@ export const EditorPage = () => {
           </button>
         </div>
       </div>
-      <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <form
-          className="flex flex-col gap-5 rounded-xl border border-border bg-card/80 p-4 shadow-sm backdrop-blur sm:p-6"
-          onSubmit={handleSave}
-        >
-          <input type="hidden" {...form.register('version', { valueAsNumber: true })} />
-          <div className="flex flex-col gap-2 text-sm">
-            <label className="flex flex-col gap-2">
-              <span className="font-medium text-foreground">タイトル</span>
-              <input
-                type="text"
-                className="min-h-11 rounded-md border border-border bg-card px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                {...form.register('title', { required: true })}
-              />
-            </label>
-          </div>
-          <div className="flex flex-col gap-2 text-sm">
-            <label className="flex flex-col gap-2">
-              <span className="font-medium text-foreground">アーティスト</span>
-              <input
-                type="text"
-                className="min-h-11 rounded-md border border-border bg-card px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                {...form.register('artist', { required: true })}
-              />
-            </label>
-          </div>
-          <div className="space-y-3 text-sm">
-            <span className="font-medium text-foreground">レンダリング例</span>
-            <p className="text-xs text-muted-foreground">
-              この表示で範囲を選択し、右側のパレットからアノテーションを追加してください。
-            </p>
-            <div ref={lyricDisplayRef} className="rounded-lg border border-border bg-card p-3 shadow-sm">
-              <LyricDisplay
-                text={watchedText}
-                annotations={lyric.annotations}
-                framed={false}
-                showTagIndicators
-                showComments
-                className="p-0 shadow-none"
-                onSelectAnnotation={(annotation) => setEditing(annotation)}
-              />
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-3 text-sm">
-            <button
-              type="button"
-              className="inline-flex min-h-10 items-center rounded-md border border-border px-4 font-semibold text-muted-foreground transition hover:text-foreground"
-              onClick={() => {
-                setIsLyricsModalOpen(true);
-                setSelection(null);
-              }}
-            >
-              編集
-            </button>
-            <button
-              type="submit"
-              className="inline-flex min-h-10 items-center rounded-md bg-primary px-5 font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
-              disabled={updateLyric.isPending}
-            >
-              {updateLyric.isPending ? '保存中…' : '保存'}
-            </button>
-          </div>
-        </form>
-        <div className="hidden md:block md:sticky md:top-28">
-          <AnnotationPalette
-            selection={selection}
-            onSubmit={handleAddAnnotation}
-            isSubmitting={annotations.create.isPending}
-            className="max-h-[calc(100dvh-10rem)] overflow-y-auto"
-          />
+      {/* メタ情報編集フォーム */}
+      <form
+        className="flex flex-col gap-4 rounded-xl border border-border bg-card/80 p-4 shadow-sm backdrop-blur sm:p-6"
+        onSubmit={handleSave}
+      >
+        <input type="hidden" {...form.register('version', { valueAsNumber: true })} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="flex flex-col gap-2 text-sm">
+            <span className="font-medium text-foreground">タイトル</span>
+            <input
+              type="text"
+              className="min-h-11 rounded-md border border-border bg-card px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              {...form.register('title', { required: true })}
+            />
+          </label>
+          <label className="flex flex-col gap-2 text-sm">
+            <span className="font-medium text-foreground">アーティスト</span>
+            <input
+              type="text"
+              className="min-h-11 rounded-md border border-border bg-card px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              {...form.register('artist', { required: true })}
+            />
+          </label>
         </div>
-      </div>
+        <div className="flex flex-wrap items-center justify-end gap-3 text-sm">
+          <button
+            type="button"
+            className="inline-flex min-h-10 items-center rounded-md border border-border px-4 font-semibold text-muted-foreground transition hover:text-foreground"
+            onClick={() => setIsLyricsModalOpen(true)}
+          >
+            歌詞を編集
+          </button>
+          <button
+            type="submit"
+            className="inline-flex min-h-10 items-center rounded-md bg-primary px-5 font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+            disabled={updateLyric.isPending}
+          >
+            {updateLyric.isPending ? '保存中…' : '保存'}
+          </button>
+        </div>
+      </form>
+
+      {/* タップ選択可能な歌詞表示 */}
+      <SelectableLyricDisplay
+        text={watchedText}
+        annotations={lyric.annotations}
+        onAddAnnotation={handleAddAnnotation}
+        onSelectAnnotation={(annotation) => setEditing(annotation)}
+        isSubmitting={annotations.create.isPending}
+      />
       <section className="space-y-4 rounded-xl border border-border bg-card/80 p-4 shadow-sm sm:p-6">
         <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold sm:text-xl">アノテーション一覧</h2>
@@ -279,13 +211,6 @@ export const EditorPage = () => {
           isDeleting={annotations.remove.isPending}
         />
       )}
-      <AnnotationMobileAction
-        selection={selection}
-        onSubmit={handleAddAnnotation}
-        isSubmitting={annotations.create.isPending}
-        open={isAnnotationSheetOpen}
-        onOpenChange={setIsAnnotationSheetOpen}
-      />
       {isLyricsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-2 pb-2 sm:items-center sm:px-4 sm:pb-0">
           <div className="flex max-h-[90dvh] w-full max-w-3xl flex-col rounded-xl border border-border bg-card p-4 shadow-2xl sm:rounded-2xl sm:p-6">
