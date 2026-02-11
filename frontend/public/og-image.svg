@@ -1,12 +1,146 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#f7f0e8"/>
-      <stop offset="100%" style="stop-color:#ede4d8"/>
+      <stop offset="0%" stop-color="#f7f0e8"/>
+      <stop offset="100%" stop-color="#ede4d8"/>
+    </linearGradient>
+    <linearGradient id="icon-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dec9ab"/>
+      <stop offset="100%" stop-color="#cdb18f"/>
     </linearGradient>
   </defs>
+
+  <!-- Background -->
   <rect width="1200" height="630" fill="url(#bg)"/>
-  <text x="600" y="280" text-anchor="middle" font-family="system-ui, sans-serif" font-size="72" font-weight="bold" fill="#1a1a1a">Annotune</text>
-  <text x="600" y="360" text-anchor="middle" font-family="system-ui, sans-serif" font-size="32" fill="#666">歌唱テクニック練習ノート</text>
-  <text x="600" y="420" text-anchor="middle" font-family="system-ui, sans-serif" font-size="24" fill="#888">ビブラート・しゃくり・フォール・ブレス</text>
+
+  <!-- Decorative border -->
+  <rect x="24" y="24" width="1152" height="582" rx="24" fill="none" stroke="#e0cdb3" stroke-width="2"/>
+
+  <!-- Left section: Icon -->
+  <g transform="translate(80, 115)">
+    <!-- Icon background -->
+    <rect x="0" y="0" width="200" height="200" rx="40" fill="url(#icon-bg)" stroke="#5a321a" stroke-width="8"/>
+
+    <!-- Musical note (scaled from annotune-icon.svg) -->
+    <g transform="scale(0.35) translate(-10, -10)">
+      <path fill="#5a321a" d="
+        M173.722412,193.000793
+        C173.722916,188.335922 173.682693,184.170334 173.732178,180.005829
+        C173.857834,169.433121 178.601700,163.104614 188.936676,160.650894
+        C217.415329,153.889496 245.945633,147.345718 274.450928,140.696228
+        C285.136230,138.203644 295.792603,135.585190 306.492004,133.155563
+        C316.764832,130.822800 322.247772,135.218430 322.253845,145.756592
+        C322.281128,193.072021 322.265137,240.387497 322.280334,287.702942
+        C322.281097,290.057434 322.063934,292.233704 320.778168,294.383270
+        C309.238251,313.675781 297.960144,333.126678 286.265472,352.324127
+        C278.706451,364.732635 273.716248,366.036896 260.178314,360.482483
+        C246.987000,355.070312 239.084808,345.365265 237.829758,331.154755
+        C236.422256,315.218170 244.151382,303.517029 257.193176,295.386230
+        C269.195953,287.903229 282.277222,286.879547 295.579987,291.743195
+        C299.866058,293.310242 300.839874,292.018158 300.824799,287.914490
+        C300.728058,261.591461 300.784424,235.267899 300.745850,208.944565
+        C300.737549,203.268417 300.061737,202.719955 294.654297,203.996445
+        C263.730530,211.296310 232.847595,218.773911 201.870834,225.840622
+        C196.461472,227.074646 195.142746,229.501343 195.169693,234.715179
+        C195.366013,272.699799 194.605515,310.701599 195.506516,348.665710
+        C196.033386,370.866364 179.344025,390.450439 158.500107,395.194733
+        C144.349716,398.415558 130.877960,397.250641 119.024414,388.354492
+        C103.516594,376.715790 101.563599,355.476105 114.094116,339.438110
+        C126.359253,323.739777 149.074493,316.666504 168.052185,322.636292
+        C173.386383,324.314240 173.695877,324.128296 173.698868,318.452393
+        C173.720856,276.801788 173.717743,235.151184 173.722412,193.000793
+      z"/>
+      <!-- Pencil body -->
+      <path fill="#744427" d="
+        M335.403259,425.405640
+        C316.939758,440.488037 298.753662,455.348053 280.551239,470.187958
+        C277.592987,472.599762 274.749146,475.185883 270.796021,476.000580
+        C263.325836,477.540131 257.388641,471.703156 259.296844,464.313416
+        C266.034607,438.221039 272.898987,412.161224 279.778656,386.105774
+        C280.194427,384.531036 281.047028,383.034424 281.887115,381.614319
+        C308.512115,336.606506 335.155212,291.609467 361.808197,246.618240
+        C374.624054,224.984558 387.464813,203.365631 400.295441,181.740738
+        C403.768341,175.887482 406.238312,174.948547 412.017303,178.357620
+        C428.228088,187.920486 444.335968,197.659988 460.398285,207.470825
+        C464.826965,210.175858 465.160065,212.689545 462.105774,217.581177
+        C442.345154,249.229263 423.545898,281.455322 404.390442,313.467072
+        C383.609741,348.194855 362.865936,382.944672 342.119476,417.692902
+        C340.401276,420.570770 338.634796,423.380188 335.403259,425.405640
+        M316.029602,417.570251
+        C317.254608,416.323700 319.211090,415.630127 319.211334,412.873169
+        C313.539124,409.362274 307.692200,405.631927 301.731445,402.093384
+        C297.851379,399.790009 295.540527,400.742371 294.409546,405.181244
+        C292.158203,414.017273 290.125000,422.908813 287.976074,431.771179
+        C287.462646,433.888550 286.605042,436.145325 288.975006,437.607422
+        C291.393433,439.099396 293.032623,437.117767 294.625763,435.777649
+        C301.615295,429.898071 308.544922,423.947266 316.029602,417.570251
+      z"/>
+      <!-- Pencil tip -->
+      <path fill="#d8c9b5" d="
+        M442.698914,180.350266
+        C434.246094,175.292160 426.104950,170.421005 417.961304,165.553986
+        C412.931000,162.547668 412.150848,160.065216 415.069031,154.886658
+        C418.091248,149.523468 421.276550,144.246033 424.556610,139.035614
+        C430.443512,129.684265 441.497925,126.956093 451.127228,132.554733
+        C460.910645,138.242981 470.609863,144.078156 480.288116,149.944443
+        C489.641541,155.613861 492.639099,164.948486 487.749054,174.841721
+        C484.515198,181.384277 480.420258,187.504318 476.654205,193.779541
+        C474.559448,197.270004 471.754852,197.925858 468.222076,195.771515
+        C459.839020,190.659348 451.416260,185.612305 442.698914,180.350266
+      z"/>
+    </g>
+  </g>
+
+  <!-- Right section: Text content -->
+  <g transform="translate(340, 0)">
+    <!-- App name -->
+    <text x="0" y="200" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="80" font-weight="700" fill="#3f2a20">Annotune</text>
+
+    <!-- Catchphrase -->
+    <text x="0" y="280" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="36" font-weight="500" fill="#5a4a3a">歌詞に歌唱テクニックを書き込める</text>
+    <text x="0" y="330" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="36" font-weight="500" fill="#5a4a3a">練習ノート</text>
+
+    <!-- Annotation tags demonstration -->
+    <g transform="translate(0, 380)">
+      <!-- Vibrato tag -->
+      <rect x="0" y="0" width="120" height="44" rx="8" fill="#fef3c7" stroke="#fcd34d" stroke-width="2"/>
+      <text x="60" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#92400e">ビブラート</text>
+
+      <!-- Scoop tag -->
+      <rect x="136" y="0" width="100" height="44" rx="8" fill="#ffedd5" stroke="#fdba74" stroke-width="2"/>
+      <text x="186" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#9a3412">しゃくり</text>
+
+      <!-- Fall tag -->
+      <rect x="252" y="0" width="100" height="44" rx="8" fill="#fef9c3" stroke="#fde047" stroke-width="2"/>
+      <text x="302" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#854d0e">フォール</text>
+
+      <!-- Breath tag -->
+      <rect x="368" y="0" width="90" height="44" rx="8" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="2"/>
+      <text x="413" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#0c4a6e">ブレス</text>
+
+      <!-- Whisper tag -->
+      <rect x="474" y="0" width="110" height="44" rx="8" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="2"/>
+      <text x="529" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#6b21a8">ウィスパー</text>
+
+      <!-- Falsetto tag -->
+      <rect x="600" y="0" width="80" height="44" rx="8" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="2"/>
+      <text x="640" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#3730a3">裏声</text>
+    </g>
+
+    <!-- Sample lyrics with annotations -->
+    <g transform="translate(0, 470)">
+      <text font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="28" fill="#3f2a20">
+        <tspan x="0" y="0">あな</tspan>
+        <tspan fill="#92400e" text-decoration="underline" style="text-decoration-color:#fcd34d;text-decoration-thickness:4px">たに逢</tspan>
+        <tspan>いたくて</tspan>
+        <tspan fill="#0c4a6e" baseline-shift="super" font-size="16">v</tspan>
+        <tspan> </tspan>
+        <tspan fill="#9a3412" text-decoration="underline" style="text-decoration-color:#fdba74;text-decoration-thickness:4px">震える</tspan>
+        <tspan fill="#6b21a8" baseline-shift="super" font-size="16">~</tspan>
+      </text>
+    </g>
+  </g>
+
+  <!-- Bottom branding -->
+  <text x="1100" y="590" text-anchor="end" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="18" fill="#8f5a32">www.annotune.net</text>
 </svg>
