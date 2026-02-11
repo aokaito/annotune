@@ -10,5 +10,6 @@ new AnnotuneStack(app, 'AnnotuneStack', {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION ?? 'ap-northeast-1'
-  }
+  },
+  crossRegionReferences: true // Lambda@Edge (us-east-1) のクロスリージョン参照を有効化
 });

@@ -32,8 +32,12 @@ import {
   ViewerProtocolPolicy,
   AllowedMethods,
   CachePolicy,
-  OriginAccessIdentity
+  OriginRequestPolicy,
+  OriginAccessIdentity,
+  LambdaEdgeEventType,
+  experimental
 } from 'aws-cdk-lib/aws-cloudfront';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
@@ -273,12 +277,41 @@ export class AnnotuneStack extends Stack {
     }
     const frontendOrigin = S3BucketOrigin.withOriginAccessControl(frontendBucket);
 
+    // ---- Lambda@Edge: SNSクローラー向けOGP動的生成 ----
+    const ogpEdgeFunctionDistDir = path.join(infraDir, 'lambda-edge/ogp/dist');
+    const ogpEdgeFunction = new experimental.EdgeFunction(this, 'OgpEdgeFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset(ogpEdgeFunctionDistDir),
+      timeout: Duration.seconds(10),
+      memorySize: 128
+    });
+
+    // Lambda@EdgeにDynamoDBの読み取り権限を付与
+    lyricsTable.grantReadData(ogpEdgeFunction);
+
     const distribution = new Distribution(this, 'AnnotuneDistribution', {
       defaultBehavior: {
         origin: frontendOrigin,
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         cachePolicy: CachePolicy.CACHING_OPTIMIZED // 静的アセットを CloudFront のキャッシュに乗せる
+      },
+      additionalBehaviors: {
+        // /public/lyrics/* パスにLambda@Edgeを適用（SNSクローラー用OGP生成）
+        '/public/lyrics/*': {
+          origin: frontendOrigin,
+          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          cachePolicy: CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: OriginRequestPolicy.ALL_VIEWER, // User-Agentヘッダーを転送
+          edgeLambdas: [
+            {
+              functionVersion: ogpEdgeFunction.currentVersion,
+              eventType: LambdaEdgeEventType.ORIGIN_REQUEST
+            }
+          ]
+        }
       },
       defaultRootObject: 'index.html',
 
