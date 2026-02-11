@@ -3,7 +3,7 @@
 import clsx from 'clsx';
 import { forwardRef } from 'react';
 import { Annotation, VoiceQualityTag } from '../../types';
-import { getTagHighlightStyle, getTagLabel, getVoiceQualityLabel } from './tagColors';
+import { getTagLabel, getVoiceQualityLabel } from './tagColors';
 
 interface LyricDisplayProps {
   text: string;
@@ -55,13 +55,14 @@ const voiceQualityLegendColors: { id: VoiceQualityTag; label: string; colorClass
 const getEffectSymbol = (tag: string) => effectSymbolMap[tag] ?? '';
 const getEffectSymbolColor = (tag: string) => effectSymbolColorMap[tag] ?? 'text-slate-600 bg-slate-100';
 
-// 声質がある場合は声質の色を優先、なければエフェクトの色を使用
+// 声質がある場合は声質の色でハイライト、エフェクトのみの場合はハイライトしない
 const getAnnotationStyle = (annotation: Annotation) => {
   const voiceQuality = annotation.props?.voiceQuality;
   if (voiceQuality && voiceQualityHighlightMap[voiceQuality]) {
     return voiceQualityHighlightMap[voiceQuality];
   }
-  return getTagHighlightStyle(annotation.tag);
+  // エフェクトのみの場合はハイライトしない（記号のみ表示）
+  return '';
 };
 
 const buildSegments = (text: string, annotations: Annotation[]): Segment[] => {
@@ -202,7 +203,7 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
             onSelectAnnotation(annotation);
           }}
         >
-          <span className={clsx('rounded-sm px-1 border-b-4', style)}>{displayText}</span>
+          <span className={clsx('rounded-sm px-1', style && 'border-b-4', style)}>{displayText}</span>
           {/* エフェクトの記号のみ表示（声質は色のみ） */}
           {showTagIndicators && effectSymbol && (
             <span

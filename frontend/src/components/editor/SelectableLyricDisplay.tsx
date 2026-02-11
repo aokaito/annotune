@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import type { Annotation, AnnotationProps, VoiceQualityTag } from '../../types';
-import { getTagHighlightStyle, getTagLabel, getVoiceQualityLabel } from './tagColors';
+import { getTagLabel, getVoiceQualityLabel } from './tagColors';
 import { FloatingAnnotationMenu } from './FloatingAnnotationMenu';
 
 interface SelectableLyricDisplayProps {
@@ -64,7 +64,8 @@ const getAnnotationStyle = (annotation: Annotation) => {
   if (voiceQuality && voiceQualityHighlightMap[voiceQuality]) {
     return voiceQualityHighlightMap[voiceQuality];
   }
-  return getTagHighlightStyle(annotation.tag);
+  // エフェクトのみの場合はハイライトしない（記号のみ表示）
+  return '';
 };
 
 // 文字がどのアノテーションに属するか判定
@@ -223,7 +224,8 @@ export const SelectableLyricDisplay = ({
           <span
             key={`ann-${startI}`}
             className={clsx(
-              'relative inline cursor-pointer rounded-sm border-b-4 px-0.5 transition-all',
+              'relative inline cursor-pointer rounded-sm px-0.5 transition-all',
+              style && 'border-b-4',
               style,
               'hover:opacity-80'
             )}
