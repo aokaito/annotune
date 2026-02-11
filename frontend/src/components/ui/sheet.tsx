@@ -25,8 +25,8 @@ type SheetContentProps = ComponentPropsWithoutRef<typeof SheetPrimitive.Content>
 };
 
 const sideClasses: Record<NonNullable<SheetContentProps['side']>, string> = {
-  left: 'inset-y-0 left-0 h-full w-80 max-w-[90vw]',
-  right: 'inset-y-0 right-0 h-full w-80 max-w-[90vw]',
+  left: 'inset-y-0 left-0 h-full w-64 max-w-[75vw]',
+  right: 'inset-y-0 right-0 h-full w-64 max-w-[75vw]',
   top: 'inset-x-0 top-0 h-1/2 max-h-[90vh]',
   bottom: 'inset-x-0 bottom-0 h-auto max-h-[90vh] rounded-t-3xl'
 };

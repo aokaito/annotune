@@ -100,7 +100,7 @@ export const Header = () => {
             <SheetHeader>
               <SheetTitle>メニュー</SheetTitle>
             </SheetHeader>
-            <div className="mt-6 flex flex-col gap-3">
+            <div className="mt-3 flex flex-col gap-3">
               <SheetClose asChild>
                 <Link
                   className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-3 text-base font-semibold text-foreground transition hover:bg-muted"
