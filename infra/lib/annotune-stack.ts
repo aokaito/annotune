@@ -61,7 +61,11 @@ export class AnnotuneStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const webDomainEnv = process.env.ANNOTUNE_WEB_DOMAIN;
+    // contextからデフォルト値を取得（環境変数で上書き可能）
+    const webCertArnDefault = this.node.tryGetContext('annotune:webCertArn') as string | undefined;
+    const webDomainDefault = this.node.tryGetContext('annotune:webDomain') as string | undefined;
+
+    const webDomainEnv = process.env.ANNOTUNE_WEB_DOMAIN || webDomainDefault;
     const webDomainNames = (webDomainEnv ? webDomainEnv.split(',') : [])
       .map((name) => name.trim())
       .filter(Boolean);
@@ -266,7 +270,8 @@ export class AnnotuneStack extends Stack {
       autoDeleteObjects: true
     });
 
-    const webCertArn = process.env.ANNOTUNE_WEB_CERT_ARN;
+    // 環境変数またはcontextから証明書ARNを取得
+    const webCertArn = process.env.ANNOTUNE_WEB_CERT_ARN || webCertArnDefault;
     const webCertificate = webCertArn
       ? acm.Certificate.fromCertificateArn(this, 'AnnotuneWebCertificate', webCertArn)
       : undefined;

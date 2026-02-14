@@ -1,4 +1,7 @@
 {
   "app": "node --enable-source-maps dist/bin/annotune.js",
-  "context": {}
+  "context": {
+    "annotune:webCertArn": "arn:aws:acm:us-east-1:390403894106:certificate/fcf4e26f-9965-4af8-a6e0-9bb25eddc277",
+    "annotune:webDomain": "www.annotune.net"
+  }
 }
