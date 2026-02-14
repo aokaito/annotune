@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "npm run build:edge && tsc -p tsconfig.json",
+    "build:edge": "cd lambda-edge/ogp && npm install && npx esbuild index.ts --bundle --platform=node --target=node20 --outfile=dist/index.js --minify",
     "synth": "cdk synth",
     "deploy": "cdk deploy --all --require-approval never"
   },
