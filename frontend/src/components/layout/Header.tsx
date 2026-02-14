@@ -13,11 +13,8 @@ export const Header = () => {
   const [open, setOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const baseLoginUrl = import.meta.env.VITE_COGNITO_LOGIN_URL?.trim() || '#';
-  // Cognito Managed Login UIを日本語で表示
-  const loginHref = baseLoginUrl !== '#'
-    ? `${baseLoginUrl}${baseLoginUrl.includes('?') ? '&' : '?'}ui_locales=ja`
-    : '#';
+  // カスタムログインページを使用
+  const loginHref = '/login';
   const logoutHref = import.meta.env.VITE_COGNITO_LOGOUT_URL?.trim();
   const navigate = useNavigate();
 

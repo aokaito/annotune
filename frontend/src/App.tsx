@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { DashboardPage } from './routes/DashboardPage';
 import { EditorPage } from './routes/EditorPage';
 import { AuthCallbackPage } from './routes/AuthCallbackPage';
+import { LoginPage } from './routes/LoginPage';
 import { PublicViewPage } from './routes/PublicViewPage';
 import { ViewerPage } from './routes/ViewerPage';
 import { VersionsPage } from './routes/VersionsPage';
@@ -12,22 +13,32 @@ import { AppLayout } from './components/layout/AppLayout';
 import { DiscoverPage } from './routes/DiscoverPage';
 
 const App = () => (
-  <AppLayout>
-    <div className="mx-auto w-full max-w-screen-xl px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 md:pt-10">
-      <Suspense fallback={<p className="text-muted-foreground">読み込み中です…</p>}>
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/discover" element={<DiscoverPage />} />
-          <Route path="/editor/:docId" element={<EditorPage />} />
-          <Route path="/viewer/:docId" element={<ViewerPage />} />
-          <Route path="/public/:docId" element={<PublicViewPage />} />
-          <Route path="/account" element={<AccountSettingsPage />} />
-          <Route path="/auth/callback" element={<AuthCallbackPage />} />
-          <Route path="/versions/:docId" element={<VersionsPage />} />
-        </Routes>
-      </Suspense>
-    </div>
-  </AppLayout>
+  <Routes>
+    {/* ログインページはレイアウト外 */}
+    <Route path="/login" element={<LoginPage />} />
+    {/* その他のページはAppLayout内 */}
+    <Route
+      path="*"
+      element={
+        <AppLayout>
+          <div className="mx-auto w-full max-w-screen-xl px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 md:pt-10">
+            <Suspense fallback={<p className="text-muted-foreground">読み込み中です…</p>}>
+              <Routes>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/discover" element={<DiscoverPage />} />
+                <Route path="/editor/:docId" element={<EditorPage />} />
+                <Route path="/viewer/:docId" element={<ViewerPage />} />
+                <Route path="/public/:docId" element={<PublicViewPage />} />
+                <Route path="/account" element={<AccountSettingsPage />} />
+                <Route path="/auth/callback" element={<AuthCallbackPage />} />
+                <Route path="/versions/:docId" element={<VersionsPage />} />
+              </Routes>
+            </Suspense>
+          </div>
+        </AppLayout>
+      }
+    />
+  </Routes>
 );
 
 export default App;
