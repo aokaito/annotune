@@ -28,7 +28,7 @@ const App = () => (
                 <Route path="/discover" element={<DiscoverPage />} />
                 <Route path="/editor/:docId" element={<EditorPage />} />
                 <Route path="/viewer/:docId" element={<ViewerPage />} />
-                <Route path="/public/:docId" element={<PublicViewPage />} />
+                <Route path="/public/lyrics/:docId" element={<PublicViewPage />} />
                 <Route path="/account" element={<AccountSettingsPage />} />
                 <Route path="/auth/callback" element={<AuthCallbackPage />} />
                 <Route path="/versions/:docId" element={<VersionsPage />} />

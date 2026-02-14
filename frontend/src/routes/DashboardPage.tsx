@@ -1,9 +1,11 @@
 // ダッシュボード画面：歌詞ドキュメントの一覧表示と新規作成を担当。
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useCreateLyric, useLyricsList } from '../hooks/useLyrics';
 import { useAnnotuneApi } from '../hooks/useAnnotuneApi';
+import { useAuthStore } from '../store/auth';
+import { ApiError } from '../api/client';
 import type { LyricDocument } from '../types';
 
 type FormValues = {
@@ -80,11 +82,20 @@ const CreateLyricForm = ({ onClose }: { onClose(): void }) => {
 };
 
 export const DashboardPage = () => {
-  const { data: lyrics, isLoading } = useLyricsList();
+  const { data: lyrics, isLoading, error } = useLyricsList();
   const { mode, isAuthenticated } = useAnnotuneApi();
+  const signOut = useAuthStore((state) => state.signOut);
   const [open, setOpen] = useState(false);
-  const loginHref = import.meta.env.VITE_COGNITO_LOGIN_URL?.trim() || '#';
+  const loginHref = '/login';
   const requiresSignIn = mode === 'http' && !isAuthenticated;
+
+  // 401エラー（認証切れ）の場合は自動サインアウト
+  const isAuthError = error instanceof ApiError && error.status === 401;
+  useEffect(() => {
+    if (isAuthError) {
+      signOut();
+    }
+  }, [isAuthError, signOut]);
 
   return (
     // 一覧・ホルダー・モーダルを段組みで構成
@@ -114,23 +125,38 @@ export const DashboardPage = () => {
       {requiresSignIn && (
         <div className="rounded-lg border border-dashed border-border bg-card/80 p-10 text-center text-muted-foreground">
           <p className="mb-4">歌詞ノートを利用するにはサインインしてください。</p>
-          <a
+          <Link
             className="inline-flex min-h-10 items-center rounded-md bg-secondary px-4 text-sm font-semibold text-secondary-foreground transition hover:bg-secondary/90"
-            href={loginHref}
+            to={loginHref}
           >
             サインインページへ移動
-          </a>
+          </Link>
         </div>
       )}
       {isLoading && !requiresSignIn && (
         <p className="text-muted-foreground">歌詞一覧を読み込み中です…</p>
       )}
-      {lyrics && lyrics.length === 0 && !requiresSignIn && (
+      {error && !requiresSignIn && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+          <p className="mb-4 text-red-700">
+            {isAuthError
+              ? 'セッションの有効期限が切れました。再度サインインしてください。'
+              : 'データの取得に失敗しました。しばらくしてから再度お試しください。'}
+          </p>
+          <Link
+            to={loginHref}
+            className="inline-flex min-h-10 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+          >
+            サインインページへ
+          </Link>
+        </div>
+      )}
+      {!error && lyrics && lyrics.length === 0 && !requiresSignIn && (
         <div className="rounded-lg border border-dashed border-border bg-card/80 p-10 text-center text-muted-foreground">
           <p>まだ歌詞ドキュメントがありません。右上のボタンから作成しましょう。</p>
         </div>
       )}
-      {lyrics && lyrics.length > 0 && !requiresSignIn && (
+      {!error && lyrics && lyrics.length > 0 && !requiresSignIn && (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {lyrics.map((lyric: LyricDocument) => (
             <li

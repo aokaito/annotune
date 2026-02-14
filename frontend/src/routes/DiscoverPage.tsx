@@ -142,7 +142,7 @@ export const DiscoverPage = () => {
                 {lyric.text}
               </p>
               <Link
-                to={`/public/${lyric.docId}`}
+                to={`/public/lyrics/${lyric.docId}`}
                 className="mt-auto min-h-10 flex items-center justify-center rounded-lg border border-border text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground sm:min-h-11"
               >
                 表示する
