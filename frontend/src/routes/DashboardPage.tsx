@@ -143,6 +143,9 @@ export const DashboardPage = () => {
               ? 'セッションの有効期限が切れました。再度サインインしてください。'
               : 'データの取得に失敗しました。しばらくしてから再度お試しください。'}
           </p>
+          <p className="mb-4 text-xs text-red-500">
+            {error instanceof Error ? error.message : String(error)}
+          </p>
           <Link
             to={loginHref}
             className="inline-flex min-h-10 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
