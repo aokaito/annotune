@@ -1,7 +1,7 @@
 // NOTE: 共通レイアウトへ移行しレスポンシブ余白を集約。代替案: ルートごとに container クラスを付けるが重複を避けるためここで統一
 import { Route, Routes } from 'react-router-dom';
 import { Suspense } from 'react';
-import { DashboardPage } from './routes/DashboardPage';
+import { HomePage } from './routes/HomePage';
 import { EditorPage } from './routes/EditorPage';
 import { AuthCallbackPage } from './routes/AuthCallbackPage';
 import { LoginPage } from './routes/LoginPage';
@@ -24,7 +24,7 @@ const App = () => (
           <div className="mx-auto w-full max-w-screen-xl px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 md:pt-10">
             <Suspense fallback={<p className="text-muted-foreground">読み込み中です…</p>}>
               <Routes>
-                <Route path="/" element={<DashboardPage />} />
+                <Route path="/" element={<HomePage />} />
                 <Route path="/discover" element={<DiscoverPage />} />
                 <Route path="/editor/:docId" element={<EditorPage />} />
                 <Route path="/viewer/:docId" element={<ViewerPage />} />
