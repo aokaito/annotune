@@ -2,6 +2,12 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
+    <!-- amazon-cognito-identity-js が Node.js の global を参照するためのポリフィル -->
+    <script>
+      if (typeof global === 'undefined') {
+        window.global = window;
+      }
+    </script>
     <!-- NOTE: モバイルの表示崩れ抑止と安全領域対応のために viewport / PWA メタを追加。代替案: react-helmet で動的に挿入しても良いが、初期描画優先でここに記載 -->
      <!--メモ-->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
