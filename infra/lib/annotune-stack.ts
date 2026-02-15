@@ -76,11 +76,17 @@ export class AnnotuneStack extends Stack {
     const oauthCallbackUrls =
       oauthCallbackUrlsEnv && oauthCallbackUrlsEnv.trim().length > 0
         ? oauthCallbackUrlsEnv.split(',').map((url) => url.trim()).filter(Boolean)
-        : effectiveDomainNames.map((domain) => `https://${domain}/auth/callback`);
+        : [
+            ...effectiveDomainNames.map((domain) => `https://${domain}/auth/callback`),
+            'http://localhost:5173/auth/callback'
+          ];
     const oauthLogoutUrls =
       oauthLogoutUrlsEnv && oauthLogoutUrlsEnv.trim().length > 0
         ? oauthLogoutUrlsEnv.split(',').map((url) => url.trim()).filter(Boolean)
-        : effectiveDomainNames.map((domain) => `https://${domain}/`);
+        : [
+            ...effectiveDomainNames.map((domain) => `https://${domain}/`),
+            'http://localhost:5173/'
+          ];
 
     // ---- DynamoDB テーブル定義 ----
     const lyricsTable = new Table(this, 'LyricsTable', {
