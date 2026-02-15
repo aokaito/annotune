@@ -14,7 +14,9 @@ const normalizeBaseUrl = (value: string): string | undefined => {
   for (const candidate of candidates) {
     try {
       const parsed = new URL(candidate);
-      return `${parsed.protocol}//${parsed.host}/`;
+      // パス部分（/prod など）を保持する
+      const pathname = parsed.pathname.endsWith('/') ? parsed.pathname : `${parsed.pathname}/`;
+      return `${parsed.protocol}//${parsed.host}${pathname}`;
     } catch {
       // noop
     }
