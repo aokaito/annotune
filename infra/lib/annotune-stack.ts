@@ -190,7 +190,8 @@ export class AnnotuneStack extends Stack {
     const authorizer = new HttpUserPoolAuthorizer('AnnotuneAuthorizer', userPool, {
       userPoolClients: [userPoolClient]
     });
-    const authorizationScopes = ['openid', 'email', 'profile'];
+    // ID Token にはスコープクレームが含まれないため、authorizationScopes は設定しない
+    // JWT Authorizer は Audience と Issuer のみを検証する
 
     // ---- API Gateway ----
     const httpApi = new HttpApi(this, 'AnnotuneHttpApi', {
@@ -251,8 +252,7 @@ export class AnnotuneStack extends Stack {
         path: route.path,
         methods: [route.method],
         integration,
-        authorizer,
-        authorizationScopes
+        authorizer
       });
     });
 
