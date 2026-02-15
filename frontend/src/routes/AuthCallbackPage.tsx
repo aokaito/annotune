@@ -36,31 +36,39 @@ export const AuthCallbackPage = () => {
     const params = new URLSearchParams(location.hash.replace(/^#/, ''));
     const idToken = params.get('id_token');
 
-    if (idToken) {
-      const payload = decodeJwt<IdTokenPayload>(idToken);
-      const accessToken = params.get('access_token');
-      const expiresIn = params.get('expires_in');
-      const userId =
-        payload?.sub ?? payload?.['cognito:username'] ?? payload?.email ?? 'current-user';
-      const storedDisplayName = getStoredDisplayName(userId);
-      const displayName =
-        storedDisplayName ??
-        params.get('name') ??
-        payload?.name ??
-        payload?.preferred_username ??
-        payload?.['cognito:username'] ??
-        payload?.email ??
-        'Vocalist';
-      const expiresAt = expiresIn ? Date.now() + Number(expiresIn) * 1000 : null;
-
-      setAuthenticated({
-        userId,
-        displayName,
-        idToken,
-        accessToken,
-        expiresAt
-      });
+    if (!idToken) {
+      console.error(
+        '認証エラー: id_token が取得できませんでした。Cognito の response_type 設定を確認してください。',
+        { hash: location.hash, params: Object.fromEntries(params.entries()) }
+      );
+      navigate('/', { replace: true });
+      return;
     }
+
+    const payload = decodeJwt<IdTokenPayload>(idToken);
+    const accessToken = params.get('access_token');
+    const expiresIn = params.get('expires_in');
+    const userId =
+      payload?.sub ?? payload?.['cognito:username'] ?? payload?.email ?? 'current-user';
+    const storedDisplayName = getStoredDisplayName(userId);
+    const displayName =
+      storedDisplayName ??
+      params.get('name') ??
+      payload?.name ??
+      payload?.preferred_username ??
+      payload?.['cognito:username'] ??
+      payload?.email ??
+      'Vocalist';
+    const expiresAt = expiresIn ? Date.now() + Number(expiresIn) * 1000 : null;
+
+    setAuthenticated({
+      userId,
+      displayName,
+      idToken,
+      accessToken,
+      expiresAt
+    });
+
     // コールバック完了後はトップページへ戻す
     navigate('/', { replace: true });
   }, [location.hash, navigate, setAuthenticated]);
