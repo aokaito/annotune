@@ -33,7 +33,7 @@ export const useAnnotuneApi = () => {
   const isAuthenticated = useAuthStore((state: AuthState) => state.isAuthenticated);
   const expiresAt = useAuthStore((state: AuthState) => state.expiresAt);
   const signOut = useAuthStore((state: AuthState) => state.signOut);
-  const idToken = useAuthStore((state: AuthState) => state.idToken);
+  const accessToken = useAuthStore((state: AuthState) => state.accessToken);
 
   const mode = normalizedBase ? 'http' : 'mock';
 
@@ -53,11 +53,11 @@ export const useAnnotuneApi = () => {
       : normalizedBase;
     return createHttpApi({
       baseUrl: normalized,
-      // API Gateway JWT authorizer は idToken を期待する（openid, email, profile スコープが必要）
-      getIdToken: () => useAuthStore.getState().idToken,
+      // API Gateway JWT authorizer はスコープ検証を行うため accessToken を使用
+      getIdToken: () => useAuthStore.getState().accessToken,
       getExpiresAt: () => useAuthStore.getState().expiresAt
     });
-  }, [idToken, normalizedBase]);
+  }, [accessToken, normalizedBase]);
 
   return {
     api,
