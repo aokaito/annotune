@@ -174,7 +174,12 @@ export class AnnotuneStack extends Stack {
         LYRICS_PUBLIC_STATUS_INDEX_NAME: 'publicStatus-index',
         ANNOTATIONS_TABLE_NAME: annotationsTable.tableName,
         VERSIONS_TABLE_NAME: versionsTable.tableName,
-        ALLOWED_ORIGIN: `https://${effectiveDomainNames[0]}`
+        // 本番ドメインとローカル開発用オリジンをカンマ区切りで設定
+        ALLOWED_ORIGIN: [
+          ...effectiveDomainNames.map((d) => `https://${d}`),
+          'http://localhost:5173',
+          'http://localhost:3000'
+        ].join(',')
       }
     });
 

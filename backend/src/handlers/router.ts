@@ -14,7 +14,7 @@ import {
   updateLyricHandler
 } from './lyrics';
 import { getPublicLyricHandler, listPublicLyricsHandler } from './public';
-import { jsonResponse } from '../utils/http';
+import { jsonResponse, getCorsHeaders } from '../utils/http';
 
 type AsyncHandler = (event: APIGatewayProxyEventV2) => Promise<APIGatewayProxyResultV2>;
 
@@ -34,16 +34,37 @@ const routeHandlers: Record<string, AsyncHandler> = {
   'GET /v1/public/lyrics/{docId}': getPublicLyricHandler
 };
 
+// レスポンスに CORS ヘッダーを追加するラッパー
+const withCors = (
+  response: APIGatewayProxyResultV2,
+  requestOrigin?: string
+): APIGatewayProxyResultV2 => {
+  // APIGatewayProxyResultV2 は string の場合もあるため、オブジェクトかどうかをチェック
+  if (typeof response === 'string') {
+    return response;
+  }
+  const corsHeaders = getCorsHeaders(requestOrigin);
+  return {
+    ...response,
+    headers: {
+      ...corsHeaders,
+      ...(response.headers ?? {})
+    }
+  };
+};
+
 export const handler = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2> => {
   const routeKey = event.requestContext.routeKey;
+  const requestOrigin = event.headers?.origin;
   const target = routeHandlers[routeKey];
 
   if (!target) {
     // 実装されていないルートの場合は 404 を返却
-    return jsonResponse(404, { message: `Route ${routeKey} not implemented` });
+    return withCors(jsonResponse(404, { message: `Route ${routeKey} not implemented` }), requestOrigin);
   }
 
-  return target(event);
+  const response = await target(event);
+  return withCors(response, requestOrigin);
 };

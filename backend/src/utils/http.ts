@@ -3,21 +3,53 @@ import { ZodError } from 'zod';
 import { logger } from './logger';
 import { NotFoundError } from './errors';
 
-export const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyResultV2 => {
-  const allowedOrigin = process.env.ALLOWED_ORIGIN;
-  if (!allowedOrigin) {
+// 許可するオリジンのリスト（環境変数から取得、カンマ区切り）
+export const getAllowedOrigins = (): string[] => {
+  const envValue = process.env.ALLOWED_ORIGIN;
+  if (!envValue) {
     throw new Error('ALLOWED_ORIGIN environment variable is required');
   }
+  return envValue.split(',').map((origin) => origin.trim());
+};
+
+// リクエストの Origin が許可リストに含まれているか確認し、CORS 用のオリジンを返す
+export const getCorsOrigin = (requestOrigin?: string): string => {
+  const allowedOrigins = getAllowedOrigins();
+
+  if (allowedOrigins.includes('*')) {
+    return '*';
+  }
+  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+    return requestOrigin;
+  }
+  // 許可リストにない場合はデフォルト（最初のオリジン）を返す
+  return allowedOrigins[0];
+};
+
+// CORS ヘッダーを生成
+export const getCorsHeaders = (requestOrigin?: string): Record<string, string> => {
+  const responseOrigin = getCorsOrigin(requestOrigin);
+  const headers: Record<string, string> = {
+    'Access-Control-Allow-Origin': responseOrigin
+  };
+  if (responseOrigin !== '*') {
+    headers['Access-Control-Allow-Credentials'] = 'true';
+  }
+  return headers;
+};
+
+export const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyResultV2 => {
+  const allowedOrigin = getAllowedOrigins()[0];
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': allowedOrigin
   };
-  
+
   // Access-Control-Allow-Credentials は、Origin が '*' でない場合のみ設定可能
   if (allowedOrigin !== '*') {
     headers['Access-Control-Allow-Credentials'] = 'true';
   }
-  
+
   return {
     statusCode,
     headers,
