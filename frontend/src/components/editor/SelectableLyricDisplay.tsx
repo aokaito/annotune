@@ -105,7 +105,6 @@ export const SelectableLyricDisplay = ({
     startIndex: null,
     endIndex: null
   });
-  const [clickPosition, setClickPosition] = useState<{ x: number; y: number } | null>(null);
 
   // 選択範囲を計算（開始・終了の順序を正規化）
   const selectionRange = useMemo(() => {
@@ -131,7 +130,6 @@ export const SelectableLyricDisplay = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setSelectionState({ mode: 'idle', startIndex: null, endIndex: null });
-        setClickPosition(null);
       }
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -139,7 +137,7 @@ export const SelectableLyricDisplay = ({
   }, []);
 
   // 文字クリック時の処理
-  const handleCharClick = (index: number, annotation: Annotation | null, event?: React.MouseEvent) => {
+  const handleCharClick = (index: number, annotation: Annotation | null) => {
     // 既存アノテーションをクリックした場合は編集ダイアログを開く
     if (annotation && selectionState.mode === 'idle' && onSelectAnnotation) {
       onSelectAnnotation(annotation);
@@ -150,10 +148,7 @@ export const SelectableLyricDisplay = ({
       // 選択開始
       setSelectionState({ mode: 'selecting', startIndex: index, endIndex: null });
     } else if (selectionState.mode === 'selecting') {
-      // 選択確定 - クリック位置を保存
-      if (event) {
-        setClickPosition({ x: event.clientX, y: event.clientY });
-      }
+      // 選択確定
       setSelectionState((prev) => ({
         mode: 'selected',
         startIndex: prev.startIndex,
@@ -172,13 +167,11 @@ export const SelectableLyricDisplay = ({
   }) => {
     await onAddAnnotation(payload);
     setSelectionState({ mode: 'idle', startIndex: null, endIndex: null });
-    setClickPosition(null);
   };
 
   // 選択キャンセル
   const handleCancel = () => {
     setSelectionState({ mode: 'idle', startIndex: null, endIndex: null });
-    setClickPosition(null);
   };
 
   // 声質が使われているかチェック
@@ -247,7 +240,7 @@ export const SelectableLyricDisplay = ({
                   onClick={(e) => {
                     if (selectionState.mode !== 'idle') {
                       e.stopPropagation();
-                      handleCharClick(charIndex, null, e);
+                      handleCharClick(charIndex, null);
                     }
                   }}
                   className={clsx(
@@ -302,7 +295,7 @@ export const SelectableLyricDisplay = ({
         <span
           key={`char-${charIndex}`}
           data-char-index={charIndex}
-          onClick={(e) => handleCharClick(charIndex, null, e)}
+          onClick={() => handleCharClick(charIndex, null)}
           className={charClassName}
         >
           {char}
@@ -336,7 +329,7 @@ export const SelectableLyricDisplay = ({
           >
             {selectionState.mode === 'idle' && '歌詞をタップして選択開始'}
             {selectionState.mode === 'selecting' && '終了位置をタップしてください'}
-            {selectionState.mode === 'selected' && '右のパレットからアノテーションを追加'}
+            {selectionState.mode === 'selected' && 'アノテーションを追加してください'}
           </span>
           {selectionState.mode !== 'idle' && (
             <button
@@ -356,15 +349,15 @@ export const SelectableLyricDisplay = ({
         <div className="text-base leading-loose sm:text-lg">{renderCharacters()}</div>
       </div>
 
-      {/* フローティングメニュー */}
-      {selectionState.mode === 'selected' && selectionRange && (
+      {/* アノテーション追加モーダル */}
+      {selectionRange && (
         <FloatingAnnotationMenu
           selection={{
             start: selectionRange.start,
             end: selectionRange.end,
             text: text.slice(selectionRange.start, selectionRange.end)
           }}
-          clickPosition={clickPosition}
+          open={selectionState.mode === 'selected'}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isSubmitting={isSubmitting}
