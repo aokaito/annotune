@@ -1,49 +1,49 @@
 // アノテーションタグごとの配色を定義し、表示用クラスを返す。
 import type { AnnotationTag, EffectTag, VoiceQualityTag } from '../../types';
 
-// エフェクト用の色パレット
+// エフェクト用の色パレット（ダークテーマ対応）
 export const effectPalette: Record<EffectTag, string> = {
-  vibrato: 'bg-amber-100 text-amber-900 border-amber-300',
-  scoop: 'bg-orange-100 text-orange-900 border-orange-300',
-  fall: 'bg-yellow-100 text-yellow-900 border-yellow-300',
-  breath: 'bg-sky-100 text-sky-900 border-sky-300'
+  vibrato: 'bg-amber-500/20 text-amber-300 border-amber-500/50',
+  scoop: 'bg-orange-500/20 text-orange-300 border-orange-500/50',
+  fall: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/50',
+  breath: 'bg-sky-500/20 text-sky-300 border-sky-500/50'
 };
 
-// 声質用の色パレット
+// 声質用の色パレット（ダークテーマ対応）
 export const voiceQualityPalette: Record<VoiceQualityTag, string> = {
-  whisper: 'bg-purple-100 text-purple-900 border-purple-300',
-  edge: 'bg-rose-100 text-rose-900 border-rose-300',
-  falsetto: 'bg-indigo-100 text-indigo-900 border-indigo-300'
+  whisper: 'bg-purple-500/20 text-purple-300 border-purple-500/50',
+  edge: 'bg-rose-500/20 text-rose-300 border-rose-500/50',
+  falsetto: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50'
 };
 
 // 汎用タグパレット（後方互換性のため）
 export const tagPalette: Record<AnnotationTag, string> = {
   ...effectPalette,
   ...voiceQualityPalette,
-  comment: 'bg-slate-100 text-slate-800 border-slate-300'
+  comment: 'bg-stone-500/20 text-stone-300 border-stone-500/50'
 };
 
 export const getTagStyle = (tag: AnnotationTag) =>
   tagPalette[tag] ?? 'bg-slate-100 text-slate-800 border-slate-300';
 
-// ハイライト用パレット
+// ハイライト用パレット（ダークテーマ対応）
 const effectHighlightPalette: Record<EffectTag, string> = {
-  vibrato: 'bg-amber-100 text-amber-950 border-amber-500',
-  scoop: 'bg-orange-100 text-orange-950 border-orange-500',
-  fall: 'bg-yellow-100 text-yellow-950 border-yellow-500',
-  breath: 'bg-sky-100 text-sky-950 border-sky-500'
+  vibrato: 'bg-amber-500/30 text-amber-200 border-amber-400',
+  scoop: 'bg-orange-500/30 text-orange-200 border-orange-400',
+  fall: 'bg-yellow-500/30 text-yellow-200 border-yellow-400',
+  breath: 'bg-sky-500/30 text-sky-200 border-sky-400'
 };
 
 const voiceQualityHighlightPalette: Record<VoiceQualityTag, string> = {
-  whisper: 'bg-purple-100 text-purple-950 border-purple-500',
-  edge: 'bg-rose-100 text-rose-950 border-rose-500',
-  falsetto: 'bg-indigo-100 text-indigo-950 border-indigo-500'
+  whisper: 'bg-purple-500/30 text-purple-200 border-purple-400',
+  edge: 'bg-rose-500/30 text-rose-200 border-rose-400',
+  falsetto: 'bg-indigo-500/30 text-indigo-200 border-indigo-400'
 };
 
 const tagHighlightPalette: Record<AnnotationTag, string> = {
   ...effectHighlightPalette,
   ...voiceQualityHighlightPalette,
-  comment: 'bg-slate-100 text-slate-900 border-slate-500'
+  comment: 'bg-stone-500/30 text-stone-200 border-stone-400'
 };
 
 export const getTagHighlightStyle = (tag: AnnotationTag) =>

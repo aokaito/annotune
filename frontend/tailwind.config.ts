@@ -6,26 +6,49 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: '#f7f0e8',
-        foreground: '#3f2a20',
+        // ベースカラー（ダーク）
+        background: '#111010',        // メイン背景
+        surface: '#1C1917',           // カード・サーフェス
+        elevated: '#292524',          // 入力フィールド・ホバー背景
+        foreground: '#F5F5F4',        // メインテキスト
+
         muted: {
-          DEFAULT: '#efe2d1',
-          foreground: '#725843'
+          DEFAULT: '#292524',
+          foreground: '#A8A29E'       // サブテキスト
         },
+
+        // アクセントカラー（アンバー）
         primary: {
-          DEFAULT: '#8f5a32',
-          foreground: '#fdf8f3'
+          DEFAULT: '#F59E0B',         // メインアクセント
+          hover: '#D97706',           // ホバー状態
+          foreground: '#111010'       // ボタン上のテキスト
         },
+
         secondary: {
-          DEFAULT: '#c69a6d',
-          foreground: '#3f2a20'
+          DEFAULT: '#44403C',
+          foreground: '#F5F5F4'
         },
+
         accent: {
-          DEFAULT: '#b08968',
-          foreground: '#fdf8f3'
+          DEFAULT: '#FBBF24',         // 明るいアクセント
+          foreground: '#111010'
         },
-        card: '#fffaf4',
-        border: '#e0cdb3'
+
+        // セマンティックカラー
+        card: '#1C1917',
+        border: '#44403C',
+        input: '#292524',
+        ring: '#F59E0B',
+
+        // フィードバックカラー
+        destructive: {
+          DEFAULT: '#EF4444',
+          foreground: '#F5F5F4'
+        },
+        success: {
+          DEFAULT: '#22C55E',
+          foreground: '#111010'
+        }
       }
     }
   },

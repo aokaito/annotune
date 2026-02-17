@@ -146,7 +146,7 @@ export const AnnotationEditDialog = ({ annotation, onClose, onSave, onDelete, is
             {onDelete && (
               <button
                 type="button"
-                className="order-3 min-h-11 rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50 sm:order-1"
+                className="order-3 min-h-11 rounded-lg border border-destructive/30 px-4 py-2 text-sm font-semibold text-destructive transition hover:bg-destructive/10 disabled:opacity-50 sm:order-1"
                 onClick={async () => {
                   if (!window.confirm('このアノテーションを削除しますか？')) return;
                   await onDelete(annotation.annotationId);

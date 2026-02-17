@@ -34,26 +34,26 @@ const effectSymbolMap: Record<string, string> = {
   breath: '●'
 };
 
-// エフェクト用のシンボル色
+// エフェクト用のシンボル色（ダークテーマ対応）
 const effectSymbolColorMap: Record<string, string> = {
-  vibrato: 'text-amber-600',
-  scoop: 'text-orange-600',
-  fall: 'text-yellow-600',
-  breath: 'text-sky-600'
+  vibrato: 'text-amber-300',
+  scoop: 'text-orange-300',
+  fall: 'text-yellow-300',
+  breath: 'text-sky-300'
 };
 
-// 声質用のハイライト色
+// 声質用のハイライト色（ダークテーマ対応）
 const voiceQualityHighlightMap: Record<VoiceQualityTag, string> = {
-  whisper: 'bg-purple-100 text-purple-950',
-  edge: 'bg-rose-100 text-rose-950',
-  falsetto: 'bg-indigo-100 text-indigo-950'
+  whisper: 'bg-purple-500/30 text-purple-100',
+  edge: 'bg-rose-500/30 text-rose-100',
+  falsetto: 'bg-indigo-500/30 text-indigo-100'
 };
 
-// 声質の凡例用の色
+// 声質の凡例用の色（ダークテーマ対応）
 const voiceQualityLegendColors: { id: VoiceQualityTag; label: string; colorClass: string }[] = [
-  { id: 'whisper', label: 'ウィスパー', colorClass: 'bg-purple-200 border-purple-400' },
-  { id: 'edge', label: 'エッジ', colorClass: 'bg-rose-200 border-rose-400' },
-  { id: 'falsetto', label: '裏声', colorClass: 'bg-indigo-200 border-indigo-400' }
+  { id: 'whisper', label: 'ウィスパー', colorClass: 'bg-purple-500/30 border-purple-400' },
+  { id: 'edge', label: 'エッジ', colorClass: 'bg-rose-500/30 border-rose-400' },
+  { id: 'falsetto', label: '裏声', colorClass: 'bg-indigo-500/30 border-indigo-400' }
 ];
 
 const getEffectSymbol = (tag: string) => effectSymbolMap[tag] ?? '';
@@ -245,8 +245,8 @@ export const SelectableLyricDisplay = ({
                   }}
                   className={clsx(
                     selectionState.mode !== 'idle' && 'cursor-pointer',
-                    isCharInRange && 'bg-blue-400/60 text-blue-900',
-                    isCharStart && 'bg-blue-500 text-white rounded'
+                    isCharInRange && 'bg-primary/40 text-foreground',
+                    isCharStart && 'bg-primary text-primary-foreground rounded'
                   )}
                 >
                   {c}
@@ -280,15 +280,15 @@ export const SelectableLyricDisplay = ({
       const charClassName = clsx(
         'cursor-pointer transition-all duration-100',
         // 選択範囲内
-        isInRange && 'bg-blue-300 text-blue-900',
+        isInRange && 'bg-primary/30 text-foreground',
         // 開始位置（選択中モードで開始点のみの場合）
-        isStartChar && selectionState.mode === 'selecting' && 'bg-blue-500 text-white rounded px-0.5',
+        isStartChar && selectionState.mode === 'selecting' && 'bg-primary text-primary-foreground rounded px-0.5',
         // 開始位置（範囲選択済み）
-        isStartChar && selectionState.mode === 'selected' && 'rounded-l bg-blue-400',
+        isStartChar && selectionState.mode === 'selected' && 'rounded-l bg-primary/50',
         // 終了位置
-        isEndChar && selectionState.mode === 'selected' && 'rounded-r bg-blue-400',
+        isEndChar && selectionState.mode === 'selected' && 'rounded-r bg-primary/50',
         // ホバー
-        !isInRange && !isStartChar && 'hover:bg-blue-100'
+        !isInRange && !isStartChar && 'hover:bg-primary/10'
       );
 
       elements.push(
@@ -323,8 +323,8 @@ export const SelectableLyricDisplay = ({
             className={clsx(
               'rounded px-2 py-1 font-medium',
               selectionState.mode === 'idle' && 'bg-muted text-muted-foreground',
-              selectionState.mode === 'selecting' && 'bg-blue-100 text-blue-700',
-              selectionState.mode === 'selected' && 'bg-green-100 text-green-700'
+              selectionState.mode === 'selecting' && 'bg-primary/20 text-primary',
+              selectionState.mode === 'selected' && 'bg-success/20 text-success'
             )}
           >
             {selectionState.mode === 'idle' && '歌詞をタップして選択開始'}
@@ -335,7 +335,7 @@ export const SelectableLyricDisplay = ({
             <button
               type="button"
               onClick={handleCancel}
-              className="rounded bg-red-100 px-2 py-1 text-red-600 transition hover:bg-red-200"
+              className="rounded bg-destructive/20 px-2 py-1 text-destructive transition hover:bg-destructive/30"
             >
               キャンセル
             </button>

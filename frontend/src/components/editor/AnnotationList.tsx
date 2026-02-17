@@ -39,7 +39,7 @@ export const AnnotationList = ({ annotations, onEdit, onDelete }: AnnotationList
                 編集
               </button>
               <button
-                className="inline-flex min-h-11 items-center rounded border border-red-200 bg-card px-3 text-sm text-red-600 transition hover:bg-red-50"
+                className="inline-flex min-h-11 items-center rounded border border-destructive/30 bg-card px-3 text-sm text-destructive transition hover:bg-destructive/10"
                 onClick={() => onDelete(annotation.annotationId)}
               >
                 {/* 即削除。バックエンドでも所有者チェックあり */}

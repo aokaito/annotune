@@ -30,26 +30,26 @@ const effectSymbolMap: Record<string, string> = {
   breath: '●'
 };
 
-// エフェクト用のシンボル色
+// エフェクト用のシンボル色（ダークテーマ対応）
 const effectSymbolColorMap: Record<string, string> = {
-  vibrato: 'text-amber-600 bg-amber-100',
-  scoop: 'text-orange-600 bg-orange-100',
-  fall: 'text-yellow-600 bg-yellow-100',
-  breath: 'text-sky-600 bg-sky-100'
+  vibrato: 'text-amber-300 bg-amber-500/20',
+  scoop: 'text-orange-300 bg-orange-500/20',
+  fall: 'text-yellow-300 bg-yellow-500/20',
+  breath: 'text-sky-300 bg-sky-500/20'
 };
 
-// 声質用のハイライト色（歌詞の背景色として使用）
+// 声質用のハイライト色（歌詞の背景色として使用）（ダークテーマ対応）
 const voiceQualityHighlightMap: Record<VoiceQualityTag, string> = {
-  whisper: 'bg-purple-100 text-purple-950 border-purple-400',
-  edge: 'bg-rose-100 text-rose-950 border-rose-400',
-  falsetto: 'bg-indigo-100 text-indigo-950 border-indigo-400'
+  whisper: 'bg-purple-500/30 text-purple-100 border-purple-400',
+  edge: 'bg-rose-500/30 text-rose-100 border-rose-400',
+  falsetto: 'bg-indigo-500/30 text-indigo-100 border-indigo-400'
 };
 
-// 声質の凡例用の色
+// 声質の凡例用の色（ダークテーマ対応）
 const voiceQualityLegendColors: { id: VoiceQualityTag; label: string; colorClass: string }[] = [
-  { id: 'whisper', label: 'ウィスパー', colorClass: 'bg-purple-200 border-purple-400' },
-  { id: 'edge', label: 'エッジ', colorClass: 'bg-rose-200 border-rose-400' },
-  { id: 'falsetto', label: '裏声', colorClass: 'bg-indigo-200 border-indigo-400' }
+  { id: 'whisper', label: 'ウィスパー', colorClass: 'bg-purple-500/30 border-purple-400' },
+  { id: 'edge', label: 'エッジ', colorClass: 'bg-rose-500/30 border-rose-400' },
+  { id: 'falsetto', label: '裏声', colorClass: 'bg-indigo-500/30 border-indigo-400' }
 ];
 
 const getEffectSymbol = (tag: string) => effectSymbolMap[tag] ?? '';

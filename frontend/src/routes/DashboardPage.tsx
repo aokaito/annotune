@@ -137,13 +137,13 @@ export const DashboardPage = () => {
         <p className="text-muted-foreground">歌詞一覧を読み込み中です…</p>
       )}
       {error && !requiresSignIn && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <p className="mb-4 text-red-700">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-6 text-center">
+          <p className="mb-4 text-destructive">
             {isAuthError
               ? 'セッションの有効期限が切れました。再度サインインしてください。'
               : 'データの取得に失敗しました。しばらくしてから再度お試しください。'}
           </p>
-          <p className="mb-4 text-xs text-red-500">
+          <p className="mb-4 text-xs text-destructive/70">
             {error instanceof Error ? error.message : String(error)}
           </p>
           <Link

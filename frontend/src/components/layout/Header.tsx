@@ -173,7 +173,7 @@ export const Header = () => {
             </button>
             <button
               type="button"
-              className="w-full rounded-md border border-red-200 px-4 py-2 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
+              className="w-full rounded-md border border-destructive/30 px-4 py-2 text-left text-sm font-medium text-destructive transition hover:bg-destructive/10"
               onClick={handleSignOut}
             >
               サインアウト

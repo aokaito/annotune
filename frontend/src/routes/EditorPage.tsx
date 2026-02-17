@@ -131,7 +131,7 @@ export const EditorPage = () => {
           <button
             type="button"
             aria-label="ドキュメントを削除"
-            className="inline-flex min-h-11 items-center rounded-md border border-red-200 px-4 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+            className="inline-flex min-h-11 items-center rounded-md border border-destructive/30 px-4 text-sm font-semibold text-destructive transition hover:bg-destructive/10"
             onClick={handleDelete}
           >
             削除

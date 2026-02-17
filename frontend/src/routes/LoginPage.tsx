@@ -44,7 +44,7 @@ export const LoginPage = () => {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="w-full max-w-md rounded-xl border border-border bg-card p-8">
-          <p className="text-center text-red-600">
+          <p className="text-center text-destructive">
             認証設定が見つかりません。環境変数を確認してください。
           </p>
         </div>
@@ -305,13 +305,13 @@ export const LoginPage = () => {
         <h1 className="mb-6 text-center text-2xl font-bold text-foreground">{getTitle()}</h1>
 
         {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
             {error}
           </div>
         )}
 
         {message && (
-          <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+          <div className="mb-4 rounded-lg border border-success/30 bg-success/10 p-3 text-sm text-success">
             {message}
           </div>
         )}
