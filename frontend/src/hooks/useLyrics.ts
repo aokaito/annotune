@@ -133,7 +133,8 @@ export const useShareLyric = (docId: string) => {
   const { api } = useAnnotuneApi();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (isPublic: boolean) => api.shareLyric(docId, isPublic),
+    mutationFn: ({ isPublic, ownerName }: { isPublic: boolean; ownerName?: string }) =>
+      api.shareLyric(docId, isPublic, ownerName),
     onSuccess: (lyric: LyricDocument) => {
       // 詳細キャッシュを更新し、公開状態に応じたメッセージを表示
       queryClient.invalidateQueries({ queryKey: keys.lyric(docId) });

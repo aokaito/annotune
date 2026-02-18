@@ -15,6 +15,7 @@ import { AnnotationList } from '../components/editor/AnnotationList';
 import { AnnotationEditDialog } from '../components/editor/AnnotationEditDialog';
 import type { Annotation, AnnotationProps } from '../types';
 import { useAnnotuneApi } from '../hooks/useAnnotuneApi';
+import { useAuthStore } from '../store/auth';
 
 interface FormValues {
   title: string;
@@ -35,6 +36,7 @@ export const EditorPage = () => {
   const shareLyric = useShareLyric(docId);
   const annotations = useAnnotationMutations(docId);
   const { mode, isAuthenticated } = useAnnotuneApi();
+  const displayName = useAuthStore((state) => state.displayName);
   const requiresSignIn = mode === 'http' && !isAuthenticated;
 
   const form = useForm<FormValues>({
@@ -76,7 +78,12 @@ export const EditorPage = () => {
 
   const handleToggleShare = async () => {
     if (!lyric) return;
-    await shareLyric.mutateAsync(!lyric.isPublicView);
+    const newPublicState = !lyric.isPublicView;
+    // 公開時は現在の表示名を送信
+    await shareLyric.mutateAsync({
+      isPublic: newPublicState,
+      ownerName: newPublicState ? displayName : undefined
+    });
   };
 
   const handleAddAnnotation = async (payload: {

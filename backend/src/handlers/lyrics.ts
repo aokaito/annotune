@@ -137,8 +137,11 @@ export const shareLyricHandler = async (
       throw new HttpError(400, 'Missing docId');
     }
     const payload = shareSchema.parse(parseBody(event));
-    // 公開可否を反転し、公開する場合は現在のアカウント名でownerNameを更新
-    const ownerName = payload.isPublicView ? user.displayName : undefined;
+    // 公開可否を反転し、公開する場合はownerNameを更新
+    // リクエストに含まれるownerNameを優先、なければCognitoのdisplayNameを使用
+    const ownerName = payload.isPublicView
+      ? (payload.ownerName?.trim() || user.displayName)
+      : undefined;
     const lyric = await repository.shareLyric(docId, user.userId, payload.isPublicView, ownerName);
     return jsonResponse(200, lyric);
   } catch (error) {

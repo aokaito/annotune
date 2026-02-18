@@ -240,10 +240,10 @@ export const createHttpApi = (config: HttpApiConfig): AnnotuneApi => {
         method: 'DELETE'
       });
     },
-    async shareLyric(docId: string, isPublicView: boolean) {
+    async shareLyric(docId: string, isPublicView: boolean, ownerName?: string) {
       const data = await request<LyricResponse>(`/v1/lyrics/${docId}/share`, {
         method: 'POST',
-        body: { isPublicView }
+        body: { isPublicView, ownerName }
       });
       return toLyricDocument({ ...data, annotations: data.annotations ?? [] });
     },

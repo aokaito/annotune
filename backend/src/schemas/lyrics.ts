@@ -41,7 +41,8 @@ export const annotationSchema = z
 
 // 公開設定切り替え用スキーマ
 export const shareSchema = z.object({
-  isPublicView: z.boolean()
+  isPublicView: z.boolean(),
+  ownerName: z.string().min(1).max(100).optional()
 });
 
 // 公開歌詞一覧取得のクエリパラメータ

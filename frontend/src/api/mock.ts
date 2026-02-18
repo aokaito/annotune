@@ -191,12 +191,17 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
       db.versions.delete(docId);
     },
     // 公開／非公開の状態を切り替える
-    async shareLyric(docId, isPublicView) {
+    async shareLyric(docId, isPublicView, ownerName) {
       const existing = db.lyrics.get(docId);
       if (!existing) {
         throw new Error('Lyric not found');
       }
-      const updated = { ...existing, isPublicView, updatedAt: new Date().toISOString() };
+      const updated = {
+        ...existing,
+        isPublicView,
+        ownerName: isPublicView ? (ownerName || existing.ownerName) : existing.ownerName,
+        updatedAt: new Date().toISOString()
+      };
       db.lyrics.set(docId, updated);
       return touch(updated);
     },

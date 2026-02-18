@@ -34,7 +34,7 @@ export interface AnnotuneApi {
   }): Promise<LyricDocument[]>;
   updateLyric(docId: string, payload: UpdateLyricPayload): Promise<LyricDocument>;
   deleteLyric(docId: string): Promise<void>;
-  shareLyric(docId: string, isPublicView: boolean): Promise<LyricDocument>;
+  shareLyric(docId: string, isPublicView: boolean, ownerName?: string): Promise<LyricDocument>;
   createAnnotation(docId: string, authorId: string, payload: AnnotationPayload): Promise<Annotation>;
   updateAnnotation(
     docId: string,
