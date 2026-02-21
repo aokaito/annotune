@@ -63,6 +63,36 @@ GitHub Actions on push to `main` with path filters:
 3. CDK synth + diff (PR) or deploy (main branch)
 4. AWS OIDC authentication for deployments
 
+## MCP Servers
+
+プロジェクトルートの `.mcp.json` で以下のMCPサーバを設定済み。
+
+| サーバ | 用途 |
+|--------|------|
+| **context7** | React/Vite/CDK等の最新ドキュメントを参照 |
+| **github** | Issue・PR・ブランチ操作 |
+| **playwright** | ブラウザ操作・E2Eテストのデバッグ |
+
+### GitHub MCP セットアップ
+
+GitHub MCPサーバを使うには Personal Access Token が必要:
+
+```bash
+# ~/.zshrc または ~/.bashrc に追加
+export GITHUB_PERSONAL_ACCESS_TOKEN="ghp_xxxxxxxxxxxx"
+```
+
+必要なスコープ: `repo`, `read:org`
+
+### MCP サーバの使い方ヒント
+
+- **context7**: ライブラリ名を `use context7` と伝えると最新ドキュメントを取得
+  - 例: `TanStack Query v5のuseQueryの使い方を context7 で調べて`
+- **github**: Issue番号を指定してコンテキストを読み込める
+  - 例: `issue #42 の内容を確認して実装して`
+- **playwright**: フロントエンドdevサーバ起動後にブラウザ操作が可能
+  - 例: `localhost:5173 を開いてアノテーション追加のE2Eテストを書いて`
+
 ## Key Architecture Notes
 
 - DynamoDB tables: Lyrics, Annotations, Versions — all with GSI on `ownerId`
