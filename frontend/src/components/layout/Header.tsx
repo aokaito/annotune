@@ -87,12 +87,20 @@ export const Header = () => {
             </span>
           )}
           {mode === 'http' && !isAuthenticated && (
-            <a
-              className="inline-flex min-h-11 items-center rounded-md bg-secondary px-4 text-sm font-semibold text-secondary-foreground transition hover:bg-secondary/90"
-              href={loginHref}
-            >
-              サインイン
-            </a>
+            <>
+              <a
+                className="inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+                href={loginHref}
+              >
+                ログイン
+              </a>
+              <a
+                className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+                href={loginHref}
+              >
+                新規登録
+              </a>
+            </>
           )}
           {mode === 'http' && isAuthenticated && <div className="relative">{accountButton}</div>}
         </nav>
@@ -122,14 +130,24 @@ export const Header = () => {
                 </span>
               )}
               {mode === 'http' && !isAuthenticated && (
-                <SheetClose asChild>
-                  <a
-                    className="inline-flex w-full items-center justify-center rounded-md bg-secondary px-4 py-3 text-base font-semibold text-secondary-foreground transition hover:bg-secondary/90"
-                    href={loginHref}
-                  >
-                    サインイン
-                  </a>
-                </SheetClose>
+                <>
+                  <SheetClose asChild>
+                    <a
+                      className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-3 text-base font-semibold text-foreground transition hover:bg-muted"
+                      href={loginHref}
+                    >
+                      ログイン
+                    </a>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <a
+                      className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-3 text-base font-semibold text-primary-foreground transition hover:bg-primary/90"
+                      href={loginHref}
+                    >
+                      新規登録
+                    </a>
+                  </SheetClose>
+                </>
               )}
               {mode === 'http' && isAuthenticated && (
                 <>
