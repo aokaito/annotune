@@ -1,161 +1,268 @@
-// ランディングページ：未ログインユーザー向けのSEOコンテンツを表示
+// ランディングページ：未ログインユーザー向けに価値を伝えるページ
+// ヒーロー → 公開歌詞フィード → インタラクティブデモ → 登録CTA
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { usePublicLyricsList } from '../hooks/useLyrics';
+import { SelectableLyricDisplay } from '../components/editor/SelectableLyricDisplay';
+import { AnnotationList } from '../components/editor/AnnotationList';
+import { AnnotationEditDialog } from '../components/editor/AnnotationEditDialog';
+import { SAMPLE_LYRICS } from '../data/sampleLyrics';
+import type { Annotation, AnnotationProps, LyricDocument } from '../types';
+
+const generateDemoId = () => `demo-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 export const LandingPage = () => {
+  // ② 公開歌詞フィード
+  const { data: publicLyrics, isLoading: isLoadingFeed } = usePublicLyricsList();
+  const displayedLyrics = publicLyrics?.slice(0, 6) ?? [];
+
+  // ③ インタラクティブデモの状態管理
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [editing, setEditing] = useState<Annotation | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleAddAnnotation = async (payload: {
+    start: number;
+    end: number;
+    tag: string;
+    comment?: string;
+    props?: AnnotationProps;
+  }) => {
+    setIsSubmitting(true);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    const newAnnotation: Annotation = {
+      annotationId: generateDemoId(),
+      authorId: 'demo-user',
+      start: payload.start,
+      end: payload.end,
+      tag: payload.tag as Annotation['tag'],
+      comment: payload.comment,
+      props: payload.props,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    setAnnotations((prev) => [...prev, newAnnotation]);
+    setIsSubmitting(false);
+  };
+
+  const handleUpdateAnnotation = async (payload: {
+    annotationId: string;
+    start: number;
+    end: number;
+    tag: string;
+    comment?: string;
+    props?: AnnotationProps;
+  }) => {
+    setAnnotations((prev) =>
+      prev.map((ann) =>
+        ann.annotationId === payload.annotationId
+          ? {
+              ...ann,
+              start: payload.start,
+              end: payload.end,
+              tag: payload.tag as Annotation['tag'],
+              comment: payload.comment,
+              props: payload.props,
+              updatedAt: new Date().toISOString()
+            }
+          : ann
+      )
+    );
+    setEditing(null);
+  };
+
+  const handleDeleteAnnotation = async (annotationId: string) => {
+    setAnnotations((prev) => prev.filter((ann) => ann.annotationId !== annotationId));
+    setEditing(null);
+  };
+
   return (
     <div className="space-y-16 pb-8 sm:space-y-20 md:space-y-24">
-      {/* ヒーローセクション */}
+      {/* ① ヒーローセクション */}
       <section className="text-center">
         <h1 className="text-2xl font-bold leading-tight text-foreground sm:text-3xl md:text-4xl lg:text-5xl">
-          歌詞に歌唱テクニックを書き込める、
-          <br className="hidden sm:block" />
-          あなただけのボーカル練習ノート
+          歌唱テクニックを歌詞に刻もう
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:mt-6 sm:text-lg">
-          Annotuneは、歌詞にビブラートやしゃくりなどの歌唱テクニック記号を追加し、
-          練習メモを残せるボーカル練習支援ツールです。
+          ビブラート・しゃくり・フォールなどのテクニック記号やコメントを歌詞の好きな箇所に追加して、
+          あなただけのボーカル練習ノートを作ろう。
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 sm:mt-10 sm:flex-row sm:justify-center sm:gap-4">
           <Link
             to="/login"
             className="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:min-h-14 sm:w-auto sm:px-10 sm:text-lg"
           >
-            無料で始める
+            アカウント作成（無料）
           </Link>
-          <Link
-            to="/demo"
+          <a
+            href="#demo"
             className="inline-flex min-h-12 w-full items-center justify-center rounded-lg border border-border bg-card px-8 text-base font-semibold text-foreground shadow-sm transition hover:bg-muted sm:min-h-14 sm:w-auto sm:px-10 sm:text-lg"
           >
-            まず試してみる
-          </Link>
+            デモを試す
+          </a>
         </div>
-        <p className="mt-4 text-sm text-muted-foreground">
-          または{' '}
-          <Link to="/discover" className="font-medium text-foreground underline transition hover:text-primary">
-            公開歌詞を見る
+      </section>
+
+      {/* ② 公開歌詞フィード */}
+      <section>
+        <header className="mb-6 flex items-baseline justify-between sm:mb-8">
+          <h2 className="text-xl font-bold text-foreground sm:text-2xl md:text-3xl">
+            みんなの練習ノート
+          </h2>
+          <Link
+            to="/discover"
+            className="text-sm font-medium text-primary transition hover:text-primary/80"
+          >
+            もっと見る →
           </Link>
+        </header>
+
+        {isLoadingFeed && (
+          <div className="py-8 text-center text-sm text-muted-foreground">読み込み中...</div>
+        )}
+
+        {!isLoadingFeed && displayedLyrics.length === 0 && (
+          <div className="rounded-xl border border-dashed border-border bg-card/80 p-8 text-center text-sm text-muted-foreground">
+            まだ公開された練習ノートはありません
+          </div>
+        )}
+
+        {displayedLyrics.length > 0 && (
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+            {displayedLyrics.map((lyric: LyricDocument) => (
+              <li
+                key={lyric.docId}
+                className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm transition hover:shadow-md sm:gap-3 sm:p-5"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-base font-semibold sm:text-lg">{lyric.title}</h3>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {lyric.artist || 'アーティスト未設定'}
+                    </p>
+                    {lyric.ownerName?.trim() && (
+                      <p className="truncate text-xs text-muted-foreground">
+                        by {lyric.ownerName.trim()}
+                      </p>
+                    )}
+                  </div>
+                  <span className="shrink-0 rounded-full bg-secondary/50 px-2 py-0.5 text-[10px] font-medium text-secondary-foreground sm:px-3 sm:py-1 sm:text-xs">
+                    公開中
+                  </span>
+                </div>
+                <p className="wrap-anywhere whitespace-pre-line text-xs text-muted-foreground line-clamp-3 sm:text-sm sm:line-clamp-4">
+                  {lyric.text}
+                </p>
+                <Link
+                  to={`/public/lyrics/${lyric.docId}`}
+                  className="mt-auto flex min-h-10 items-center justify-center rounded-lg border border-border text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground sm:min-h-11"
+                >
+                  詳細を見る
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <p className="mt-6 text-center text-sm text-muted-foreground sm:mt-8">
+          <Link
+            to="/login"
+            className="font-medium text-foreground underline transition hover:text-primary"
+          >
+            アカウント登録
+          </Link>{' '}
+          して、あなたの歌詞を公開しよう →
         </p>
       </section>
 
-      {/* 機能紹介セクション */}
-      <section>
-        <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl md:text-3xl">
-          Annotuneでできること
-        </h2>
-        <ul className="mx-auto mt-8 grid max-w-4xl grid-cols-1 gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-6">
-          <li className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-xl sm:h-12 sm:w-12">
-              🎵
-            </div>
-            <h3 className="text-base font-semibold text-foreground sm:text-lg">歌唱テクニック記号</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              ビブラート・しゃくり・フォール・ブレスなどの歌唱テクニック記号を歌詞の任意の位置に追加できます。
-            </p>
-          </li>
-          <li className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-xl sm:h-12 sm:w-12">
-              💬
-            </div>
-            <h3 className="text-base font-semibold text-foreground sm:text-lg">コメント機能</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              歌詞の各箇所にコメントを追加して、練習のポイントやメモを残すことができます。
-            </p>
-          </li>
-          <li className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-xl sm:h-12 sm:w-12">
-              📜
-            </div>
-            <h3 className="text-base font-semibold text-foreground sm:text-lg">バージョン管理</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              練習ノートの履歴を保存し、過去のバージョンを確認・比較できます。
-            </p>
-          </li>
-          <li className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-xl sm:h-12 sm:w-12">
-              🔗
-            </div>
-            <h3 className="text-base font-semibold text-foreground sm:text-lg">公開・共有機能</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              練習ノートを公開して、他のユーザーと共有することができます。
-            </p>
-          </li>
-        </ul>
-      </section>
+      {/* ③ インタラクティブデモ */}
+      <section id="demo" className="scroll-mt-20 space-y-4">
+        <header className="space-y-2">
+          <h2 className="text-xl font-bold text-foreground sm:text-2xl md:text-3xl">
+            実際に操作してみよう
+          </h2>
+          <p className="text-sm text-muted-foreground sm:text-base">
+            歌詞を選択してアノテーションを追加してみてください。
+          </p>
+        </header>
 
-      {/* 使い方セクション */}
-      <section className="rounded-2xl bg-card/80 px-4 py-10 sm:px-8 sm:py-14 md:py-16">
-        <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl md:text-3xl">
-          使い方は簡単3ステップ
-        </h2>
-        <ol className="mx-auto mt-8 flex max-w-3xl flex-col gap-6 sm:mt-10 sm:flex-row sm:gap-4 md:gap-8">
-          <li className="flex flex-1 flex-col items-center text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground sm:h-14 sm:w-14 sm:text-xl">
-              1
-            </div>
-            <h3 className="mt-4 text-base font-semibold text-foreground sm:text-lg">歌詞を入力</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              練習したい曲の歌詞を入力して、ドキュメントを作成します。
-            </p>
-          </li>
-          <li className="flex flex-1 flex-col items-center text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground sm:h-14 sm:w-14 sm:text-xl">
-              2
-            </div>
-            <h3 className="mt-4 text-base font-semibold text-foreground sm:text-lg">
-              テクニック記号やコメントを追加
-            </h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              歌詞の任意の位置に歌唱テクニック記号やコメントを追加します。
-            </p>
-          </li>
-          <li className="flex flex-1 flex-col items-center text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground sm:h-14 sm:w-14 sm:text-xl">
-              3
-            </div>
-            <h3 className="mt-4 text-base font-semibold text-foreground sm:text-lg">保存して練習・共有</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              ノートを保存して練習に活用。必要に応じて公開・共有もできます。
-            </p>
-          </li>
-        </ol>
-      </section>
+        <div
+          role="alert"
+          className="flex flex-col items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm sm:flex-row sm:gap-4"
+        >
+          <p className="text-center text-amber-100 sm:text-left">
+            <span className="mr-2 font-semibold">デモモード</span>
+            これはデモです。データは保存されません。保存するにはアカウント登録が必要です。
+          </p>
+          <Link
+            to="/login"
+            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+          >
+            無料で登録
+          </Link>
+        </div>
 
-      {/* こんな方におすすめセクション */}
-      <section>
-        <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl md:text-3xl">
-          こんな方におすすめ
-        </h2>
-        <ul className="mx-auto mt-8 flex max-w-2xl flex-col gap-3 sm:mt-10 sm:gap-4">
-          <li className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-4 sm:px-6">
-            <span className="mt-0.5 text-lg text-primary">✓</span>
-            <span className="text-sm text-foreground sm:text-base">ボーカルレッスンの復習をしたい方</span>
-          </li>
-          <li className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-4 sm:px-6">
-            <span className="mt-0.5 text-lg text-primary">✓</span>
-            <span className="text-sm text-foreground sm:text-base">カラオケの上達を目指す方</span>
-          </li>
-          <li className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-4 sm:px-6">
-            <span className="mt-0.5 text-lg text-primary">✓</span>
-            <span className="text-sm text-foreground sm:text-base">歌唱テクニックを体系的に学びたい方</span>
-          </li>
-          <li className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-4 sm:px-6">
-            <span className="mt-0.5 text-lg text-primary">✓</span>
-            <span className="text-sm text-foreground sm:text-base">
-              ボイストレーナーが生徒にフィードバックを共有したい方
+        <div className="rounded-xl border border-border bg-card/80 p-4 shadow-sm sm:p-6">
+          <h3 className="mb-1 text-lg font-semibold">{SAMPLE_LYRICS.title}</h3>
+          <p className="mb-3 text-sm text-muted-foreground">{SAMPLE_LYRICS.artist}</p>
+          <p className="text-sm text-muted-foreground">
+            歌詞の文字をタップして選択し、ビブラート・しゃくり・フォール・ブレスなどのテクニック記号やコメントを追加できます。
+          </p>
+        </div>
+
+        <SelectableLyricDisplay
+          text={SAMPLE_LYRICS.text}
+          annotations={annotations}
+          onAddAnnotation={handleAddAnnotation}
+          onSelectAnnotation={(annotation) => setEditing(annotation)}
+          isSubmitting={isSubmitting}
+        />
+
+        <div className="space-y-4 rounded-xl border border-border bg-card/80 p-4 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="text-lg font-semibold sm:text-xl">アノテーション一覧</h3>
+            <span className="text-sm text-muted-foreground">
+              {annotations.length}件のアノテーション
             </span>
-          </li>
-        </ul>
-        <div className="mt-10 text-center sm:mt-12">
+          </div>
+          <AnnotationList
+            annotations={annotations}
+            onEdit={setEditing}
+            onDelete={handleDeleteAnnotation}
+          />
+        </div>
+
+        {editing && (
+          <AnnotationEditDialog
+            annotation={editing}
+            onClose={() => setEditing(null)}
+            onSave={handleUpdateAnnotation}
+            onDelete={handleDeleteAnnotation}
+            isSaving={false}
+            isDeleting={false}
+          />
+        )}
+      </section>
+
+      {/* ④ 登録CTA */}
+      <section className="rounded-2xl bg-card/80 px-4 py-10 text-center sm:px-8 sm:py-14 md:py-16">
+        <h2 className="text-xl font-bold text-foreground sm:text-2xl md:text-3xl">
+          まずは無料で始める
+        </h2>
+        <p className="mx-auto mt-4 max-w-lg text-sm text-muted-foreground sm:text-base">
+          アカウント登録は無料。歌詞を作成して、あなただけのボーカル練習ノートを始めよう。
+        </p>
+        <div className="mt-8">
           <Link
             to="/login"
             className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:min-h-14 sm:px-10 sm:text-lg"
           >
-            無料で始める
+            アカウント作成（無料）
           </Link>
         </div>
       </section>
 
-      {/* フッターセクション（AppLayoutのフッターの上に表示される追加情報） */}
+      {/* フッター */}
       <footer className="border-t border-border pt-8 text-center">
         <p className="text-lg font-semibold text-foreground">Annotune</p>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -165,8 +272,6 @@ export const LandingPage = () => {
           <Link to="/discover" className="transition hover:text-foreground">
             公開ライブラリ
           </Link>
-          {/* プライバシーポリシーページがあれば追加 */}
-          {/* <Link to="/privacy" className="transition hover:text-foreground">プライバシーポリシー</Link> */}
         </nav>
       </footer>
     </div>
