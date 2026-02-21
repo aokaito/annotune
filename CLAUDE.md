@@ -2,101 +2,128 @@
 
 ## Project Overview
 
-Annotune is a vocal practice annotation tool. Users annotate song lyrics with vocal technique notations (vibrato, scoop, fall, breath), voice quality tags (whisper, edge, falsetto), and comments. Built as a TypeScript monorepo with React frontend, Node.js Lambda backend, and AWS CDK infrastructure.
+Annotune — ボーカル練習用アノテーションツール。歌詞に対してボーカルテクニック（ビブラート、しゃくり、フォール、ブレス）、声質タグ（ウィスパー、エッジ、ファルセット）、コメントを付与できる。TypeScriptモノレポ構成。
 
 ## Monorepo Structure
 
 ```
 frontend/          # React 18 SPA (Vite, TailwindCSS, Zustand, TanStack Query)
-backend/           # Node.js 20 Lambda handlers (DynamoDB, Zod, Pino)
-infra/             # AWS CDK stacks (Cognito, DynamoDB, Lambda, API Gateway, S3+CloudFront)
-packages/common/   # Shared types and utilities
+backend/           # Node.js 20 Lambda (DynamoDB, Zod, Pino)
+infra/             # AWS CDK (Cognito, DynamoDB, Lambda, API Gateway, S3+CloudFront)
+packages/common/   # 共有型・ユーティリティ
 ```
 
 ## Commands
 
-### Root (all workspaces)
-- `npm run lint` — Lint frontend + backend
-- `npm run typecheck` — Type-check all workspaces
-- `npm run build:frontend` — Build React SPA
-- `npm run build:backend` — Build Lambda handlers
-- `npm run synth` — Synthesize CDK templates
+### ルート
+| コマンド | 説明 |
+|----------|------|
+| `npm run lint` | frontend + backend のlint |
+| `npm run typecheck` | 全ワークスペースの型チェック |
+| `npm run build:frontend` | React SPAビルド |
+| `npm run build:backend` | Lambdaハンドラビルド |
+| `npm run synth` | CDKテンプレート生成 |
 
 ### Frontend (`npm --prefix frontend run ...`)
-- `dev` — Dev server on port 5173
-- `build` — Typecheck + Vite production build
-- `test` — Unit tests (Vitest)
-- `test:e2e` — E2E tests (Playwright)
-- `lint` / `typecheck`
+`dev` / `build` / `test` / `test:e2e` / `lint` / `typecheck`
 
 ### Backend (`npm --prefix backend run ...`)
-- `build` — Compile TypeScript
-- `test` — Unit tests (Vitest)
-- `lint` / `typecheck`
+`build` / `test` / `lint` / `typecheck`
 
-### Infrastructure (`npm --prefix infra run ...`)
-- `synth` — Synthesize CloudFormation
-- `deploy` — Deploy to AWS
+### Infra (`npm --prefix infra run ...`)
+`synth` / `deploy` / `diff`
+
+---
+
+## Slash Commands
+
+プロジェクト固有のスラッシュコマンド（`.claude/commands/`）:
+
+| コマンド | 説明 |
+|----------|------|
+| `/check` | コミット前品質チェック（lint→typecheck→test を順次実行、失敗時は自動修正） |
+| `/deploy` | AWS CDKデプロイ（build→synth→diff→確認→deploy） |
+| `/pr` | 日本語PRを作成（変更分析→/check実行→gh pr create） |
+| `/new-api-endpoint` | バックエンドAPIスキャフォールド（Schema→Repository→Service→Handler→Router登録） |
+| `/agent-team` | 6エージェントチームでの開発ワークフロー実行 |
+
+---
+
+## Agent Team
+
+`/agent-team` で起動する6エージェント（`.claude/agent-team.md` で定義）:
+
+| エージェント | 役割 |
+|--------------|------|
+| **planner** | 要求分析・実装計画策定 |
+| **devils_advocate** | 批判的検証・リスク指摘（計画時＆最終チェック） |
+| **frontend_dev** | フロントエンド実装 |
+| **backend_dev** | バックエンド実装 |
+| **code_reviewer** | コードレビュー（正確性・セキュリティ・パフォーマンス・設計） |
+| **qa_engineer** | テスト計画・E2Eシナリオ作成 |
+
+標準フロー: planner → devils_advocate(計画批評) → frontend/backend_dev → code_reviewer → qa_engineer → devils_advocate(最終評価)
+
+---
+
+## Hooks
+
+`.claude/settings.json` で設定済み:
+
+- **SessionStart**: リモート環境（Claude.ai Web）でのセッション開始時に `npm install` を自動実行
+- **Notification**: 全通知を有効化
+
+---
 
 ## Code Conventions
 
-- **Language**: TypeScript (strict mode). Project documentation and UI are in Japanese.
-- **Backend pattern**: Router → Handler → Service → Repository → DynamoDB
-- **Validation**: Zod schemas in `backend/src/schemas/`
-- **Error handling**: `HttpError` class with HTTP status codes in `backend/src/utils/errors.ts`
-- **Auth**: JWT extraction from API Gateway event (`backend/src/utils/auth.ts`)
-- **Frontend state**: Zustand for auth (`store/auth.ts`), TanStack Query for server state (`hooks/useLyrics.ts`)
-- **API client**: Dual-mode — mock (in-memory) when `VITE_API_BASE_URL` is unset, otherwise HTTP client (`api/client.ts`)
-- **Components**: Radix UI primitives, TailwindCSS for styling
-- **Routing**: React Router v6 with lazy-loaded pages
-- **Shared types**: `packages/common/src/types.ts` — EffectTag, VoiceQualityTag, AnnotationTag, etc.
-- **ID generation**: nanoid via shared utility
-- **Optimistic locking**: `X-Doc-Version` header for concurrent edit protection
-- **Testing**: Vitest for unit tests, Playwright for E2E (desktop 1280x800, tablet 768x1024, mobile 375x812)
-- **ESLint + Prettier** configured in both frontend and backend
+- **Language**: TypeScript strict。ドキュメント・UIは日本語
+- **Backend**: Router → Handler → Repository → DynamoDB（Serviceはシングルトンファクトリ）
+- **Validation**: Zod (`backend/src/schemas/`)
+- **Error**: `HttpError` / `NotFoundError` (`backend/src/utils/errors.ts`)
+- **Auth**: `getAuthenticatedUser(event)` (`backend/src/utils/auth.ts`)
+- **Frontend State**: Zustand (auth), TanStack Query (server state)
+- **API Client**: `VITE_API_BASE_URL` 未設定時はモック、設定時はHTTPクライアント
+- **Components**: Radix UI + TailwindCSS
+- **Routing**: React Router v6 (lazy-loaded)
+- **Shared Types**: `packages/common/src/types.ts`
+- **ID**: nanoid
+- **Optimistic Locking**: `X-Doc-Version` ヘッダー
+- **Testing**: Vitest + Playwright E2E (1280x800 / 768x1024 / 375x812)
 
-## CI/CD
-
-GitHub Actions on push to `main` with path filters:
-1. Lint frontend + backend
-2. Test frontend + backend
-3. CDK synth + diff (PR) or deploy (main branch)
-4. AWS OIDC authentication for deployments
+---
 
 ## MCP Servers
 
-プロジェクトルートの `.mcp.json` で以下のMCPサーバを設定済み。
+`.mcp.json` で設定済み:
 
-| サーバ | 用途 |
-|--------|------|
-| **context7** | React/Vite/CDK等の最新ドキュメントを参照 |
-| **github** | Issue・PR・ブランチ操作 |
-| **playwright** | ブラウザ操作・E2Eテストのデバッグ |
+| サーバ | 用途 | 使用例 |
+|--------|------|--------|
+| **context7** | 最新ドキュメント参照 | `TanStack Queryの使い方を context7 で調べて` |
+| **github** | Issue・PR操作 | `issue #42 を確認して実装して` |
+| **playwright** | ブラウザ操作・E2Eデバッグ | `localhost:5173 でE2Eテストを書いて` |
 
 ### GitHub MCP セットアップ
 
-GitHub MCPサーバを使うには Personal Access Token が必要:
-
 ```bash
-# ~/.zshrc または ~/.bashrc に追加
-export GITHUB_PERSONAL_ACCESS_TOKEN="ghp_xxxxxxxxxxxx"
+export GITHUB_PERSONAL_ACCESS_TOKEN="ghp_xxxx"  # ~/.zshrc に追加
 ```
+必要スコープ: `repo`, `read:org`
 
-必要なスコープ: `repo`, `read:org`
+---
 
-### MCP サーバの使い方ヒント
+## CI/CD
 
-- **context7**: ライブラリ名を `use context7` と伝えると最新ドキュメントを取得
-  - 例: `TanStack Query v5のuseQueryの使い方を context7 で調べて`
-- **github**: Issue番号を指定してコンテキストを読み込める
-  - 例: `issue #42 の内容を確認して実装して`
-- **playwright**: フロントエンドdevサーバ起動後にブラウザ操作が可能
-  - 例: `localhost:5173 を開いてアノテーション追加のE2Eテストを書いて`
+GitHub Actions (`.github/workflows/`):
+- **frontend.yml**: lint → typecheck → test → build
+- **backend.yml**: lint → typecheck → test → build
+- **auto-fix.yml**: 自動修正
 
-## Key Architecture Notes
+---
 
-- DynamoDB tables: Lyrics, Annotations, Versions — all with GSI on `ownerId`
-- Point-in-time recovery (PITR) enabled
-- Cognito UserPool with Hosted UI and OAuth for authentication
-- S3 + CloudFront for SPA hosting
-- Lambda: Node.js 20, 512MB, 30s timeout
+## Architecture
+
+- **DynamoDB**: Lyrics, Annotations, Versions（全テーブル `ownerId` GSI、PITR有効）
+- **Auth**: Cognito UserPool + Hosted UI + OAuth
+- **Hosting**: S3 + CloudFront
+- **Lambda**: Node.js 20, 512MB, 30s timeout

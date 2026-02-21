@@ -15,14 +15,26 @@ export const LandingPage = () => {
           Annotuneは、歌詞にビブラートやしゃくりなどの歌唱テクニック記号を追加し、
           練習メモを残せるボーカル練習支援ツールです。
         </p>
-        <div className="mt-8 sm:mt-10">
+        <div className="mt-8 flex flex-col items-center gap-3 sm:mt-10 sm:flex-row sm:justify-center sm:gap-4">
           <Link
             to="/login"
-            className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:min-h-14 sm:px-10 sm:text-lg"
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:min-h-14 sm:w-auto sm:px-10 sm:text-lg"
           >
             無料で始める
           </Link>
+          <Link
+            to="/demo"
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-lg border border-border bg-card px-8 text-base font-semibold text-foreground shadow-sm transition hover:bg-muted sm:min-h-14 sm:w-auto sm:px-10 sm:text-lg"
+          >
+            まず試してみる
+          </Link>
         </div>
+        <p className="mt-4 text-sm text-muted-foreground">
+          または{' '}
+          <Link to="/discover" className="font-medium text-foreground underline transition hover:text-primary">
+            公開歌詞を見る
+          </Link>
+        </p>
       </section>
 
       {/* 機能紹介セクション */}

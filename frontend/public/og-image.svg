@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f7f0e8"/>
-      <stop offset="100%" stop-color="#ede4d8"/>
+      <stop offset="0%" stop-color="#111010"/>
+      <stop offset="100%" stop-color="#1C1917"/>
     </linearGradient>
-    <linearGradient id="icon-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#dec9ab"/>
-      <stop offset="100%" stop-color="#cdb18f"/>
+    <linearGradient id="amber-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
     </linearGradient>
   </defs>
 
@@ -14,16 +14,16 @@
   <rect width="1200" height="630" fill="url(#bg)"/>
 
   <!-- Decorative border -->
-  <rect x="24" y="24" width="1152" height="582" rx="24" fill="none" stroke="#e0cdb3" stroke-width="2"/>
+  <rect x="24" y="24" width="1152" height="582" rx="24" fill="none" stroke="#44403C" stroke-width="2"/>
 
   <!-- Left section: Icon -->
   <g transform="translate(80, 115)">
     <!-- Icon background -->
-    <rect x="0" y="0" width="200" height="200" rx="40" fill="url(#icon-bg)" stroke="#5a321a" stroke-width="8"/>
+    <rect x="0" y="0" width="200" height="200" rx="40" fill="#292524" stroke="#F59E0B" stroke-width="4"/>
 
-    <!-- Musical note (scaled from annotune-icon.svg) -->
+    <!-- Musical note with pencil (simplified, amber colored) -->
     <g transform="scale(0.35) translate(-10, -10)">
-      <path fill="#5a321a" d="
+      <path fill="#F59E0B" d="
         M173.722412,193.000793
         C173.722916,188.335922 173.682693,184.170334 173.732178,180.005829
         C173.857834,169.433121 178.601700,163.104614 188.936676,160.650894
@@ -51,7 +51,7 @@
         C173.720856,276.801788 173.717743,235.151184 173.722412,193.000793
       z"/>
       <!-- Pencil body -->
-      <path fill="#744427" d="
+      <path fill="#FBBF24" d="
         M335.403259,425.405640
         C316.939758,440.488037 298.753662,455.348053 280.551239,470.187958
         C277.592987,472.599762 274.749146,475.185883 270.796021,476.000580
@@ -76,7 +76,7 @@
         C301.615295,429.898071 308.544922,423.947266 316.029602,417.570251
       z"/>
       <!-- Pencil tip -->
-      <path fill="#d8c9b5" d="
+      <path fill="#F5F5F4" d="
         M442.698914,180.350266
         C434.246094,175.292160 426.104950,170.421005 417.961304,165.553986
         C412.931000,162.547668 412.150848,160.065216 415.069031,154.886658
@@ -94,53 +94,53 @@
   <!-- Right section: Text content -->
   <g transform="translate(340, 0)">
     <!-- App name -->
-    <text x="0" y="200" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="80" font-weight="700" fill="#3f2a20">Annotune</text>
+    <text x="0" y="200" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="80" font-weight="700" fill="#F5F5F4">Annotune</text>
 
     <!-- Catchphrase -->
-    <text x="0" y="280" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="36" font-weight="500" fill="#5a4a3a">歌詞に歌唱テクニックを書き込める</text>
-    <text x="0" y="330" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="36" font-weight="500" fill="#5a4a3a">練習ノート</text>
+    <text x="0" y="280" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="36" font-weight="500" fill="#A8A29E">歌詞に歌唱テクニックを書き込める</text>
+    <text x="0" y="330" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="36" font-weight="500" fill="#A8A29E">練習ノート</text>
 
-    <!-- Annotation tags demonstration -->
+    <!-- Annotation tags demonstration (dark theme colors) -->
     <g transform="translate(0, 380)">
       <!-- Vibrato tag -->
-      <rect x="0" y="0" width="120" height="44" rx="8" fill="#fef3c7" stroke="#fcd34d" stroke-width="2"/>
-      <text x="60" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#92400e">ビブラート</text>
+      <rect x="0" y="0" width="120" height="44" rx="8" fill="rgba(245,158,11,0.2)" stroke="rgba(245,158,11,0.5)" stroke-width="2"/>
+      <text x="60" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#FCD34D">ビブラート</text>
 
       <!-- Scoop tag -->
-      <rect x="136" y="0" width="100" height="44" rx="8" fill="#ffedd5" stroke="#fdba74" stroke-width="2"/>
-      <text x="186" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#9a3412">しゃくり</text>
+      <rect x="136" y="0" width="100" height="44" rx="8" fill="rgba(249,115,22,0.2)" stroke="rgba(249,115,22,0.5)" stroke-width="2"/>
+      <text x="186" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#FDBA74">しゃくり</text>
 
       <!-- Fall tag -->
-      <rect x="252" y="0" width="100" height="44" rx="8" fill="#fef9c3" stroke="#fde047" stroke-width="2"/>
-      <text x="302" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#854d0e">フォール</text>
+      <rect x="252" y="0" width="100" height="44" rx="8" fill="rgba(234,179,8,0.2)" stroke="rgba(234,179,8,0.5)" stroke-width="2"/>
+      <text x="302" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#FDE047">フォール</text>
 
       <!-- Breath tag -->
-      <rect x="368" y="0" width="90" height="44" rx="8" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="2"/>
-      <text x="413" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#0c4a6e">ブレス</text>
+      <rect x="368" y="0" width="90" height="44" rx="8" fill="rgba(14,165,233,0.2)" stroke="rgba(14,165,233,0.5)" stroke-width="2"/>
+      <text x="413" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#7DD3FC">ブレス</text>
 
       <!-- Whisper tag -->
-      <rect x="474" y="0" width="110" height="44" rx="8" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="2"/>
-      <text x="529" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#6b21a8">ウィスパー</text>
+      <rect x="474" y="0" width="110" height="44" rx="8" fill="rgba(168,85,247,0.2)" stroke="rgba(168,85,247,0.5)" stroke-width="2"/>
+      <text x="529" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#D8B4FE">ウィスパー</text>
 
       <!-- Falsetto tag -->
-      <rect x="600" y="0" width="80" height="44" rx="8" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="2"/>
-      <text x="640" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#3730a3">裏声</text>
+      <rect x="600" y="0" width="80" height="44" rx="8" fill="rgba(99,102,241,0.2)" stroke="rgba(99,102,241,0.5)" stroke-width="2"/>
+      <text x="640" y="29" text-anchor="middle" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="20" font-weight="500" fill="#A5B4FC">裏声</text>
     </g>
 
     <!-- Sample lyrics with annotations -->
     <g transform="translate(0, 470)">
-      <text font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="28" fill="#3f2a20">
+      <text font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="28" fill="#F5F5F4">
         <tspan x="0" y="0">あな</tspan>
-        <tspan fill="#92400e" text-decoration="underline" style="text-decoration-color:#fcd34d;text-decoration-thickness:4px">たに逢</tspan>
-        <tspan>いたくて</tspan>
-        <tspan fill="#0c4a6e" baseline-shift="super" font-size="16">v</tspan>
+        <tspan fill="#FCD34D" text-decoration="underline">たに逢</tspan>
+        <tspan fill="#F5F5F4">いたくて</tspan>
+        <tspan fill="#7DD3FC" baseline-shift="super" font-size="16">●</tspan>
         <tspan> </tspan>
-        <tspan fill="#9a3412" text-decoration="underline" style="text-decoration-color:#fdba74;text-decoration-thickness:4px">震える</tspan>
-        <tspan fill="#6b21a8" baseline-shift="super" font-size="16">~</tspan>
+        <tspan fill="#FDBA74" text-decoration="underline">震える</tspan>
+        <tspan fill="#FCD34D" baseline-shift="super" font-size="16">〰</tspan>
       </text>
     </g>
   </g>
 
   <!-- Bottom branding -->
-  <text x="1100" y="590" text-anchor="end" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="18" fill="#8f5a32">www.annotune.net</text>
+  <text x="1100" y="590" text-anchor="end" font-family="'Inter', 'Noto Sans JP', system-ui, sans-serif" font-size="18" fill="#F59E0B">www.annotune.net</text>
 </svg>

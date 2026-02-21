@@ -11,6 +11,7 @@ import { VersionsPage } from './routes/VersionsPage';
 import { AccountSettingsPage } from './routes/AccountSettingsPage';
 import { AppLayout } from './components/layout/AppLayout';
 import { DiscoverPage } from './routes/DiscoverPage';
+import { DemoPage } from './routes/DemoPage';
 
 const App = () => (
   <Routes>
@@ -25,6 +26,7 @@ const App = () => (
             <Suspense fallback={<p className="text-muted-foreground">読み込み中です…</p>}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
+                <Route path="/demo" element={<DemoPage />} />
                 <Route path="/discover" element={<DiscoverPage />} />
                 <Route path="/editor/:docId" element={<EditorPage />} />
                 <Route path="/viewer/:docId" element={<ViewerPage />} />

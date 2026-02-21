@@ -75,6 +75,12 @@ export const Header = () => {
           </Link>
         </div>
         <nav className="hidden items-center gap-2 md:flex">
+          <Link
+            to="/discover"
+            className="inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+          >
+            公開ライブラリ
+          </Link>
           {mode === 'mock' && (
             <span className="inline-flex min-h-11 items-center rounded-md border border-border px-4 text-sm font-semibold text-muted-foreground">
               デモモード
