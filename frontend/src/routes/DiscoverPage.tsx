@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
+import { Eye } from 'lucide-react';
 import { usePublicLyricsList } from '../hooks/useLyrics';
 import type { LyricDocument } from '../types';
 
@@ -138,14 +139,13 @@ export const DiscoverPage = () => {
                   公開中
                 </span>
               </div>
-              <p className="wrap-anywhere whitespace-pre-line text-xs text-muted-foreground line-clamp-3 sm:text-sm sm:line-clamp-4">
-                {lyric.text}
-              </p>
               <Link
                 to={`/public/lyrics/${lyric.docId}`}
-                className="mt-auto min-h-10 flex items-center justify-center rounded-lg border border-border text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground sm:min-h-11"
+                className="mt-auto inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                aria-label="表示する"
+                title="表示する"
               >
-                表示する
+                <Eye size={18} />
               </Link>
             </li>
           ))}

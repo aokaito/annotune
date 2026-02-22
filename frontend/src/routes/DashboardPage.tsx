@@ -1,6 +1,7 @@
 // ダッシュボード画面：歌詞ドキュメントの一覧表示と新規作成を担当。
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Eye, Pencil } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useCreateLyric, useLyricsList } from '../hooks/useLyrics';
 import { useAnnotuneApi } from '../hooks/useAnnotuneApi';
@@ -166,19 +167,16 @@ export const DashboardPage = () => {
               key={lyric.docId}
               className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-sm transition hover:shadow-md"
             >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                {/* タイトル・更新日・公開状態を表示 */}
+              <div className="flex items-start justify-between gap-2">
+                {/* タイトル・アーティスト・公開状態を表示 */}
                 <div className="min-w-0 space-y-1">
                   <h2 className="truncate text-lg font-semibold sm:text-xl">{lyric.title}</h2>
                   <p className="truncate text-xs text-muted-foreground sm:text-sm">
                     {lyric.artist || 'アーティスト未設定'}
                   </p>
-                  <p className="text-xs text-muted-foreground sm:text-sm">
-                    最終更新 {new Date(lyric.updatedAt).toLocaleString()}
-                  </p>
                 </div>
                 <span
-                  className={`inline-flex min-h-8 items-center whitespace-nowrap rounded-full px-3 text-xs font-medium ${
+                  className={`shrink-0 inline-flex min-h-8 items-center whitespace-nowrap rounded-full px-3 text-xs font-medium ${
                     lyric.isPublicView
                       ? 'bg-secondary text-secondary-foreground'
                       : 'bg-muted text-muted-foreground'
@@ -188,32 +186,23 @@ export const DashboardPage = () => {
                   {lyric.isPublicView ? '公開中' : '非公開'}
                 </span>
               </div>
-              <p className="wrap-anywhere whitespace-pre-line text-sm text-muted-foreground line-clamp-5">
-                {lyric.text}
-              </p>
-              <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-wrap gap-2">
-                  <Link
-                    className="inline-flex min-h-10 items-center rounded-md border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"
-                    to={`/editor/${lyric.docId}`}
-                  >
-                    {/* 詳細エディタ画面へ遷移 */}
-                    編集
-                  </Link>
-                  <Link
-                    className="inline-flex min-h-10 items-center rounded-md border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"
-                    to={`/viewer/${lyric.docId}`}
-                  >
-                    閲覧
-                  </Link>
-                  <Link
-                    className="inline-flex min-h-10 items-center rounded-md border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"
-                    to={`/versions/${lyric.docId}`}
-                  >
-                    {/* バージョン履歴画面へ遷移 */}
-                    履歴
-                  </Link>
-                </div>
+              <div className="flex gap-2">
+                <Link
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  to={`/editor/${lyric.docId}`}
+                  aria-label="編集"
+                  title="編集"
+                >
+                  <Pencil size={18} />
+                </Link>
+                <Link
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  to={`/viewer/${lyric.docId}`}
+                  aria-label="閲覧"
+                  title="閲覧"
+                >
+                  <Eye size={18} />
+                </Link>
               </div>
             </li>
           ))}

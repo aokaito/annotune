@@ -1,7 +1,8 @@
 // エディタ画面：歌詞本文の編集、注釈 CRUD、共有トグルをまとめた中核ページ。
 // NOTE: タップ選択モードでアノテーションを付与できるように改善。
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { History } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import {
   useAnnotationMutations,
@@ -123,6 +124,13 @@ export const EditorPage = () => {
           <p className="text-sm text-muted-foreground">{lyric.artist || 'アーティスト未設定'}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link
+            to={`/versions/${docId}`}
+            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border px-4 text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+          >
+            <History size={16} />
+            履歴
+          </Link>
           <button
             type="button"
             aria-label={lyric.isPublicView ? '公開リンクをオフにする' : '公開リンクをオンにする'}
