@@ -2,7 +2,6 @@
 // NOTE: ViewerPageと同じ画面仕様で表示
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { usePublicLyric } from '../hooks/useLyrics';
 import { LyricDisplay } from '../components/editor/LyricDisplay';
 import { getTagLabel } from '../components/editor/tagColors';
@@ -175,15 +174,15 @@ export const PublicViewPage = () => {
     return <p className="text-muted-foreground">このドキュメントは公開されていません。</p>;
   }
 
-  const pageTitle = `${lyric.title}${lyric.artist ? ` - ${lyric.artist}` : ''} | Annotune`;
-  const pageDescription = `${lyric.ownerName ? `${lyric.ownerName}さんの` : ''}歌唱テクニック（ビブラート・しゃくりなどの注釈付き）練習ノート`;
+  // ブラウザタブのタイトルを歌詞ページ用に更新する
+  // Googlebot 向けの <title>/<meta> は Lambda@Edge が返す HTML で対応している
+  useEffect(() => {
+    const pageTitle = `${lyric.title}${lyric.artist ? ` - ${lyric.artist}` : ''} | Annotune`;
+    document.title = pageTitle;
+    return () => { document.title = 'Annotune'; };
+  }, [lyric.title, lyric.artist]);
 
   return (
-    <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-      </Helmet>
     <article className="mx-auto w-full max-w-3xl space-y-6 rounded-2xl border border-border bg-card/90 px-4 py-6 shadow-sm sm:px-8 sm:py-8">
       <header className="space-y-1">
         <p className="text-xs uppercase tracking-wide text-secondary sm:text-sm">公開ビュー</p>
@@ -278,6 +277,5 @@ export const PublicViewPage = () => {
         </ul>
       </section>
     </article>
-    </>
   );
 };
