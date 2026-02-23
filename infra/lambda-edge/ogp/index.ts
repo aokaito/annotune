@@ -38,25 +38,28 @@ export const handler = async (event: CloudFrontRequestEvent): Promise<CloudFront
     const result = await dynamodb.send(new GetItemCommand({
       TableName: TABLE_NAME,
       Key: { docId: { S: docId } },
-      ProjectionExpression: 'title, artist, isPublicView, ownerName'
+      // text は DynamoDB 予約語のため ExpressionAttributeNames でエスケープ
+      ProjectionExpression: 'title, artist, isPublicView, ownerName, #t',
+      ExpressionAttributeNames: { '#t': 'text' }
     }));
 
     const item = result.Item;
 
     // 存在しない or 非公開の場合はフォールバックOGP
     if (!item || item.isPublicView?.BOOL !== true) {
-      return generateOgpResponse(docId, 'Annotune', '', '');
+      return generateOgpResponse(docId, 'Annotune', '', '', '');
     }
 
     const title = item.title?.S || '無題';
     const artist = item.artist?.S || '';
     const ownerName = item.ownerName?.S || '';
+    const lyricsText = item.text?.S || '';
 
-    return generateOgpResponse(docId, title, artist, ownerName);
+    return generateOgpResponse(docId, title, artist, ownerName, lyricsText);
   } catch (error) {
     console.error('DynamoDB access error:', JSON.stringify({ docId, error: String(error) }));
     // エラー時もフォールバックOGPを返す
-    return generateOgpResponse(docId, 'Annotune', '', '');
+    return generateOgpResponse(docId, 'Annotune', '', '', '');
   }
 };
 
@@ -64,7 +67,8 @@ function generateOgpResponse(
   docId: string,
   title: string,
   artist: string,
-  ownerName: string
+  ownerName: string,
+  lyricsText: string
 ): CloudFrontRequestResult {
   const isFound = title !== 'Annotune';
 
@@ -79,11 +83,22 @@ function generateOgpResponse(
   const canonicalUrl = `https://${SITE_DOMAIN}/public/lyrics/${docId}`;
   const ogImageUrl = `https://${SITE_DOMAIN}/og-image.png`;
 
+  // 歌詞本文の先頭 300 文字を Google 向けコンテンツとして含める
+  // キーワードマッチングを高めるため、曲名・アーティスト名と合わせて本文を提供する
+  const lyricsExcerpt = lyricsText.length > 300
+    ? lyricsText.slice(0, 300) + '…'
+    : lyricsText;
+
+  const lyricsSection = isFound && lyricsExcerpt
+    ? `\n  <section>\n    <h2>歌詞（一部）</h2>\n    <p>${escapeHtml(lyricsExcerpt)}</p>\n  </section>`
+    : '';
+
   const html = `<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <title>${escapeHtml(ogTitle)}</title>
+  <meta name="description" content="${escapeHtml(ogDescription)}" />
   <meta property="og:type" content="article" />
   <meta property="og:site_name" content="Annotune" />
   <meta property="og:title" content="${escapeHtml(ogTitle)}" />
@@ -98,7 +113,7 @@ function generateOgpResponse(
 </head>
 <body>
   <h1>${escapeHtml(ogTitle)}</h1>
-  <p>${escapeHtml(ogDescription)}</p>
+  <p>${escapeHtml(ogDescription)}</p>${lyricsSection}
   <p><a href="${canonicalUrl}">Annotuneで見る</a></p>
 </body>
 </html>`;
