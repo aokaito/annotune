@@ -32,12 +32,18 @@ import {
   ViewerProtocolPolicy,
   AllowedMethods,
   CachePolicy,
+  CacheCookieBehavior,
+  CacheHeaderBehavior,
+  CacheQueryStringBehavior,
   OriginRequestPolicy,
   OriginAccessIdentity,
   LambdaEdgeEventType,
   experimental
 } from 'aws-cdk-lib/aws-cloudfront';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
 import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
@@ -171,7 +177,7 @@ export class AnnotuneStack extends Stack {
       depsLockFilePath: path.join(repoRoot, 'package-lock.json'),
       bundling: {
         externalModules: ['aws-sdk'], // ランタイムに同梱されている aws-sdk をバンドル対象から除外
-        nodeModules: ['@aws-sdk/client-dynamodb', '@aws-sdk/lib-dynamodb', 'zod'],
+        nodeModules: ['@aws-sdk/client-dynamodb', '@aws-sdk/client-lambda', '@aws-sdk/lib-dynamodb', 'zod'],
         tsconfig: path.join(backendDir, 'tsconfig.json')
       },
       environment: {
@@ -306,6 +312,19 @@ export class AnnotuneStack extends Stack {
     // Lambda@EdgeにDynamoDBの読み取り権限を付与
     lyricsTable.grantReadData(ogpEdgeFunction);
 
+    // sitemap.xml 用のカスタムキャッシュポリシー（1時間 TTL）
+    // SitemapGenerator が S3 を更新後 CloudFront を無効化するため、
+    // 1時間以内に最新版が配信される
+    const sitemapCachePolicy = new CachePolicy(this, 'SitemapCachePolicy', {
+      comment: 'Annotune sitemap.xml 用 1時間 TTL',
+      defaultTtl: Duration.hours(1),
+      maxTtl: Duration.hours(1),
+      minTtl: Duration.seconds(0),
+      cookieBehavior: CacheCookieBehavior.none(),
+      headerBehavior: CacheHeaderBehavior.none(),
+      queryStringBehavior: CacheQueryStringBehavior.none()
+    });
+
     const distribution = new Distribution(this, 'AnnotuneDistribution', {
       defaultBehavior: {
         origin: frontendOrigin,
@@ -314,6 +333,13 @@ export class AnnotuneStack extends Stack {
         cachePolicy: CachePolicy.CACHING_OPTIMIZED // 静的アセットを CloudFront のキャッシュに乗せる
       },
       additionalBehaviors: {
+        // sitemap.xml: 1時間 TTL で配信（SitemapGenerator Lambda が定期更新）
+        '/sitemap.xml': {
+          origin: frontendOrigin,
+          viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          cachePolicy: sitemapCachePolicy
+        },
         // /public/lyrics/* パスにLambda@Edgeを適用（SNSクローラー用OGP生成）
         '/public/lyrics/*': {
           origin: frontendOrigin,
@@ -346,6 +372,63 @@ export class AnnotuneStack extends Stack {
         }
       ]
     });
+
+    // ---- SitemapGenerator Lambda ----
+    // EventBridge（1時間ごと）と shareLyric API からの非同期呼び出しで動作する。
+    // DynamoDB から全公開歌詞を取得し、sitemap.xml を S3 に書き込んで CloudFront を無効化する。
+    const sitemapGeneratorLambda = new NodejsFunction(this, 'SitemapGeneratorLambda', {
+      entry: path.join(infraDir, 'lambda/sitemap-generator/index.ts'),
+      runtime: Runtime.NODEJS_20_X,
+      memorySize: 256,
+      timeout: Duration.seconds(30),
+      handler: 'handler',
+      projectRoot: repoRoot,
+      depsLockFilePath: path.join(repoRoot, 'package-lock.json'),
+      bundling: {
+        externalModules: ['aws-sdk'],
+        // S3 / CloudFront / DynamoDB は Lambda ランタイムに含まれないためバンドルに含める
+        nodeModules: [
+          '@aws-sdk/client-dynamodb',
+          '@aws-sdk/client-s3',
+          '@aws-sdk/client-cloudfront'
+        ],
+        tsconfig: path.join(infraDir, 'tsconfig.json')
+      },
+      environment: {
+        LYRICS_TABLE_NAME: lyricsTable.tableName,
+        LYRICS_PUBLIC_STATUS_INDEX_NAME: 'publicStatus-index',
+        FRONTEND_BUCKET_NAME: frontendBucket.bucketName,
+        CLOUDFRONT_DISTRIBUTION_ID: distribution.distributionId
+      }
+    });
+
+    // SitemapGenerator Lambda に必要な権限を付与
+    lyricsTable.grantReadData(sitemapGeneratorLambda);
+    frontendBucket.grantPut(sitemapGeneratorLambda);
+    sitemapGeneratorLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['cloudfront:CreateInvalidation'],
+        resources: [
+          `arn:aws:cloudfront::${this.account}:distribution/${distribution.distributionId}`
+        ]
+      })
+    );
+
+    // EventBridge: 1時間ごとに自動実行
+    new events.Rule(this, 'SitemapScheduleRule', {
+      description: 'Annotune sitemap.xml を1時間ごとに再生成する',
+      schedule: events.Schedule.rate(Duration.hours(1)),
+      targets: [new targets.LambdaFunction(sitemapGeneratorLambda)]
+    });
+
+    // バックエンド Lambda から SitemapGenerator を非同期で呼び出せるよう権限を付与
+    sitemapGeneratorLambda.grantInvoke(handler);
+
+    // バックエンド Lambda に SitemapGenerator ARN を環境変数として渡す
+    handler.addEnvironment(
+      'SITEMAP_GENERATOR_LAMBDA_ARN',
+      sitemapGeneratorLambda.functionArn
+    );
 
     // ビルド済みフロントエンドを S3 に配置し、CloudFront を更新
     new BucketDeployment(this, 'AnnotuneBucketDeployment', {

@@ -1,5 +1,6 @@
 // 歌詞・アノテーション関連の Lambda ハンドラ群。
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { getAuthenticatedUser } from '../utils/auth';
 import { getLyricsRepository } from '../services/lyricsService';
 import { handleError, HttpError, jsonResponse } from '../utils/http';
@@ -9,6 +10,20 @@ import {
   shareSchema,
   updateLyricSchema
 } from '../schemas/lyrics';
+
+// SitemapGenerator Lambda を非同期で呼び出す（fire and forget）
+// 公開設定の変更後にサイトマップを即時更新するために使用する
+const lambdaClient = new LambdaClient({});
+const triggerSitemapRegeneration = (): void => {
+  const sitemapArn = process.env.SITEMAP_GENERATOR_LAMBDA_ARN;
+  if (!sitemapArn) return;
+  // InvocationType: 'Event' = 非同期呼び出し（レスポンスを待たない）
+  lambdaClient
+    .send(new InvokeCommand({ FunctionName: sitemapArn, InvocationType: 'Event' }))
+    .catch((err: unknown) => {
+      console.warn(JSON.stringify({ message: 'Failed to trigger sitemap regeneration', err: String(err) }));
+    });
+};
 
 const repository = getLyricsRepository();
 
@@ -143,6 +158,8 @@ export const shareLyricHandler = async (
       ? (payload.ownerName?.trim() || user.displayName)
       : undefined;
     const lyric = await repository.shareLyric(docId, user.userId, payload.isPublicView, ownerName);
+    // 公開設定が変わったタイミングでサイトマップを非同期で再生成する
+    triggerSitemapRegeneration();
     return jsonResponse(200, lyric);
   } catch (error) {
     return handleError(error);

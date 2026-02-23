@@ -12,5 +12,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["bin", "lib"]
+  "include": ["bin", "lib", "lambda"]
 }
