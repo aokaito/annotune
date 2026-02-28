@@ -13,7 +13,7 @@
   "dependencies": {
     "@annotune/common": "file:../packages/common",
     "@aws-sdk/client-dynamodb": "^3.619.0",
-    "@aws-sdk/client-lambda": "^3.995.0",
+    "@aws-sdk/client-lambda": "^3.999.0",
     "@aws-sdk/lib-dynamodb": "^3.619.0",
     "pino": "^9.2.0",
     "zod": "^3.23.8"

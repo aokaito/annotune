@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, DeleteCommand, GetCommand, PutCommand, QueryCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, BatchWriteCommand, DeleteCommand, GetCommand, PutCommand, QueryCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { ConditionalCheckFailedException } from '@aws-sdk/client-dynamodb';
 import { NotFoundError } from '../utils/errors';
 import { nanoid } from '@annotune/common';
@@ -158,6 +158,13 @@ export class LyricsRepository {
   }): Promise<LyricDocument[]> {
     let items: LyricDocument[];
 
+    // アイテムを正規化するヘルパー関数
+    const normalizeItem = (item: unknown): LyricDocument => {
+      const lyric = normalizeLyricRecord(item as LyricDocument);
+      const normalizedOwnerName = lyric.ownerName && lyric.ownerName !== lyric.ownerId ? lyric.ownerName : undefined;
+      return { ...lyric, ownerName: normalizedOwnerName };
+    };
+
     if (this.config.lyricsPublicStatusIndex) {
       // GSI(publicStatus-index)がある場合はQueryで高速に取得
       const queryResult = await this.client.send(
@@ -170,11 +177,29 @@ export class LyricsRepository {
           }
         })
       );
-      items = (queryResult.Items ?? []).map((item) => {
-        const lyric = normalizeLyricRecord(item as LyricDocument);
-        const normalizedOwnerName = lyric.ownerName && lyric.ownerName !== lyric.ownerId ? lyric.ownerName : undefined;
-        return { ...lyric, ownerName: normalizedOwnerName };
-      });
+      items = (queryResult.Items ?? []).map(normalizeItem);
+
+      // フォールバック: isPublicView=true かつ publicStatus属性がないレコードをScan
+      // SEO改修(cd80595)以前に公開設定されたデータの後方互換性のため
+      // TODO: データマイグレーション完了後にこのフォールバックを削除する
+      const scanResult = await this.client.send(
+        new ScanCommand({
+          TableName: this.config.lyricsTable,
+          FilterExpression: 'isPublicView = :public AND attribute_not_exists(publicStatus)',
+          ExpressionAttributeValues: {
+            ':public': true
+          }
+        })
+      );
+      const fallbackItems = (scanResult.Items ?? []).map(normalizeItem);
+
+      // 重複を除去してマージ
+      const docIds = new Set(items.map((i) => i.docId));
+      for (const item of fallbackItems) {
+        if (!docIds.has(item.docId)) {
+          items.push(item);
+        }
+      }
     } else {
       // GSIがない場合はScanでフォールバック（後方互換性のため）
       const scanResult = await this.client.send(
@@ -186,11 +211,7 @@ export class LyricsRepository {
           }
         })
       );
-      items = (scanResult.Items ?? []).map((item) => {
-        const lyric = normalizeLyricRecord(item as LyricDocument);
-        const normalizedOwnerName = lyric.ownerName && lyric.ownerName !== lyric.ownerId ? lyric.ownerName : undefined;
-        return { ...lyric, ownerName: normalizedOwnerName };
-      });
+      items = (scanResult.Items ?? []).map(normalizeItem);
     }
 
     if (!filters || (!filters.title && !filters.artist && !filters.author)) {
@@ -403,5 +424,67 @@ export class LyricsRepository {
       throw new HttpError(statusCode, message);
     }
     throw error;
+  }
+
+  // 指定ユーザーの全歌詞の ownerName を一括更新する
+  async updateOwnerNameForUser(ownerId: string, newOwnerName: string): Promise<number> {
+    // ownerId-index GSI で所有歌詞を取得
+    const lyrics = await this.listLyrics(ownerId);
+
+    if (lyrics.length === 0) {
+      return 0;
+    }
+
+    const timestamp = now();
+
+    // DynamoDB の BatchWrite は最大 25 件まで
+    const BATCH_SIZE = 25;
+    for (let i = 0; i < lyrics.length; i += BATCH_SIZE) {
+      const batch = lyrics.slice(i, i + BATCH_SIZE);
+      const writeRequests = batch.map((lyric) => ({
+        PutRequest: {
+          Item: {
+            ...lyric,
+            ownerName: newOwnerName,
+            updatedAt: timestamp,
+            // publicStatus が存在しない場合は追加（後方互換性対応）
+            publicStatus: lyric.isPublicView ? 'public' : 'private'
+          }
+        }
+      }));
+
+      let unprocessedItems = writeRequests;
+      let retryCount = 0;
+      const MAX_RETRIES = 3;
+
+      // 未処理アイテムがある場合はリトライ
+      while (unprocessedItems.length > 0 && retryCount < MAX_RETRIES) {
+        const result = await this.client.send(
+          new BatchWriteCommand({
+            RequestItems: {
+              [this.config.lyricsTable]: unprocessedItems
+            }
+          })
+        );
+
+        const remaining = result.UnprocessedItems?.[this.config.lyricsTable];
+        if (!remaining || remaining.length === 0) {
+          break;
+        }
+
+        // 未処理アイテムがある場合は指数バックオフでリトライ
+        unprocessedItems = remaining as typeof writeRequests;
+        retryCount++;
+        if (retryCount < MAX_RETRIES) {
+          await new Promise((resolve) => setTimeout(resolve, 100 * Math.pow(2, retryCount)));
+        }
+      }
+
+      if (unprocessedItems.length > 0) {
+        throw new HttpError(500, 'Failed to update all lyrics');
+      }
+    }
+
+    return lyrics.length;
   }
 }

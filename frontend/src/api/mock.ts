@@ -298,6 +298,22 @@ export const createMockApi = (ownerId: string): AnnotuneApi => {
     // 指定バージョン番号のスナップショットを取得する
     async getVersion(docId, version) {
       return (db.versions.get(docId) ?? []).find((snap) => snap.version === version);
+    },
+    // プロフィール（displayName）を更新し、所有する全歌詞の ownerName も更新する
+    async updateProfile(displayName: string) {
+      let updatedCount = 0;
+      for (const lyric of db.lyrics.values()) {
+        if (lyric.ownerId === ownerId) {
+          lyric.ownerName = displayName;
+          lyric.updatedAt = new Date().toISOString();
+          updatedCount++;
+        }
+      }
+      return {
+        message: `${updatedCount}件の歌詞の作成者名を更新しました`,
+        updatedCount,
+        displayName
+      };
     }
   };
 };

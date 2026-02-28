@@ -14,6 +14,7 @@ import {
   updateLyricHandler
 } from './lyrics';
 import { getPublicLyricHandler, listPublicLyricsHandler } from './public';
+import { updateProfileHandler } from './user';
 import { jsonResponse, getCorsHeaders } from '../utils/http';
 
 type AsyncHandler = (event: APIGatewayProxyEventV2) => Promise<APIGatewayProxyResultV2>;
@@ -31,7 +32,8 @@ const routeHandlers: Record<string, AsyncHandler> = {
   'GET /v1/lyrics/{docId}/versions': listVersionsHandler,
   'GET /v1/lyrics/{docId}/versions/{version}': getVersionHandler,
   'GET /v1/public/lyrics': listPublicLyricsHandler,
-  'GET /v1/public/lyrics/{docId}': getPublicLyricHandler
+  'GET /v1/public/lyrics/{docId}': getPublicLyricHandler,
+  'PATCH /v1/user/profile': updateProfileHandler
 };
 
 // レスポンスに CORS ヘッダーを追加するラッパー

@@ -4,7 +4,8 @@ import {
   type AnnotuneApi,
   type AnnotationPayload,
   type CreateLyricPayload,
-  type UpdateLyricPayload
+  type UpdateLyricPayload,
+  type UpdateProfileResponse
 } from './types';
 
 export interface HttpApiConfig {
@@ -15,7 +16,7 @@ export interface HttpApiConfig {
 }
 
 type RequestOptions = {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   query?: Record<string, string | number | boolean | undefined>;
   headers?: Record<string, string>;
@@ -279,6 +280,12 @@ export const createHttpApi = (config: HttpApiConfig): AnnotuneApi => {
         `/v1/lyrics/${docId}/versions/${version}`
       );
       return data ? normalizeVersions([data])[0] : undefined;
+    },
+    async updateProfile(displayName: string) {
+      return request<UpdateProfileResponse>('/v1/user/profile', {
+        method: 'PATCH',
+        body: { displayName }
+      });
     }
   };
 };

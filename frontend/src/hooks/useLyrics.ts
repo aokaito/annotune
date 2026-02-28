@@ -143,6 +143,28 @@ export const useShareLyric = (docId: string) => {
   });
 };
 
+// プロフィール（displayName）を更新し、所有する全歌詞の ownerName も一括更新
+export const useUpdateProfile = () => {
+  const { api, userId } = useAnnotuneApi();
+  const queryClient = useQueryClient();
+  const setDisplayName = useAuthStore((state: AuthState) => state.setDisplayName);
+
+  return useMutation({
+    mutationFn: (displayName: string) => api.updateProfile(displayName),
+    onSuccess: (result) => {
+      // ストアの displayName を更新
+      setDisplayName(result.displayName);
+      // 自分の歌詞一覧と公開歌詞のキャッシュを無効化
+      queryClient.invalidateQueries({ queryKey: keys.list(userId) });
+      queryClient.invalidateQueries({ queryKey: ['lyrics', 'public'] });
+      toast.success(result.message);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'アカウント名の更新に失敗しました');
+    }
+  });
+};
+
 export const useAnnotationMutations = (docId: string) => {
   const { api, userId } = useAnnotuneApi();
   const queryClient = useQueryClient();

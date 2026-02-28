@@ -142,6 +142,16 @@ export const PublicViewPage = () => {
     };
   }, [isPlaying, lineMeta, annotations]);
 
+  // ブラウザタブのタイトルを歌詞ページ用に更新する
+  // Googlebot 向けの <title>/<meta> は Lambda@Edge が返す HTML で対応している
+  // NOTE: フックは条件分岐の前に配置する必要がある（Reactフックルール）
+  useEffect(() => {
+    if (!lyric) return;
+    const pageTitle = `${lyric.title}${lyric.artist ? ` - ${lyric.artist}` : ''} | Annotune`;
+    document.title = pageTitle;
+    return () => { document.title = 'Annotune'; };
+  }, [lyric]);
+
   const handleToggle = () => {
     if (isPlaying) {
       setIsPlaying(false);
@@ -173,14 +183,6 @@ export const PublicViewPage = () => {
     // ドキュメントが存在しないか、所有者が公開を停止している場合
     return <p className="text-muted-foreground">このドキュメントは公開されていません。</p>;
   }
-
-  // ブラウザタブのタイトルを歌詞ページ用に更新する
-  // Googlebot 向けの <title>/<meta> は Lambda@Edge が返す HTML で対応している
-  useEffect(() => {
-    const pageTitle = `${lyric.title}${lyric.artist ? ` - ${lyric.artist}` : ''} | Annotune`;
-    document.title = pageTitle;
-    return () => { document.title = 'Annotune'; };
-  }, [lyric.title, lyric.artist]);
 
   return (
     <article className="mx-auto w-full max-w-3xl space-y-6 rounded-2xl border border-border bg-card/90 px-4 py-6 shadow-sm sm:px-8 sm:py-8">

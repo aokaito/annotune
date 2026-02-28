@@ -1,0 +1,23 @@
+[     165ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ https://www.annotune.net/public/lyrics/t379uup5huqv:0
+[     304ms] [ERROR] Error: Minified React error #310; visit https://reactjs.org/docs/error-decoder.html?invariant=310 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at Ot (https://www.annotune.net/assets/index-BPNsMqeW.js:38:17593)
+    at Za (https://www.annotune.net/assets/index-BPNsMqeW.js:38:20535)
+    at Object.Id [as useEffect] (https://www.annotune.net/assets/index-BPNsMqeW.js:38:20793)
+    at oe.useEffect (https://www.annotune.net/assets/index-BPNsMqeW.js:9:5880)
+    at EA (https://www.annotune.net/assets/index-BPNsMqeW.js:406:1902)
+    at _d (https://www.annotune.net/assets/index-BPNsMqeW.js:38:16998)
+    at tc (https://www.annotune.net/assets/index-BPNsMqeW.js:40:3139)
+    at iv (https://www.annotune.net/assets/index-BPNsMqeW.js:40:44737)
+    at nv (https://www.annotune.net/assets/index-BPNsMqeW.js:40:39727)
+    at vw (https://www.annotune.net/assets/index-BPNsMqeW.js:40:39655) @ https://www.annotune.net/assets/index-BPNsMqeW.js:39
+[     304ms] Error: Minified React error #310; visit https://reactjs.org/docs/error-decoder.html?invariant=310 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at Ot (https://www.annotune.net/assets/index-BPNsMqeW.js:38:17593)
+    at Za (https://www.annotune.net/assets/index-BPNsMqeW.js:38:20535)
+    at Object.Id [as useEffect] (https://www.annotune.net/assets/index-BPNsMqeW.js:38:20793)
+    at oe.useEffect (https://www.annotune.net/assets/index-BPNsMqeW.js:9:5880)
+    at EA (https://www.annotune.net/assets/index-BPNsMqeW.js:406:1902)
+    at _d (https://www.annotune.net/assets/index-BPNsMqeW.js:38:16998)
+    at tc (https://www.annotune.net/assets/index-BPNsMqeW.js:40:3139)
+    at iv (https://www.annotune.net/assets/index-BPNsMqeW.js:40:44737)
+    at nv (https://www.annotune.net/assets/index-BPNsMqeW.js:40:39727)
+    at vw (https://www.annotune.net/assets/index-BPNsMqeW.js:40:39655)

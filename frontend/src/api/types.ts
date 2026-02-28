@@ -22,6 +22,12 @@ export interface AnnotationPayload {
   props?: Annotation['props'];
 }
 
+export interface UpdateProfileResponse {
+  message: string;
+  updatedCount: number;
+  displayName: string;
+}
+
 export interface AnnotuneApi {
   listLyrics(ownerId: string): Promise<LyricDocument[]>;
   createLyric(ownerId: string, payload: CreateLyricPayload): Promise<LyricDocument>;
@@ -44,6 +50,7 @@ export interface AnnotuneApi {
   deleteAnnotation(docId: string, annotationId: string): Promise<void>;
   listVersions(docId: string): Promise<LyricVersionSnapshot[]>;
   getVersion(docId: string, version: number): Promise<LyricVersionSnapshot | undefined>;
+  updateProfile(displayName: string): Promise<UpdateProfileResponse>;
 }
 
 export class ApiError extends Error {

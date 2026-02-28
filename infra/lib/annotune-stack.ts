@@ -15,7 +15,8 @@ import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import {
   HttpApi,
   HttpMethod,
-  CorsHttpMethod
+  CorsHttpMethod,
+  CorsPreflightOptions
 } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
@@ -213,6 +214,7 @@ export class AnnotuneStack extends Stack {
           CorsHttpMethod.GET,
           CorsHttpMethod.POST,
           CorsHttpMethod.PUT,
+          CorsHttpMethod.PATCH,
           CorsHttpMethod.DELETE,
           CorsHttpMethod.OPTIONS
         ],
@@ -256,7 +258,8 @@ export class AnnotuneStack extends Stack {
         path: '/v1/lyrics/{docId}/versions/{version}',
         method: HttpMethod.GET,
         handler: 'getVersionHandler'
-      }
+      },
+      { path: '/v1/user/profile', method: HttpMethod.PATCH, handler: 'updateProfileHandler' }
     ];
 
     protectedRoutes.forEach((route) => {

@@ -1,21 +1,24 @@
 import { useState } from 'react';
 import { useAuthStore } from '../store/auth';
+import { useUpdateProfile } from '../hooks/useLyrics';
+import { useAnnotuneApi } from '../hooks/useAnnotuneApi';
 
 export const AccountSettingsPage = () => {
   const displayName = useAuthStore((state) => state.displayName);
   const userId = useAuthStore((state) => state.userId);
-  const setDisplayName = useAuthStore((state) => state.setDisplayName);
   const [value, setValue] = useState(displayName);
-  const [saved, setSaved] = useState(false);
+  const { mode } = useAnnotuneApi();
+  const updateProfile = useUpdateProfile();
 
   const handleSave = () => {
     const trimmed = value.trim();
-    if (trimmed) {
-      setDisplayName(trimmed);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+    if (trimmed && trimmed !== displayName) {
+      updateProfile.mutate(trimmed);
     }
   };
+
+  // 変更がない場合は保存ボタンを無効化
+  const isUnchanged = value.trim() === displayName;
 
   return (
     <section className="mx-auto w-full max-w-2xl space-y-4 rounded-2xl border border-border bg-card/80 px-4 py-5 shadow-sm sm:space-y-6 sm:px-8 sm:py-6">
@@ -38,17 +41,25 @@ export const AccountSettingsPage = () => {
             className="min-h-11 rounded-lg border border-border bg-card px-3 py-2"
             value={value}
             onChange={(event) => setValue(event.target.value)}
+            maxLength={50}
           />
         </label>
+        <p className="text-xs text-muted-foreground">
+          アカウント名を変更すると、公開済みの歌詞の作成者名も更新されます。
+        </p>
         <button
           type="button"
           className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50 sm:w-auto"
           onClick={handleSave}
-          disabled={!value.trim()}
+          disabled={!value.trim() || isUnchanged || updateProfile.isPending}
         >
-          保存
+          {updateProfile.isPending ? '更新中...' : '保存'}
         </button>
-        {saved && <p className="text-xs text-secondary">保存しました。</p>}
+        {mode === 'mock' && (
+          <p className="text-xs text-muted-foreground">
+            (モックモード: 実際のAPIは呼び出されません)
+          </p>
+        )}
       </div>
     </section>
   );
