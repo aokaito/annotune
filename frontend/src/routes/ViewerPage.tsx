@@ -13,7 +13,6 @@ export const ViewerPage = () => {
   const requiresSignIn = mode === 'http' && !isAuthenticated;
 
   const lyricDisplayRef = useRef<HTMLDivElement | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [bpm, setBpm] = useState(120);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -26,9 +25,8 @@ export const ViewerPage = () => {
   const currentLineRef = useRef(0);
   const activeAnnotationRef = useRef<string | undefined>(undefined);
 
-  // 滑らかなスクロールフック
+  // 滑らかなスクロールフック（ページ全体をスクロール）
   useSmoothLyricScroll({
-    containerRef: scrollContainerRef,
     lineElementsRef,
     progress,
     isPlaying,
@@ -240,8 +238,6 @@ export const ViewerPage = () => {
         </div>
       </section>
       <div
-        ref={scrollContainerRef}
-        className="max-h-[50vh] overflow-y-auto scroll-smooth rounded-lg border border-border bg-card/80 shadow-inner"
         onClick={() => {
           if (isPlaying) {
             setIsPlaying(false);
@@ -257,7 +253,7 @@ export const ViewerPage = () => {
           showComments
           activeAnnotationId={activeAnnotationId}
           renderLines
-          className="p-6"
+          className="rounded-lg border border-border bg-card/80 p-6 shadow-inner"
         />
       </div>
       <section className="space-y-3">

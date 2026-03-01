@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 
 interface UseSmoothLyricScrollOptions {
-  containerRef: React.RefObject<HTMLElement | null>;
   lineElementsRef: React.RefObject<HTMLElement[] | null>;
   progress: number;
   isPlaying: boolean;
@@ -11,41 +10,41 @@ interface UseSmoothLyricScrollOptions {
  * 歌詞の滑らかなスクロールを管理するカスタムフック
  *
  * 行変更時の離散的なscrollIntoViewではなく、
- * 進行度に基づいて連続的にscrollTopを更新することで
- * 滑らかなスクロールを実現する。
+ * 進行度に基づいてwindow.scrollToで連続的にスクロールすることで
+ * ページ全体の滑らかなスクロールを実現する。
  */
 export const useSmoothLyricScroll = ({
-  containerRef,
   lineElementsRef,
   progress,
   isPlaying,
 }: UseSmoothLyricScrollOptions) => {
-  // 行の位置をキャッシュ（offsetTop取得はレイアウト強制を避けるため）
+  // 行の位置をキャッシュ（getBoundingClientRect取得を最小化）
   const linePositionsRef = useRef<number[]>([]);
-  const containerHeightRef = useRef(0);
-  const contentHeightRef = useRef(0);
+  const baseScrollYRef = useRef(0);
 
-  // 行の位置をキャッシュ
+  // 再生開始時に行の位置をキャッシュ
   useEffect(() => {
-    const lines = lineElementsRef.current;
-    const container = containerRef.current;
-    if (!lines || lines.length === 0 || !container) return;
+    if (!isPlaying) return;
 
-    // 行の offsetTop を一括取得してキャッシュ
-    linePositionsRef.current = lines.map((line) => line.offsetTop);
-    containerHeightRef.current = container.clientHeight;
-    // 最後の行の下端をコンテンツの高さとして計算
-    const lastLine = lines[lines.length - 1];
-    if (lastLine) {
-      contentHeightRef.current = lastLine.offsetTop + lastLine.offsetHeight;
-    }
-  }, [containerRef, lineElementsRef, lineElementsRef.current?.length]);
+    const lines = lineElementsRef.current;
+    if (!lines || lines.length === 0) return;
+
+    // 現在のスクロール位置を基準として保存
+    baseScrollYRef.current = window.scrollY;
+
+    // 各行のページ内での絶対位置を計算
+    linePositionsRef.current = lines.map((line) => {
+      const rect = line.getBoundingClientRect();
+      return rect.top + window.scrollY;
+    });
+  }, [isPlaying, lineElementsRef]);
 
   // スクロール位置を更新
   useEffect(() => {
-    const container = containerRef.current;
+    if (!isPlaying) return;
+
     const positions = linePositionsRef.current;
-    if (!container || positions.length === 0) return;
+    if (positions.length === 0) return;
 
     const totalLines = positions.length;
     const absolute = progress * totalLines;
@@ -59,30 +58,16 @@ export const useSmoothLyricScroll = ({
     // 行間を線形補間してスクロール位置を計算
     const interpolatedTop = currentTop + (nextTop - currentTop) * lineProgress;
 
-    // コンテナの中央に配置するためのオフセット
-    const containerHeight = containerHeightRef.current;
-    const centerOffset = containerHeight / 2;
+    // 画面の上部から少し下に配置するためのオフセット（ビューポートの1/3）
+    const viewportOffset = window.innerHeight / 3;
 
-    // 目標のスクロール位置（行を中央に配置）
-    const targetScrollTop = Math.max(0, interpolatedTop - centerOffset + 20);
+    // 目標のスクロール位置
+    const targetScrollY = Math.max(0, interpolatedTop - viewportOffset);
 
     // スムーズなスクロール更新
-    container.scrollTop = targetScrollTop;
-  }, [containerRef, progress]);
-
-  // 再生停止時にキャッシュを更新（リサイズ対応）
-  useEffect(() => {
-    if (isPlaying) return;
-
-    const lines = lineElementsRef.current;
-    const container = containerRef.current;
-    if (!lines || lines.length === 0 || !container) return;
-
-    linePositionsRef.current = lines.map((line) => line.offsetTop);
-    containerHeightRef.current = container.clientHeight;
-    const lastLine = lines[lines.length - 1];
-    if (lastLine) {
-      contentHeightRef.current = lastLine.offsetTop + lastLine.offsetHeight;
-    }
-  }, [containerRef, lineElementsRef, isPlaying]);
+    window.scrollTo({
+      top: targetScrollY,
+      behavior: 'instant', // 毎フレーム更新するのでinstantで直接設定
+    });
+  }, [isPlaying, progress]);
 };
