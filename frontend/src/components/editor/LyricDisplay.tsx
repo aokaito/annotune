@@ -186,6 +186,8 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
       const tooltipParts = [tagLabel, voiceQualityLabel, comment].filter(Boolean);
       const tooltipText = tooltipParts.join(' / ');
       const isActive = activeAnnotationId === annotation.annotationId;
+      // アクティブかつコメントありの場合、視覚的に強調
+      const hasActiveComment = isActive && comment;
       return (
         <span
           key={key}
@@ -203,7 +205,16 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
             onSelectAnnotation(annotation);
           }}
         >
-          <span className={clsx('rounded-sm px-1', style && 'border-b-4', style)}>{displayText}</span>
+          <span
+            className={clsx(
+              'rounded-sm px-1 transition-colors duration-200',
+              style && 'border-b-4',
+              style,
+              hasActiveComment && 'border-l-4 border-l-primary bg-primary/10'
+            )}
+          >
+            {displayText}
+          </span>
           {/* エフェクトの記号のみ表示（声質は色のみ） */}
           {showTagIndicators && effectSymbol && (
             <span

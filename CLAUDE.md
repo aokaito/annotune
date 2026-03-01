@@ -45,7 +45,8 @@ packages/common/   # 共有型・ユーティリティ
 | `/deploy` | AWS CDKデプロイ（build→synth→diff→確認→deploy） |
 | `/pr` | 日本語PRを作成（変更分析→/check実行→gh pr create） |
 | `/new-api-endpoint` | バックエンドAPIスキャフォールド（Schema→Repository→Service→Handler→Router登録） |
-| `/agent-team` | 6エージェントチームでの開発ワークフロー実行 |
+| `/agent-team` | 6エージェント開発チームでの実装ワークフロー実行 |
+| `/idea-team` | 5エージェント企画チームでの機能・UI案検討 |
 
 ---
 
@@ -63,6 +64,22 @@ packages/common/   # 共有型・ユーティリティ
 | **qa_engineer** | テスト計画・E2Eシナリオ作成 |
 
 標準フロー: planner → devils_advocate(計画批評) → frontend/backend_dev → code_reviewer → qa_engineer → devils_advocate(最終評価)
+
+---
+
+## Idea Team
+
+`/idea-team` で起動する5エージェント（企画・デザインフェーズ用）:
+
+| エージェント | 役割 |
+|--------------|------|
+| **product_owner** | アイデアの価値分析・スコープ定義 |
+| **ux_researcher** | ユーザー体験の観点から課題・要件整理 |
+| **ui_designer** | 具体的なUI案を複数提示 |
+| **devils_advocate** | 批判的検証・代替案の提示 |
+| **spec_writer** | 機能仕様書としてまとめ |
+
+標準フロー: product_owner → ux_researcher → ui_designer → devils_advocate → spec_writer → ユーザー確認 → `/agent-team` へ引き継ぎ
 
 ---
 
