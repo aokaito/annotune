@@ -5,6 +5,7 @@ import { useParams } from 'react-router-dom';
 import { usePublicLyric } from '../hooks/useLyrics';
 import { LyricDisplay } from '../components/editor/LyricDisplay';
 import { getTagLabel } from '../components/editor/tagColors';
+import { useSmoothLyricScroll } from '../hooks/useSmoothLyricScroll';
 import type { Annotation } from '../types';
 
 export const PublicViewPage = () => {
@@ -12,6 +13,7 @@ export const PublicViewPage = () => {
   const { data: lyric, isLoading } = usePublicLyric(docId);
 
   const lyricDisplayRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [bpm, setBpm] = useState(120);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -23,6 +25,14 @@ export const PublicViewPage = () => {
   const lineElementsRef = useRef<HTMLElement[]>([]);
   const currentLineRef = useRef(0);
   const activeAnnotationRef = useRef<string | undefined>(undefined);
+
+  // 滑らかなスクロールフック
+  useSmoothLyricScroll({
+    containerRef: scrollContainerRef,
+    lineElementsRef,
+    progress,
+    isPlaying,
+  });
 
   const lyricText = lyric?.text ?? '';
   const lyricId = lyric?.docId ?? '';
@@ -105,13 +115,8 @@ export const PublicViewPage = () => {
       setProgressValue(nextProgress);
 
       const { lineIndex, lineProgress } = getLinePosition(nextProgress);
-      if (lineIndex !== currentLineRef.current) {
-        currentLineRef.current = lineIndex;
-        const lineElement = lineElementsRef.current[lineIndex];
-        if (lineElement) {
-          lineElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        }
-      }
+      // 行インデックスを更新（スクロールはuseSmoothLyricScrollフックで処理）
+      currentLineRef.current = lineIndex;
 
       const lineInfo = lineMeta[lineIndex];
       const lineOffset =
@@ -243,6 +248,8 @@ export const PublicViewPage = () => {
         </div>
       </section>
       <div
+        ref={scrollContainerRef}
+        className="max-h-[50vh] overflow-y-auto scroll-smooth rounded-lg border border-border bg-card/80 shadow-inner"
         onClick={() => {
           if (isPlaying) {
             setIsPlaying(false);
@@ -258,7 +265,7 @@ export const PublicViewPage = () => {
           showComments
           activeAnnotationId={activeAnnotationId}
           renderLines
-          className="rounded-lg border border-border bg-card/80 p-6 shadow-inner"
+          className="p-6"
         />
       </div>
       <section className="space-y-3">
