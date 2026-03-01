@@ -132,6 +132,14 @@ export class AnnotuneStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY
     });
 
+    const usersTable = new Table(this, 'UsersTable', {
+      tableName: 'AnnotuneUsers',
+      partitionKey: { name: 'userId', type: AttributeType.STRING },
+      billingMode: BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY,
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true }
+    });
+
     // ---- 認証（Cognito）リソース ----
     const userPool = new UserPool(this, 'AnnotuneUserPool', {
       selfSignUpEnabled: true,
@@ -187,6 +195,7 @@ export class AnnotuneStack extends Stack {
         LYRICS_PUBLIC_STATUS_INDEX_NAME: 'publicStatus-index',
         ANNOTATIONS_TABLE_NAME: annotationsTable.tableName,
         VERSIONS_TABLE_NAME: versionsTable.tableName,
+        USERS_TABLE_NAME: usersTable.tableName,
         // 本番ドメインとローカル開発用オリジンをカンマ区切りで設定
         ALLOWED_ORIGIN: [
           ...effectiveDomainNames.map((d) => `https://${d}`),
@@ -199,6 +208,7 @@ export class AnnotuneStack extends Stack {
     lyricsTable.grantReadWriteData(handler);
     annotationsTable.grantReadWriteData(handler);
     versionsTable.grantReadWriteData(handler);
+    usersTable.grantReadWriteData(handler);
 
     const authorizer = new HttpUserPoolAuthorizer('AnnotuneAuthorizer', userPool, {
       userPoolClients: [userPoolClient]

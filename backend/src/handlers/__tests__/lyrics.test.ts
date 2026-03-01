@@ -14,9 +14,21 @@ const mockRepository = vi.hoisted(() => ({
   deleteAnnotation: vi.fn()
 }));
 
+const mockUsersRepository = vi.hoisted(() => ({
+  getOrCreateUser: vi.fn().mockResolvedValue({ userId: 'user-123', displayName: 'Test User' }),
+  getUser: vi.fn(),
+  createUser: vi.fn(),
+  updateDisplayName: vi.fn(),
+  batchGetUsers: vi.fn()
+}));
+
 // Mock dependencies
 vi.mock('../../services/lyricsService', () => ({
   getLyricsRepository: () => mockRepository
+}));
+
+vi.mock('../../services/usersService', () => ({
+  getUsersRepository: () => mockUsersRepository
 }));
 
 vi.mock('../../utils/auth', () => ({

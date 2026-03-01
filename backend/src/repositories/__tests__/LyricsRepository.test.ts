@@ -20,6 +20,7 @@ describe('LyricsRepository', () => {
       lyricsTable: 'lyrics',
       annotationsTable: 'annotations',
       versionsTable: 'versions',
+      usersTable: 'users'
     });
   });
 

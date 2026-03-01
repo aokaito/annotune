@@ -3,6 +3,7 @@ export interface TableConfig {
   lyricsTable: string;
   annotationsTable: string;
   versionsTable: string;
+  usersTable: string;
   lyricsOwnerIndex?: string;
   lyricsPublicStatusIndex?: string;
 }
@@ -12,14 +13,15 @@ export const getTableConfig = (): TableConfig => {
   const lyricsTable = process.env.LYRICS_TABLE_NAME;
   const annotationsTable = process.env.ANNOTATIONS_TABLE_NAME;
   const versionsTable = process.env.VERSIONS_TABLE_NAME;
+  const usersTable = process.env.USERS_TABLE_NAME;
   const lyricsOwnerIndex = process.env.LYRICS_OWNER_INDEX_NAME;
   const lyricsPublicStatusIndex = process.env.LYRICS_PUBLIC_STATUS_INDEX_NAME;
 
-  if (!lyricsTable || !annotationsTable || !versionsTable) {
+  if (!lyricsTable || !annotationsTable || !versionsTable || !usersTable) {
     throw new Error('Missing DynamoDB table environment variables');
   }
 
-  return { lyricsTable, annotationsTable, versionsTable, lyricsOwnerIndex, lyricsPublicStatusIndex };
+  return { lyricsTable, annotationsTable, versionsTable, usersTable, lyricsOwnerIndex, lyricsPublicStatusIndex };
 };
 
 // 利用する AWS リージョンを取得（設定が無ければ東京リージョン）

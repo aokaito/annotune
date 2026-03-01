@@ -52,3 +52,12 @@ export interface BaseLyricVersionSnapshot {
   createdAt: string;
   authorId: string;
 }
+
+export interface BaseUserProfile {
+  userId: string;
+  displayName: string;
+  avatarUrl?: string;
+  bio?: string;
+  createdAt: string;
+  updatedAt: string;
+}

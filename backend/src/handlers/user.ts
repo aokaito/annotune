@@ -2,10 +2,12 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { getAuthenticatedUser } from '../utils/auth';
 import { getLyricsRepository } from '../services/lyricsService';
+import { getUsersRepository } from '../services/usersService';
 import { handleError, HttpError, jsonResponse } from '../utils/http';
 import { updateProfileSchema } from '../schemas/user';
 
-const repository = getLyricsRepository();
+const lyricsRepository = getLyricsRepository();
+const usersRepository = getUsersRepository();
 
 const parseBody = <T>(event: APIGatewayProxyEventV2): T => {
   if (!event.body) {
@@ -19,7 +21,7 @@ const parseBody = <T>(event: APIGatewayProxyEventV2): T => {
 };
 
 // プロフィール（displayName）更新ハンドラー
-// 認証ユーザーの全歌詞の ownerName を一括更新する
+// UsersTable の displayName を更新し、所有歌詞の ownerName キャッシュも一括更新する
 export const updateProfileHandler = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2> => {
@@ -32,7 +34,12 @@ export const updateProfileHandler = async (
       throw new HttpError(400, 'アカウント名は空にできません');
     }
 
-    const updatedCount = await repository.updateOwnerNameForUser(user.userId, newDisplayName);
+    // 1. UsersTable の displayName を更新（Source of Truth）
+    await usersRepository.getOrCreateUser(user.userId, newDisplayName);
+    await usersRepository.updateDisplayName(user.userId, newDisplayName);
+
+    // 2. 歌詞の ownerName キャッシュを一括更新（読み取り性能維持のため）
+    const updatedCount = await lyricsRepository.updateOwnerNameForUser(user.userId, newDisplayName);
 
     return jsonResponse(200, {
       message: `${updatedCount}件の歌詞の作成者名を更新しました`,

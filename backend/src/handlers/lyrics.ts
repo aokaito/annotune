@@ -3,6 +3,7 @@ import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { getAuthenticatedUser } from '../utils/auth';
 import { getLyricsRepository } from '../services/lyricsService';
+import { getUsersRepository } from '../services/usersService';
 import { handleError, HttpError, jsonResponse } from '../utils/http';
 import {
   annotationSchema,
@@ -26,6 +27,7 @@ const triggerSitemapRegeneration = (): void => {
 };
 
 const repository = getLyricsRepository();
+const usersRepository = getUsersRepository();
 
 const parseBody = <T>(event: APIGatewayProxyEventV2): T => {
   if (!event.body) {
@@ -47,12 +49,16 @@ export const createLyricHandler = async (
     const user = getAuthenticatedUser(event);
     // 入力値を zod で検証
     const payload = createLyricSchema.parse(parseBody(event));
-    const ownerName = payload.ownerName?.trim() || user.displayName;
+
+    // UsersTable から最新の displayName を取得（初回の場合は作成）
+    const defaultDisplayName = payload.ownerName?.trim() || user.displayName || 'ユーザー';
+    const userProfile = await usersRepository.getOrCreateUser(user.userId, defaultDisplayName);
+
     const lyric = await repository.createLyric(user.userId, {
       title: payload.title,
       artist: payload.artist,
       text: payload.text,
-      ownerName
+      ownerName: userProfile.displayName
     });
     return jsonResponse(201, lyric);
   } catch (error) {
