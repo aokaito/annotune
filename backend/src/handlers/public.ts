@@ -1,10 +1,12 @@
 // 公開閲覧用の GET エンドポイントを提供するハンドラ。
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { getLyricsRepository } from '../services/lyricsService';
+import { getUsersRepository } from '../services/usersService';
 import { handleError, HttpError, jsonResponse } from '../utils/http';
 import { listPublicLyricsQuerySchema } from '../schemas/lyrics';
 
 const repository = getLyricsRepository();
+const usersRepository = getUsersRepository();
 
 // SNSクローラーのUser-Agentパターン
 const SNS_CRAWLER_PATTERN = /Twitterbot|facebookexternalhit|LinkedInBot|Slackbot|Discordbot|Line|Googlebot/i;
@@ -76,11 +78,14 @@ export const getPublicLyricHandler = async (
     if (SNS_CRAWLER_PATTERN.test(userAgent)) {
       try {
         const lyric = await repository.getLyricForPublic(docId);
+        // UsersTable から最新の displayName を取得
+        const userProfile = await usersRepository.getUser(lyric.ownerId);
+        const ownerName = userProfile?.displayName ?? lyric.ownerName ?? '';
         const html = generateOgpHtml(
           docId,
           lyric.title,
           lyric.artist || '',
-          lyric.ownerName || '',
+          ownerName,
           true
         );
         return {
@@ -107,7 +112,15 @@ export const getPublicLyricHandler = async (
 
     // 通常のAPIリクエストはJSONを返す
     const lyric = await repository.getLyricForPublic(docId);
-    return jsonResponse(200, lyric);
+
+    // UsersTable から最新の displayName を取得
+    const userProfile = await usersRepository.getUser(lyric.ownerId);
+    const lyricWithOwnerName = {
+      ...lyric,
+      ownerName: userProfile?.displayName ?? lyric.ownerName ?? ''
+    };
+
+    return jsonResponse(200, lyricWithOwnerName);
   } catch (error) {
     return handleError(error);
   }
@@ -128,7 +141,16 @@ export const listPublicLyricsHandler = async (
       artist: query.artist?.length ? query.artist : undefined,
       author: query.author?.length ? query.author : undefined
     });
-    return jsonResponse(200, items);
+
+    // UsersTable から最新の displayName を取得
+    const ownerIds = [...new Set(items.map((item) => item.ownerId))];
+    const usersMap = await usersRepository.batchGetUsers(ownerIds);
+    const itemsWithOwnerName = items.map((item) => ({
+      ...item,
+      ownerName: usersMap.get(item.ownerId)?.displayName ?? item.ownerName ?? ''
+    }));
+
+    return jsonResponse(200, itemsWithOwnerName);
   } catch (error) {
     return handleError(error);
   }

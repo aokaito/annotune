@@ -16,7 +16,7 @@ const mockRepository = vi.hoisted(() => ({
 
 const mockUsersRepository = vi.hoisted(() => ({
   getOrCreateUser: vi.fn().mockResolvedValue({ userId: 'user-123', displayName: 'Test User' }),
-  getUser: vi.fn(),
+  getUser: vi.fn().mockResolvedValue({ userId: 'user-123', displayName: 'Test User' }),
   createUser: vi.fn(),
   updateDisplayName: vi.fn(),
   batchGetUsers: vi.fn()
@@ -172,7 +172,11 @@ describe('getLyricHandler', () => {
     const result = await getLyricHandler(event) as APIGatewayProxyStructuredResultV2;
 
     expect(result.statusCode).toBe(200);
-    expect(JSON.parse(result.body as string)).toEqual(mockLyric);
+    // ownerName は UsersTable から取得されるため、元のデータに追加される
+    expect(JSON.parse(result.body as string)).toEqual({
+      ...mockLyric,
+      ownerName: 'Test User'
+    });
   });
 
   it('should return 400 when docId is missing', async () => {
@@ -207,7 +211,11 @@ describe('listLyricsHandler', () => {
     const result = await listLyricsHandler(event) as APIGatewayProxyStructuredResultV2;
 
     expect(result.statusCode).toBe(200);
-    expect(JSON.parse(result.body as string)).toEqual(mockLyrics);
+    // ownerName は UsersTable から取得される
+    expect(JSON.parse(result.body as string)).toEqual([
+      { docId: 'doc-1', title: 'Song 1', ownerName: 'Test User' },
+      { docId: 'doc-2', title: 'Song 2', ownerName: 'Test User' }
+    ]);
   });
 
   it('should return 400 when mine is not true', async () => {

@@ -7,9 +7,18 @@ const mockRepository = vi.hoisted(() => ({
   listPublicLyrics: vi.fn()
 }));
 
+const mockUsersRepository = vi.hoisted(() => ({
+  getUser: vi.fn().mockResolvedValue({ userId: 'user-123', displayName: 'Test User' }),
+  batchGetUsers: vi.fn().mockResolvedValue(new Map([['user-123', { userId: 'user-123', displayName: 'Test User' }]]))
+}));
+
 // Mock dependencies
 vi.mock('../../services/lyricsService', () => ({
   getLyricsRepository: () => mockRepository
+}));
+
+vi.mock('../../services/usersService', () => ({
+  getUsersRepository: () => mockUsersRepository
 }));
 
 import { getPublicLyricHandler, listPublicLyricsHandler } from '../public';
@@ -94,8 +103,8 @@ describe('listPublicLyricsHandler', () => {
 
   it('should list public lyrics successfully', async () => {
     const mockLyrics = [
-      { docId: 'doc-1', title: 'Song 1', artist: 'Artist 1' },
-      { docId: 'doc-2', title: 'Song 2', artist: 'Artist 2' }
+      { docId: 'doc-1', title: 'Song 1', artist: 'Artist 1', ownerId: 'user-123' },
+      { docId: 'doc-2', title: 'Song 2', artist: 'Artist 2', ownerId: 'user-123' }
     ];
     mockRepository.listPublicLyrics.mockResolvedValue(mockLyrics);
 
@@ -104,7 +113,11 @@ describe('listPublicLyricsHandler', () => {
     const result = await listPublicLyricsHandler(event) as APIGatewayProxyStructuredResultV2;
 
     expect(result.statusCode).toBe(200);
-    expect(JSON.parse(result.body as string)).toEqual(mockLyrics);
+    // ownerName は UsersTable から取得される
+    expect(JSON.parse(result.body as string)).toEqual([
+      { docId: 'doc-1', title: 'Song 1', artist: 'Artist 1', ownerId: 'user-123', ownerName: 'Test User' },
+      { docId: 'doc-2', title: 'Song 2', artist: 'Artist 2', ownerId: 'user-123', ownerName: 'Test User' }
+    ]);
     expect(mockRepository.listPublicLyrics).toHaveBeenCalledWith({
       title: undefined,
       artist: undefined,

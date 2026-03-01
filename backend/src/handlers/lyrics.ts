@@ -77,7 +77,16 @@ export const listLyricsHandler = async (
       return jsonResponse(400, { message: 'Only mine=true endpoint is supported in MVP' });
     }
     const items = await repository.listLyrics(user.userId);
-    return jsonResponse(200, items);
+
+    // UsersTable から最新の displayName を取得してキャッシュを上書き
+    const userProfile = await usersRepository.getUser(user.userId);
+    const displayName = userProfile?.displayName ?? user.displayName ?? '';
+    const itemsWithOwnerName = items.map((item) => ({
+      ...item,
+      ownerName: displayName
+    }));
+
+    return jsonResponse(200, itemsWithOwnerName);
   } catch (error) {
     return handleError(error);
   }
@@ -94,7 +103,15 @@ export const getLyricHandler = async (
     }
     // 所有者チェック込みでドキュメントを取得
     const lyric = await repository.getLyric(docId, user.userId);
-    return jsonResponse(200, lyric);
+
+    // UsersTable から最新の displayName を取得
+    const userProfile = await usersRepository.getUser(lyric.ownerId);
+    const lyricWithOwnerName = {
+      ...lyric,
+      ownerName: userProfile?.displayName ?? lyric.ownerName ?? ''
+    };
+
+    return jsonResponse(200, lyricWithOwnerName);
   } catch (error) {
     return handleError(error);
   }

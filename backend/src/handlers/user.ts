@@ -21,7 +21,8 @@ const parseBody = <T>(event: APIGatewayProxyEventV2): T => {
 };
 
 // プロフィール（displayName）更新ハンドラー
-// UsersTable の displayName を更新し、所有歌詞の ownerName キャッシュも一括更新する
+// UsersTable の displayName を更新する（Source of Truth）
+// 歌詞の ownerName キャッシュ更新はベストエフォートで行う
 export const updateProfileHandler = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2> => {
@@ -38,11 +39,17 @@ export const updateProfileHandler = async (
     await usersRepository.getOrCreateUser(user.userId, newDisplayName);
     await usersRepository.updateDisplayName(user.userId, newDisplayName);
 
-    // 2. 歌詞の ownerName キャッシュを一括更新（読み取り性能維持のため）
-    const updatedCount = await lyricsRepository.updateOwnerNameForUser(user.userId, newDisplayName);
+    // 2. 歌詞の ownerName キャッシュを一括更新（ベストエフォート）
+    let updatedCount = 0;
+    try {
+      updatedCount = await lyricsRepository.updateOwnerNameForUser(user.userId, newDisplayName);
+    } catch (cacheError) {
+      // キャッシュ更新に失敗してもUsersTableは更新済みなので続行
+      console.warn('Failed to update lyrics ownerName cache:', cacheError);
+    }
 
     return jsonResponse(200, {
-      message: `${updatedCount}件の歌詞の作成者名を更新しました`,
+      message: 'アカウント名を更新しました',
       updatedCount,
       displayName: newDisplayName
     });
