@@ -130,15 +130,33 @@ export const useDeleteLyric = (docId: string) => {
 };
 
 export const useShareLyric = (docId: string) => {
-  const { api } = useAnnotuneApi();
+  const { api, userId } = useAnnotuneApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ isPublic, ownerName }: { isPublic: boolean; ownerName?: string }) =>
       api.shareLyric(docId, isPublic, ownerName),
     onSuccess: (lyric: LyricDocument) => {
-      // 詳細キャッシュを更新し、公開状態に応じたメッセージを表示
+      // 詳細キャッシュと一覧キャッシュを更新
       queryClient.invalidateQueries({ queryKey: keys.lyric(docId) });
+      queryClient.invalidateQueries({ queryKey: keys.list(userId) });
       toast.success(lyric.isPublicView ? '公開リンクを有効にしました' : '公開リンクを無効にしました');
+    }
+  });
+};
+
+// 一覧画面から公開設定を変更するためのフック（docIdを動的に指定可能）
+export const useTogglePublicLyric = () => {
+  const { api, userId } = useAnnotuneApi();
+  const displayName = useAuthStore((state: AuthState) => state.displayName);
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ docId, isPublic }: { docId: string; isPublic: boolean }) =>
+      api.shareLyric(docId, isPublic, displayName?.trim() || undefined),
+    onSuccess: (lyric: LyricDocument) => {
+      // 詳細キャッシュと一覧キャッシュを更新
+      queryClient.invalidateQueries({ queryKey: keys.lyric(lyric.docId) });
+      queryClient.invalidateQueries({ queryKey: keys.list(userId) });
+      toast.success(lyric.isPublicView ? '公開しました' : '非公開にしました');
     }
   });
 };

@@ -1,13 +1,12 @@
 // ダッシュボード画面：歌詞ドキュメントの一覧表示と新規作成を担当。
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Eye, Pencil } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useCreateLyric, useLyricsList } from '../hooks/useLyrics';
+import { useCreateLyric, useLyricsList, useTogglePublicLyric } from '../hooks/useLyrics';
 import { useAnnotuneApi } from '../hooks/useAnnotuneApi';
 import { useAuthStore } from '../store/auth';
 import { ApiError } from '../api/client';
-import type { LyricDocument } from '../types';
+import { LyricsTable } from '../components/LyricsTable';
 
 type FormValues = {
   title: string;
@@ -87,6 +86,8 @@ export const DashboardPage = () => {
   const { mode, isAuthenticated } = useAnnotuneApi();
   const signOut = useAuthStore((state) => state.signOut);
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const togglePublicMutation = useTogglePublicLyric();
   const loginHref = '/login';
   const requiresSignIn = mode === 'http' && !isAuthenticated;
 
@@ -97,6 +98,18 @@ export const DashboardPage = () => {
       signOut();
     }
   }, [isAuthError, signOut]);
+
+  const handleNavigate = (docId: string) => {
+    navigate(`/viewer/${docId}`);
+  };
+
+  const handleEdit = (docId: string) => {
+    navigate(`/editor/${docId}`);
+  };
+
+  const handleTogglePublic = (docId: string, currentIsPublic: boolean) => {
+    togglePublicMutation.mutate({ docId, isPublic: !currentIsPublic });
+  };
 
   return (
     // 一覧・ホルダー・モーダルを段組みで構成
@@ -161,52 +174,13 @@ export const DashboardPage = () => {
         </div>
       )}
       {!error && lyrics && lyrics.length > 0 && !requiresSignIn && (
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {lyrics.map((lyric: LyricDocument) => (
-            <li
-              key={lyric.docId}
-              className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-sm transition hover:shadow-md"
-            >
-              <div className="flex items-start justify-between gap-2">
-                {/* タイトル・アーティスト・公開状態を表示 */}
-                <div className="min-w-0 space-y-1">
-                  <h2 className="truncate text-lg font-semibold sm:text-xl">{lyric.title}</h2>
-                  <p className="truncate text-xs text-muted-foreground sm:text-sm">
-                    {lyric.artist || 'アーティスト未設定'}
-                  </p>
-                </div>
-                <span
-                  className={`shrink-0 inline-flex min-h-8 items-center whitespace-nowrap rounded-full px-3 text-xs font-medium ${
-                    lyric.isPublicView
-                      ? 'bg-secondary text-secondary-foreground'
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  {/* 公開状態を色付きバッジで表現 */}
-                  {lyric.isPublicView ? '公開中' : '非公開'}
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <Link
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                  to={`/editor/${lyric.docId}`}
-                  aria-label="編集"
-                  title="編集"
-                >
-                  <Pencil size={18} />
-                </Link>
-                <Link
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                  to={`/viewer/${lyric.docId}`}
-                  aria-label="閲覧"
-                  title="閲覧"
-                >
-                  <Eye size={18} />
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <LyricsTable
+          lyrics={lyrics}
+          variant="personal"
+          onNavigate={handleNavigate}
+          onEdit={handleEdit}
+          onTogglePublic={handleTogglePublic}
+        />
       )}
       {open && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 px-2 pb-2 sm:items-center sm:px-4 sm:pb-0">

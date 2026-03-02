@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
-import { Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { usePublicLyricsList } from '../hooks/useLyrics';
-import type { LyricDocument } from '../types';
+import { LyricsTable } from '../components/LyricsTable';
 
 type SearchFormValues = {
   title: string;
@@ -25,6 +24,7 @@ export const DiscoverPage = () => {
     author: ''
   });
   const { data: lyrics, isLoading } = usePublicLyricsList(filters);
+  const navigate = useNavigate();
 
   const onSubmit = form.handleSubmit((values) => {
     setFilters({
@@ -37,6 +37,10 @@ export const DiscoverPage = () => {
   const handleReset = () => {
     form.reset();
     setFilters({ title: '', artist: '', author: '' });
+  };
+
+  const handleNavigate = (docId: string) => {
+    navigate(`/public/lyrics/${docId}`);
   };
 
   const showEmptyState = !isLoading && lyrics && lyrics.length === 0;
@@ -119,37 +123,11 @@ export const DiscoverPage = () => {
       )}
 
       {lyrics && lyrics.length > 0 && (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-          {lyrics.map((lyric: LyricDocument) => (
-            <li
-              key={lyric.docId}
-              className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm transition hover:shadow-md sm:gap-3 sm:p-5"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <h2 className="truncate text-base font-semibold sm:text-lg">{lyric.title}</h2>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {lyric.artist || 'アーティスト未設定'}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    by {lyric.ownerName?.trim() || '不明'}
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-full bg-secondary/50 px-2 py-0.5 text-[10px] font-medium text-secondary-foreground sm:px-3 sm:py-1 sm:text-xs">
-                  公開中
-                </span>
-              </div>
-              <Link
-                to={`/public/lyrics/${lyric.docId}`}
-                className="mt-auto inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                aria-label="表示する"
-                title="表示する"
-              >
-                <Eye size={18} />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <LyricsTable
+          lyrics={lyrics}
+          variant="public"
+          onNavigate={handleNavigate}
+        />
       )}
     </section>
   );
