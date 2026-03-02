@@ -227,12 +227,11 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
               {effectSymbol}
             </span>
           )}
-          {(showComments || isActive) && tooltipText && (
+          {showComments && tooltipText && (
             <span
               className={clsx(
                 'absolute left-0 top-full z-10 mt-2 max-w-xs select-none rounded-md border border-border bg-card/95 px-2 py-1 text-xs text-foreground shadow-md',
-                showComments && !isActive && 'hidden group-hover:block',
-                isActive && 'block'
+                'hidden group-hover:block'
               )}
             >
               {tooltipText}
