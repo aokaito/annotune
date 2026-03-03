@@ -274,7 +274,6 @@ export const PublicViewPage = () => {
           annotations={lyric.annotations}
           framed={false}
           showTagIndicators
-          activeAnnotationId={activeAnnotationId}
           renderLines
           className="rounded-lg border border-border bg-card/80 p-6 shadow-inner"
         />
