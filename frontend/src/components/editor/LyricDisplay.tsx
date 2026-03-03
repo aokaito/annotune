@@ -12,7 +12,6 @@ interface LyricDisplayProps {
   framed?: boolean;
   showTagIndicators?: boolean;
   showComments?: boolean;
-  activeAnnotationId?: string;
   renderLines?: boolean;
   onSelectAnnotation?: (annotation: Annotation) => void;
 }
@@ -152,7 +151,6 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
       framed = true,
       showTagIndicators = false,
       showComments = false,
-      activeAnnotationId,
       renderLines = false,
       onSelectAnnotation
     },
