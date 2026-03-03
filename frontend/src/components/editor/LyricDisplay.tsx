@@ -13,6 +13,8 @@ interface LyricDisplayProps {
   showTagIndicators?: boolean;
   showComments?: boolean;
   renderLines?: boolean;
+  showInlineComments?: boolean;
+  enlargedFont?: boolean;
   onSelectAnnotation?: (annotation: Annotation) => void;
 }
 
@@ -129,6 +131,17 @@ const buildLineSegments = (text: string, annotations: Annotation[]) => {
   return { lines, segmentsByLine };
 };
 
+// 特定の行に関連するコメントを収集
+const getLineComments = (
+  lineStart: number,
+  lineEnd: number,
+  annotations: Annotation[]
+): string[] => {
+  return annotations
+    .filter((a) => a.start < lineEnd && a.end > lineStart && a.comment?.trim())
+    .map((a) => a.comment!.trim());
+};
+
 // 声質の凡例コンポーネント
 const VoiceQualityLegend = () => (
   <div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
@@ -152,6 +165,8 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
       showTagIndicators = false,
       showComments = false,
       renderLines = false,
+      showInlineComments = false,
+      enlargedFont = false,
       onSelectAnnotation
     },
     ref
@@ -242,20 +257,44 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
         {/* refは歌詞本体のみに設定（選択位置計算のため凡例を除外） */}
         <div ref={ref}>
         {renderLines && lineData
-          ? lineData.segmentsByLine.map((lineSegments, lineIndex) => (
-              <div
-                key={`line-${lineIndex}`}
-                data-line-index={lineIndex}
-                className="whitespace-pre-wrap"
-              >
-                {lineSegments.map((segment, segmentIndex) =>
-                  renderAnnotatedSegment(segment, `${lineIndex}-${segmentIndex}`)
-                )}
-                {lineData.lines[lineIndex].length === 0 && (
-                  <span className="inline-block">&nbsp;</span>
-                )}
-              </div>
-            ))
+          ? lineData.segmentsByLine.map((lineSegments, lineIndex) => {
+              // 行の開始・終了位置を計算
+              const lineStart = lineData.lines
+                .slice(0, lineIndex)
+                .reduce((sum, line) => sum + line.length + 1, 0);
+              const lineEnd = lineStart + lineData.lines[lineIndex].length;
+              const lineComments = showInlineComments
+                ? getLineComments(lineStart, lineEnd, annotations)
+                : [];
+
+              return (
+                <div key={`line-${lineIndex}`} data-line-index={lineIndex}>
+                  <div
+                    className={clsx(
+                      'whitespace-pre-wrap',
+                      enlargedFont && 'text-xl sm:text-2xl md:text-3xl'
+                    )}
+                  >
+                    {lineSegments.map((segment, segmentIndex) =>
+                      renderAnnotatedSegment(segment, `${lineIndex}-${segmentIndex}`)
+                    )}
+                    {lineData.lines[lineIndex].length === 0 && (
+                      <span className="inline-block">&nbsp;</span>
+                    )}
+                  </div>
+                  {lineComments.length > 0 && (
+                    <div className="mb-2 mt-1 space-y-0.5 pl-4 text-sm text-muted-foreground">
+                      {lineComments.map((comment, i) => (
+                        <div key={i} className="flex">
+                          <span className="mr-1 select-none text-muted-foreground/50">└</span>
+                          <span>{comment}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
           : segments.map((segment, index) => renderAnnotatedSegment(segment, `plain-${index}`))}
         </div>
       </div>

@@ -4,9 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { usePublicLyric } from '../hooks/useLyrics';
 import { LyricDisplay } from '../components/editor/LyricDisplay';
-import { CommentBar } from '../components/viewer/CommentBar';
 import { getTagLabel } from '../components/editor/tagColors';
-import { useSmoothLyricScroll } from '../hooks/useSmoothLyricScroll';
 import type { Annotation } from '../types';
 
 export const PublicViewPage = () => {
@@ -17,26 +15,14 @@ export const PublicViewPage = () => {
   const [bpm, setBpm] = useState(120);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [activeAnnotationId, setActiveAnnotationId] = useState<string | undefined>(undefined);
-  const [currentComment, setCurrentComment] = useState<string | null>(null);
   const progressRef = useRef(0);
   const startTimeRef = useRef<number | null>(null);
   const animationRef = useRef<number | null>(null);
   const durationRef = useRef(0);
-  const lineElementsRef = useRef<HTMLElement[]>([]);
   const currentLineRef = useRef(0);
-  const activeAnnotationRef = useRef<string | undefined>(undefined);
-
-  // 滑らかなスクロールフック（ページ全体をスクロール）
-  useSmoothLyricScroll({
-    lineElementsRef,
-    progress,
-    isPlaying,
-  });
 
   const lyricText = lyric?.text ?? '';
   const lyricId = lyric?.docId ?? '';
-  const annotations = lyric?.annotations ?? [];
 
   const lineMeta = useMemo(() => {
     const lines = lyricText.split('\n');
@@ -80,33 +66,9 @@ export const PublicViewPage = () => {
 
   useEffect(() => {
     setProgressValue(0);
-    setActiveAnnotationId(undefined);
-    setCurrentComment(null);
-    activeAnnotationRef.current = undefined;
     currentLineRef.current = 0;
     startTimeRef.current = null;
   }, [lyricId]);
-
-  // activeAnnotationId が変更されたときにコメントを更新
-  // コメントがあるアノテーションのみ更新（コメントなしの場合は前のコメントを維持）
-  useEffect(() => {
-    if (!activeAnnotationId) return;
-    const annotation = annotations.find((a) => a.annotationId === activeAnnotationId);
-    const comment = annotation?.comment?.trim();
-    if (comment) {
-      setCurrentComment(comment);
-    }
-  }, [activeAnnotationId, annotations]);
-
-  useEffect(() => {
-    if (!lyric) return;
-    const container = lyricDisplayRef.current;
-    if (!container) return;
-    const nodes = Array.from(
-      container.querySelectorAll<HTMLElement>('[data-line-index]')
-    );
-    lineElementsRef.current = nodes;
-  }, [lyric, lyricText, annotations.length]);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -126,22 +88,8 @@ export const PublicViewPage = () => {
       const nextProgress = Math.min(1, elapsedSeconds / durationSeconds);
       setProgressValue(nextProgress);
 
-      const { lineIndex, lineProgress } = getLinePosition(nextProgress);
-      // 行インデックスを更新（スクロールはuseSmoothLyricScrollフックで処理）
+      const { lineIndex } = getLinePosition(nextProgress);
       currentLineRef.current = lineIndex;
-
-      const lineInfo = lineMeta[lineIndex];
-      const lineOffset =
-        lineInfo.length === 0
-          ? lineInfo.start
-          : lineInfo.start + Math.min(lineInfo.length - 1, Math.floor(lineProgress * lineInfo.length));
-      const active = annotations.find(
-        (annotation) => annotation.start <= lineOffset && annotation.end > lineOffset
-      );
-      if (active?.annotationId !== activeAnnotationRef.current) {
-        activeAnnotationRef.current = active?.annotationId;
-        setActiveAnnotationId(active?.annotationId);
-      }
 
       if (nextProgress >= 1) {
         setIsPlaying(false);
@@ -157,7 +105,7 @@ export const PublicViewPage = () => {
       }
       animationRef.current = null;
     };
-  }, [isPlaying, lineMeta, annotations]);
+  }, [isPlaying, lineMeta]);
 
   // ブラウザタブのタイトルを歌詞ページ用に更新する
   // Googlebot 向けの <title>/<meta> は Lambda@Edge が返す HTML で対応している
@@ -176,8 +124,6 @@ export const PublicViewPage = () => {
     }
     if (progressRef.current >= 1) {
       setProgressValue(0);
-      activeAnnotationRef.current = undefined;
-      setActiveAnnotationId(undefined);
       startTimeRef.current = null;
     }
     setIsPlaying(true);
@@ -186,9 +132,6 @@ export const PublicViewPage = () => {
   const handleReset = () => {
     setIsPlaying(false);
     setProgressValue(0);
-    setActiveAnnotationId(undefined);
-    setCurrentComment(null);
-    activeAnnotationRef.current = undefined;
     currentLineRef.current = 0;
     startTimeRef.current = null;
   };
@@ -204,7 +147,7 @@ export const PublicViewPage = () => {
 
   return (
     <>
-    <article className="mx-auto w-full max-w-3xl space-y-6 rounded-2xl border border-border bg-card/90 px-4 py-6 pb-[45vh] shadow-sm sm:px-8 sm:py-8">
+    <article className="mx-auto w-full max-w-3xl space-y-6 rounded-2xl border border-border bg-card/90 px-4 py-6 shadow-sm sm:px-8 sm:py-8">
       <header className="space-y-1">
         <p className="text-xs uppercase tracking-wide text-secondary sm:text-sm">公開ビュー</p>
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{lyric.title}</h1>
@@ -272,6 +215,8 @@ export const PublicViewPage = () => {
           framed={false}
           showTagIndicators
           renderLines
+          showInlineComments
+          enlargedFont
           className="rounded-lg border border-border bg-card/80 p-6 shadow-inner"
         />
       </div>
@@ -293,7 +238,6 @@ export const PublicViewPage = () => {
         </ul>
       </section>
     </article>
-    <CommentBar comment={currentComment} />
     </>
   );
 };
