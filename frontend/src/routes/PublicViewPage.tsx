@@ -212,9 +212,6 @@ export const PublicViewPage = () => {
         <p className="text-sm text-muted-foreground">
           作成者: {lyric.ownerName?.trim() || '不明'}
         </p>
-        <p className="text-sm text-muted-foreground">
-          バージョン {lyric.version} ・ 最終更新 {new Date(lyric.updatedAt).toLocaleString()}
-        </p>
       </header>
       <section className="space-y-3 rounded-lg border border-border bg-card/70 p-3 text-sm sm:p-4">
         <div className="flex items-center justify-between gap-2">
