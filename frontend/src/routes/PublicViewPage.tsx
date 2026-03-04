@@ -5,6 +5,7 @@ import { useParams } from 'react-router-dom';
 import { usePublicLyric } from '../hooks/useLyrics';
 import { LyricDisplay } from '../components/editor/LyricDisplay';
 import { getTagLabel } from '../components/editor/tagColors';
+import { useSmoothLyricScroll } from '../hooks/useSmoothLyricScroll';
 import type { Annotation } from '../types';
 
 export const PublicViewPage = () => {
@@ -19,7 +20,15 @@ export const PublicViewPage = () => {
   const startTimeRef = useRef<number | null>(null);
   const animationRef = useRef<number | null>(null);
   const durationRef = useRef(0);
+  const lineElementsRef = useRef<HTMLElement[]>([]);
   const currentLineRef = useRef(0);
+
+  // 滑らかなスクロールフック（ページ全体をスクロール）
+  useSmoothLyricScroll({
+    lineElementsRef,
+    progress,
+    isPlaying,
+  });
 
   const lyricText = lyric?.text ?? '';
   const lyricId = lyric?.docId ?? '';
@@ -69,6 +78,16 @@ export const PublicViewPage = () => {
     currentLineRef.current = 0;
     startTimeRef.current = null;
   }, [lyricId]);
+
+  useEffect(() => {
+    if (!lyric) return;
+    const container = lyricDisplayRef.current;
+    if (!container) return;
+    const nodes = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-line-index]')
+    );
+    lineElementsRef.current = nodes;
+  }, [lyric, lyricText]);
 
   useEffect(() => {
     if (!isPlaying) {
