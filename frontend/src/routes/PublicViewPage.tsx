@@ -177,32 +177,26 @@ export const PublicViewPage = () => {
           作成者: {lyric.ownerName?.trim() || '不明'}
         </p>
       </header>
-      <section className="space-y-3 rounded-lg border border-border bg-card/70 p-3 text-sm sm:p-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-lg text-primary-foreground transition hover:bg-primary/90"
-              onClick={handleToggle}
-              title={isPlaying ? '停止' : '再生'}
-            >
-              {isPlaying ? '⏸' : '▶'}
-            </button>
-            <button
-              type="button"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-foreground"
-              onClick={handleReset}
-              title="リセット"
-            >
-              ↺
-            </button>
-          </div>
-          <div className="text-right">
-            <div className="text-lg font-semibold tabular-nums">{Math.round(progress * 100)}%</div>
-            <div className="text-[10px] text-muted-foreground sm:text-xs">進行状況</div>
-          </div>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-lg text-primary-foreground transition hover:bg-primary/90"
+            onClick={handleToggle}
+            title={isPlaying ? '停止' : '再生'}
+          >
+            {isPlaying ? '⏸' : '▶'}
+          </button>
+          <button
+            type="button"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-foreground"
+            onClick={handleReset}
+            title="リセット"
+          >
+            ↺
+          </button>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+        <div className="flex items-center gap-2 text-xs sm:text-sm">
           <span className="text-muted-foreground whitespace-nowrap">1（遅い）</span>
           <input
             type="range"
@@ -218,7 +212,7 @@ export const PublicViewPage = () => {
             {speed === 10 ? '10（デフォルト）' : speed}
           </span>
         </div>
-      </section>
+      </div>
       <div
         onClick={() => {
           if (isPlaying) {
