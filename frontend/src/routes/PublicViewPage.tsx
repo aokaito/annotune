@@ -208,7 +208,7 @@ export const PublicViewPage = () => {
             className="w-24 sm:w-32 accent-primary"
           />
           <span className="text-muted-foreground whitespace-nowrap">20（早い）</span>
-          <span className="ml-2 font-medium tabular-nums">
+          <span className="ml-2 w-28 text-right font-medium tabular-nums">
             {speed === 10 ? '10（デフォルト）' : speed}
           </span>
         </div>

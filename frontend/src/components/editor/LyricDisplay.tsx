@@ -131,15 +131,24 @@ const buildLineSegments = (text: string, annotations: Annotation[]) => {
   return { lines, segmentsByLine };
 };
 
-// 特定の行に関連するコメントを収集
+// 特定の行に関連するコメントを収集（行内での開始位置も含む）
+interface LineComment {
+  comment: string;
+  offsetInLine: number; // 行内でのアノテーション開始位置
+}
+
 const getLineComments = (
   lineStart: number,
   lineEnd: number,
   annotations: Annotation[]
-): string[] => {
+): LineComment[] => {
   return annotations
     .filter((a) => a.start < lineEnd && a.end > lineStart && a.comment?.trim())
-    .map((a) => a.comment!.trim());
+    .map((a) => ({
+      comment: a.comment!.trim(),
+      offsetInLine: Math.max(0, a.start - lineStart)
+    }))
+    .sort((a, b) => a.offsetInLine - b.offsetInLine);
 };
 
 // 声質の凡例コンポーネント
@@ -283,11 +292,12 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
                     )}
                   </div>
                   {lineComments.length > 0 && (
-                    <div className="mb-2 mt-1 space-y-0.5 pl-4 text-sm text-muted-foreground">
-                      {lineComments.map((comment, i) => (
-                        <div key={i} className="flex">
-                          <span className="mr-1 select-none text-muted-foreground/50">└</span>
-                          <span>{comment}</span>
+                    <div className="mb-2 mt-1 space-y-0.5 text-sm text-muted-foreground">
+                      {lineComments.map((lc, i) => (
+                        <div key={i} className="flex whitespace-pre">
+                          <span className="select-none" style={{ width: `${lc.offsetInLine}ch` }} />
+                          <span className="mr-1 select-none text-muted-foreground/50">┗</span>
+                          <span className="whitespace-normal">{lc.comment}</span>
                         </div>
                       ))}
                     </div>
