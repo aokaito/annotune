@@ -182,10 +182,11 @@ export const PublicViewPage = () => {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="inline-flex min-h-11 min-w-20 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-lg text-primary-foreground transition hover:bg-primary/90"
               onClick={handleToggle}
+              title={isPlaying ? '停止' : '再生'}
             >
-              {isPlaying ? '停止' : '再生'}
+              {isPlaying ? '⏸' : '▶'}
             </button>
             <button
               type="button"
