@@ -224,24 +224,6 @@ export const ViewerPage = () => {
           className="rounded-lg border border-border bg-card/80 p-6 shadow-inner"
         />
       </div>
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground sm:text-xl">アノテーション</h2>
-        <ul className="space-y-2 text-sm text-muted-foreground">
-          {lyric.annotations.map((annotation) => (
-            <li
-              key={annotation.annotationId}
-              className="rounded-lg border border-border bg-card/80 p-3 leading-relaxed"
-            >
-              <p className="text-foreground">
-                <span className="font-semibold">{annotation.tag}</span> ({annotation.start} –{' '}
-                {annotation.end})
-              </p>
-              <p>{annotation.comment ?? 'コメントなし'}</p>
-            </li>
-          ))}
-          {lyric.annotations.length === 0 && <li>アノテーションはまだありません。</li>}
-        </ul>
-      </section>
     </article>
     </>
   );

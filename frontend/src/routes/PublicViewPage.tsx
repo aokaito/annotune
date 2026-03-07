@@ -4,9 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { usePublicLyric } from '../hooks/useLyrics';
 import { LyricDisplay } from '../components/editor/LyricDisplay';
-import { getTagLabel } from '../components/editor/tagColors';
 import { useSmoothLyricScroll } from '../hooks/useSmoothLyricScroll';
-import type { Annotation } from '../types';
 
 export const PublicViewPage = () => {
   const { docId = '' } = useParams();
@@ -232,23 +230,6 @@ export const PublicViewPage = () => {
           className="rounded-lg border border-border bg-card/80 p-6 shadow-inner"
         />
       </div>
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground sm:text-xl">アノテーション一覧</h2>
-        <ul className="space-y-2 text-sm text-muted-foreground">
-          {lyric.annotations.map((annotation: Annotation) => (
-            <li
-              key={annotation.annotationId}
-              className="rounded-lg border border-border bg-card/80 p-3 leading-relaxed"
-            >
-              <p className="text-foreground">
-                <span className="font-semibold">{getTagLabel(annotation.tag)}</span> ({annotation.start} – {annotation.end})
-              </p>
-              <p className="wrap-anywhere">{annotation.comment ?? 'コメントなし'}</p>
-            </li>
-          ))}
-          {lyric.annotations.length === 0 && <li>アノテーションはありません。</li>}
-        </ul>
-      </section>
     </article>
     </>
   );
