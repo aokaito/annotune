@@ -13,7 +13,7 @@ export const ViewerPage = () => {
   const requiresSignIn = mode === 'http' && !isAuthenticated;
 
   const lyricDisplayRef = useRef<HTMLDivElement | null>(null);
-  const [bpm, setBpm] = useState(120);
+  const [speed, setSpeed] = useState(10); // 1-20の20段階、デフォルト10
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const progressRef = useRef(0);
@@ -46,6 +46,8 @@ export const ViewerPage = () => {
     });
   }, [lyricText]);
   const totalBeats = Math.max(1, lineMeta.length);
+  // スピード10 = BPM 30 相当として、speed * 3 でBPMを算出
+  const bpm = useMemo(() => speed * 3, [speed]);
   const duration = useMemo(() => (60 / bpm) * totalBeats, [bpm, totalBeats]);
 
   const setProgressValue = (value: number) => {
@@ -191,25 +193,21 @@ export const ViewerPage = () => {
             <div className="text-[10px] text-muted-foreground sm:text-xs">進行状況</div>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs sm:text-sm">
-          <label className="flex items-center gap-2">
-            <span className="text-muted-foreground">BPM</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={40}
-              max={240}
-              step={1}
-              className="w-16 min-h-9 rounded-lg border border-border bg-card px-2 py-1 text-center text-sm sm:w-20"
-              value={bpm}
-              onChange={(event) => {
-                const next = Number(event.target.value);
-                if (!Number.isFinite(next)) return;
-                setBpm(Math.min(240, Math.max(40, next)));
-              }}
-            />
-          </label>
-          <span className="text-muted-foreground">（1行=1拍）</span>
+        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+          <span className="text-muted-foreground whitespace-nowrap">1（遅い）</span>
+          <input
+            type="range"
+            min={1}
+            max={20}
+            step={1}
+            value={speed}
+            onChange={(e) => setSpeed(Number(e.target.value))}
+            className="w-24 sm:w-32 accent-primary"
+          />
+          <span className="text-muted-foreground whitespace-nowrap">20（早い）</span>
+          <span className="ml-2 font-medium tabular-nums">
+            {speed === 10 ? '10（デフォルト）' : speed}
+          </span>
         </div>
       </section>
       <div
