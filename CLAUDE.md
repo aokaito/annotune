@@ -42,6 +42,7 @@ packages/common/   # 共有型・ユーティリティ
 | コマンド | 説明 |
 |----------|------|
 | `/check` | コミット前品質チェック（lint→typecheck→test を順次実行、失敗時は自動修正） |
+| `/commit` | コミット＆プッシュ（引数でメッセージ指定可） |
 | `/deploy` | AWS CDKデプロイ（build→synth→diff→確認→deploy） |
 | `/pr` | 日本語PRを作成（変更分析→/check実行→gh pr create） |
 | `/new-api-endpoint` | バックエンドAPIスキャフォールド（Schema→Repository→Service→Handler→Router登録） |
@@ -75,7 +76,7 @@ packages/common/   # 共有型・ユーティリティ
 |--------------|------|
 | **product_owner** | アイデアの価値分析・スコープ定義 |
 | **ux_researcher** | ユーザー体験の観点から課題・要件整理 |
-| **ui_designer** | 具体的なUI案を複数提示 |
+| **ui_designer** | Pencil MCPでビジュアルなUI案を作成 |
 | **devils_advocate** | 批判的検証・代替案の提示 |
 | **spec_writer** | 機能仕様書としてまとめ |
 
@@ -119,6 +120,12 @@ packages/common/   # 共有型・ユーティリティ
 | **context7** | 最新ドキュメント参照 | `TanStack Queryの使い方を context7 で調べて` |
 | **github** | Issue・PR操作 | `issue #42 を確認して実装して` |
 | **playwright** | ブラウザ操作・E2Eデバッグ | `localhost:5173 でE2Eテストを書いて` |
+
+グローバル設定（`~/.claude.json`）:
+
+| サーバ | 用途 | 使用例 |
+|--------|------|--------|
+| **pencil** | UIデザイン・.penファイル操作 | `/idea-team` でui_designerがビジュアルなUI案を作成 |
 
 ### GitHub MCP セットアップ
 
