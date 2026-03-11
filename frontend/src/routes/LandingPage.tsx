@@ -79,9 +79,9 @@ export const LandingPage = () => {
   };
 
   return (
-    <div className="space-y-12 pb-8 sm:space-y-16 md:space-y-20">
+    <div className="mx-auto max-w-4xl space-y-12 pb-8 sm:space-y-16 md:space-y-20 lg:space-y-24">
       {/* ① ヒーローセクション */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-surface to-background px-4 py-12 text-center sm:px-8 sm:py-16 md:py-20">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-surface to-background px-4 py-12 text-center sm:px-8 sm:py-16 md:py-24">
         <div className="relative z-10">
           <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
             <Music className="h-4 w-4" />
@@ -126,7 +126,7 @@ export const LandingPage = () => {
       </section>
 
       {/* ③ アプリモックアップ */}
-      <section className="space-y-4">
+      <section className="mx-auto max-w-2xl">
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
           <div className="border-b border-border bg-surface p-4 sm:p-6">
             <h3 className="text-lg font-semibold text-foreground">{LP_SAMPLE_LYRICS.title}</h3>
@@ -148,7 +148,7 @@ export const LandingPage = () => {
 
       {/* ④ 機能紹介 */}
       <section className="space-y-6">
-        <h2 className="text-xl font-bold text-foreground sm:text-2xl">できること</h2>
+        <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl">できること</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
           <div className="rounded-xl border border-border bg-card p-5">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
@@ -182,9 +182,9 @@ export const LandingPage = () => {
 
       {/* ⑤ かんたん3ステップ */}
       <section className="space-y-6">
-        <h2 className="text-xl font-bold text-foreground sm:text-2xl">かんたん3ステップ</h2>
-        <div className="flex flex-col gap-6 sm:flex-row sm:gap-8">
-          <div className="flex flex-1 gap-4">
+        <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl">かんたん3ステップ</h2>
+        <div className="flex flex-col gap-6 sm:flex-row sm:justify-center sm:gap-12">
+          <div className="flex max-w-xs gap-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
               1
             </div>
@@ -195,7 +195,7 @@ export const LandingPage = () => {
               </p>
             </div>
           </div>
-          <div className="flex flex-1 gap-4">
+          <div className="flex max-w-xs gap-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
               2
             </div>
@@ -206,7 +206,7 @@ export const LandingPage = () => {
               </p>
             </div>
           </div>
-          <div className="flex flex-1 gap-4">
+          <div className="flex max-w-xs gap-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
               3
             </div>
