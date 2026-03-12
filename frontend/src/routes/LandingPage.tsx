@@ -80,10 +80,10 @@ export const LandingPage = () => {
 
   return (
     <div className="mx-auto max-w-4xl space-y-12 pb-8 sm:space-y-16 md:space-y-20 lg:space-y-24">
-      {/* ① ヒーローセクション */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-surface to-background px-4 py-12 text-center sm:px-8 sm:py-16 md:py-24">
+      {/* ① ヒーローセクション + CTA */}
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-surface to-background px-4 py-10 text-center sm:px-8 sm:py-14 md:py-16">
         <div className="relative z-10">
-          <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+          <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
             <Music className="h-4 w-4" />
             ボーカル練習アプリ
           </span>
@@ -92,37 +92,35 @@ export const LandingPage = () => {
             <br className="sm:hidden" />
             歌詞に刻もう
           </h1>
-          <p className="mx-auto mt-4 max-w-md text-sm text-muted-foreground sm:mt-6 sm:text-base">
+          <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground sm:mt-4 sm:text-base">
             ビブラート・しゃくり・フォールなどの
             <br className="sm:hidden" />
             テクニック記号やコメントを歌詞に追加して、
             <br className="sm:hidden" />
             あなただけのボーカル練習ノートを作ろう。
           </p>
+          <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4">
+            <Link
+              to="/login"
+              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-primary px-8 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:w-auto sm:px-10"
+            >
+              無料で始める
+            </Link>
+            <Link
+              to="/login"
+              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-xl border border-border bg-card px-8 text-base font-semibold text-foreground shadow-sm transition hover:bg-muted sm:w-auto sm:px-10"
+            >
+              ログイン
+            </Link>
+            <a
+              href="#demo"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-8 text-sm font-medium text-muted-foreground transition hover:text-foreground sm:w-auto"
+            >
+              <Eye className="h-4 w-4" />
+              まず見てみる
+            </a>
+          </div>
         </div>
-      </section>
-
-      {/* ② 認証ボタン */}
-      <section className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4">
-        <Link
-          to="/login"
-          className="inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-primary px-8 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:w-auto sm:px-10"
-        >
-          無料で始める
-        </Link>
-        <Link
-          to="/login"
-          className="inline-flex min-h-[52px] w-full items-center justify-center rounded-xl border border-border bg-card px-8 text-base font-semibold text-foreground shadow-sm transition hover:bg-muted sm:w-auto sm:px-10"
-        >
-          ログイン
-        </Link>
-        <a
-          href="#demo"
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-8 text-sm font-medium text-muted-foreground transition hover:text-foreground sm:w-auto"
-        >
-          <Eye className="h-4 w-4" />
-          まず見てみる
-        </a>
       </section>
 
       {/* ③ アプリモックアップ */}
