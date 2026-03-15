@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import type { Annotation, AnnotationProps, VoiceQualityTag } from '../../types';
 import { getTagLabel, getVoiceQualityLabel } from './tagColors';
 import { FloatingAnnotationMenu } from './FloatingAnnotationMenu';
+import { EditorAnnotationGuide } from './EditorAnnotationGuide';
 
 interface SelectableLyricDisplayProps {
   text: string;
@@ -49,13 +50,6 @@ const voiceQualityHighlightMap: Record<VoiceQualityTag, string> = {
   falsetto: 'bg-indigo-500/30 text-indigo-100'
 };
 
-// 声質の凡例用の色（ダークテーマ対応）
-const voiceQualityLegendColors: { id: VoiceQualityTag; label: string; colorClass: string }[] = [
-  { id: 'whisper', label: 'ウィスパー', colorClass: 'bg-purple-500/30 border-purple-400' },
-  { id: 'edge', label: 'エッジ', colorClass: 'bg-rose-500/30 border-rose-400' },
-  { id: 'falsetto', label: '裏声', colorClass: 'bg-indigo-500/30 border-indigo-400' }
-];
-
 const getEffectSymbol = (tag: string) => effectSymbolMap[tag] ?? '';
 const getEffectSymbolColor = (tag: string) => effectSymbolColorMap[tag] ?? 'text-slate-600';
 
@@ -77,19 +71,6 @@ const getAnnotationForIndex = (index: number, annotations: Annotation[]): Annota
   }
   return null;
 };
-
-// 声質の凡例コンポーネント
-const VoiceQualityLegend = () => (
-  <div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-    <span className="font-medium">声質:</span>
-    {voiceQualityLegendColors.map((item) => (
-      <span key={item.id} className="flex items-center gap-1.5">
-        <span className={clsx('inline-block h-3 w-3 rounded border', item.colorClass)} />
-        <span>{item.label}</span>
-      </span>
-    ))}
-  </div>
-);
 
 export const SelectableLyricDisplay = ({
   text,
@@ -174,8 +155,6 @@ export const SelectableLyricDisplay = ({
     setSelectionState({ mode: 'idle', startIndex: null, endIndex: null });
   };
 
-  // 声質が使われているかチェック
-  const hasVoiceQuality = annotations.some((a) => a.props?.voiceQuality);
 
   // 文字ごとにレンダリング
   const renderCharacters = () => {
@@ -342,8 +321,8 @@ export const SelectableLyricDisplay = ({
           )}
         </div>
 
-        {/* 声質凡例 */}
-        {hasVoiceQuality && <VoiceQualityLegend />}
+        {/* アノテーション凡例（常に表示） */}
+        <EditorAnnotationGuide />
 
         {/* 歌詞本体 */}
         <div className="text-base leading-loose sm:text-lg">{renderCharacters()}</div>

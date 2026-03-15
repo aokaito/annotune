@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { forwardRef } from 'react';
 import { Annotation, VoiceQualityTag } from '../../types';
 import { getTagLabel, getVoiceQualityLabel } from './tagColors';
+import { ViewerAnnotationLegend } from './ViewerAnnotationLegend';
 
 interface LyricDisplayProps {
   text: string;
@@ -45,13 +46,6 @@ const voiceQualityHighlightMap: Record<VoiceQualityTag, string> = {
   edge: 'bg-rose-500/30 text-rose-100 border-rose-400',
   falsetto: 'bg-indigo-500/30 text-indigo-100 border-indigo-400'
 };
-
-// 声質の凡例用の色（ダークテーマ対応）
-const voiceQualityLegendColors: { id: VoiceQualityTag; label: string; colorClass: string }[] = [
-  { id: 'whisper', label: 'ウィスパー', colorClass: 'bg-purple-500/30 border-purple-400' },
-  { id: 'edge', label: 'エッジ', colorClass: 'bg-rose-500/30 border-rose-400' },
-  { id: 'falsetto', label: '裏声', colorClass: 'bg-indigo-500/30 border-indigo-400' }
-];
 
 const getEffectSymbol = (tag: string) => effectSymbolMap[tag] ?? '';
 const getEffectSymbolColor = (tag: string) => effectSymbolColorMap[tag] ?? 'text-slate-600 bg-slate-100';
@@ -151,19 +145,6 @@ const getLineComments = (
     .sort((a, b) => a.offsetInLine - b.offsetInLine);
 };
 
-// 声質の凡例コンポーネント
-const VoiceQualityLegend = () => (
-  <div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-    <span className="font-medium">声質:</span>
-    {voiceQualityLegendColors.map((item) => (
-      <span key={item.id} className="flex items-center gap-1.5">
-        <span className={clsx('inline-block h-3 w-3 rounded border', item.colorClass)} />
-        <span>{item.label}</span>
-      </span>
-    ))}
-  </div>
-);
-
 export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
   (
     {
@@ -187,9 +168,6 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
       framed && 'border border-border bg-card p-6 shadow-sm',
       className
     );
-
-    // 声質が使われているかチェック
-    const hasVoiceQuality = annotations.some((a) => a.props?.voiceQuality);
 
     const renderAnnotatedSegment = (segment: Segment, key: string | number) => {
       const displayText = segment.text;
@@ -261,8 +239,8 @@ export const LyricDisplay = forwardRef<HTMLDivElement, LyricDisplayProps>(
 
     return (
       <div className={containerClass}>
-        {/* 声質が使われている場合のみ凡例を表示 */}
-        {showTagIndicators && hasVoiceQuality && <VoiceQualityLegend />}
+        {/* アノテーション凡例（使用されているものがある場合のみ表示） */}
+        {showTagIndicators && <ViewerAnnotationLegend annotations={annotations} />}
         {/* refは歌詞本体のみに設定（選択位置計算のため凡例を除外） */}
         <div ref={ref}>
         {renderLines && lineData
